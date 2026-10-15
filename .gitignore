@@ -1,0 +1,27 @@
+# ターミナルからNew-Item .gitignoreを実行して作成した.gitignoreファイルの中身です。
+#★初心者向け解説：これで将来、プログラムの中にパスワードを書き込んでも
+#Gitが自動的にそのファイルを「見えないもの」として扱ってくれるため
+#間違えて世界に公開されるリスクを100%防ぐことができます！
+
+# === 【最重要】セキュリティ：パスワードが書かれた設定ファイルをガッチリ隠す ===
+/src/main/resources/application.properties
+/src/main/resources/application-local.properties
+/src/main/resources/application-secret.properties
+
+# === Java（Spring Boot）が自動生成する不要なファイル（アップロード禁止） ===
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+/mvnw
+/mvnw.cmd
+/.mvn/
+.mtj.tmp/
+
+# === 開発ツール（VS CodeやIntelliJ）の個人設定ファイル ===
+/.vscode/
+/.idea/
+*.iml
+*.iws
+
+# === パソコンのOSが自動生成するゴミファイル ===
+.DS_Store
+Thumbs.db
