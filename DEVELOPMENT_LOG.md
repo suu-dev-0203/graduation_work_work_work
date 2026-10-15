@@ -89,3 +89,24 @@ New-Item .gitignoreを入力し実行して作成した `.gitignore` ファイ�
      - 左側のファイル一覧（エクスプローラー）から、いま作った一番奥にある `GraduationApplication.java` をクリックして開く。
      - 起動スイッチとなるプログラム（SpringApplication.run が書かれたコード）を貼り付ける。
      - キーボードの **`Ctrl + S`** を押して、ファイルをしっかりと保存（セーブ）する。
+
+
+## 2026-10-15: 最初のWeb通信テスト（Controller）の追加
+- **やったこと**: Webからのリクエストを受け取るための `HelloController.java` を手動で作成した。
+- **学んだこと**: 
+  - `@RestController` というマーク（アノテーション）をつけると、そのクラスがWebの通信窓口（Controller）になる。
+  - `@GetMapping("/hello")` と書くことで、「/hello」というURLでアクセスされたときに特定のプログラムを動かし、ブラウザへ文字を直接返すことができる。
+
+### 💻 実行した手順とコマンドの詳細解説
+
+1. **同じ部屋（exampleフォルダ）の中に、通信窓口となるJavaファイルを新しく生み出す**
+   - **実行したコマンド**:
+     ```powershell
+     New-Item src\main\java\com\example\HelloController.java
+     ```
+   - **意味**: 起動スイッチと同じ並びに、Webからの通信を専門に待ち受けるための真っ白なJavaファイルを誕生させる命令。
+
+2. **VS Codeでファイルを開き、通信テスト用のコードを保存する**
+   - **操作手順**:
+     - 左側のファイル一覧から `HelloController.java` を開く。
+     - ブラウザに文字を返すコードを貼り付け、キーボードの **`Ctrl + S`** を押してしっかりと保存する。
