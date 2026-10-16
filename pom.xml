@@ -29,7 +29,20 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
-		<!-- 4. テスト（プログラムが正しく動くか自動チェック）を行うための部品 -->
+		<!-- 4. データベース（JPA）を操作するための部品 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<!-- 5. データを保存する倉庫（H2 Database）そのものの部品 -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- 6. テスト（プログラムが正しく動くか自動チェック）を行うための部品 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
