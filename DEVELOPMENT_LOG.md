@@ -637,3 +637,117 @@ public class QuestionController {
   ブラウザから「/questions」という要求（GETリクエスト）が送られてきた際に、直後のメソッドを自動的に実行させるためのマッピング設定。
 - **`Model` オブジェクトによるデータの受け渡し**
   Java側で取得したデータを、HTML（Thymeleaf）テンプレートに渡すためのデータ格納用コンテナ。`model.addAttribute("キー名", データ)` の形式でデータを保持させる。
+
+## 2026-10-20: クイズデータ表示用HTML（questions.html）の作成とブラウザ描写テストの完全成功
+
+### 【目的と全体像】
+コントローラー（QuestionController.java）から渡されたクイズデータをブラウザに表示するための画面（HTML）を作成する。
+Thymeleaf（タイムリーフ）の繰り返し構文を用いて、データベース内のデータを動的に画面へ描写し、クイズ機能のエンドツーエンド（通信の全工程）の開通を確認する。
+
+---
+
+### 1. 作業手順と実施内容
+
+#### ① 画面表示用フォルダへのHTMLファイルの自動生成
+画面テンプレートを管理する `src/main/resources/templates` フォルダにクイズ用の画面を配置するため、ターミナル（PowerShell）に以下のコマンドを入力し、空のファイルを生成した。
+
+```powershell
+New-Item -ItemType File -Force -Path src/main/resources/templates/questions.html
+```
+
+#### ② 描写ロジックの記述と日本語解説コメントの追加
+新しく作成したファイルを開き、Thymeleafの独自設定を含めたすべての行に対して、初心者向けの平易な日本語訳と解説コメントを1行ずつ記述した。
+
+```html
+<!-- このファイルがHTML（Web画面）の記述であることを示している -->
+<!DOCTYPE html>
+<!-- 画面で使う言語を日本語に設定し、Thymeleaf（th:）の機能を使えるようにURLを指定している -->
+<html lang="ja" xmlns:th="http://thymeleaf.org">
+<head>
+    <!-- 画面の文字化けを防ぐための文字コード（UTF-8）を設定している -->
+    <meta charset="UTF-8">
+    <!-- ブラウザのタブに表示されるタイトルを設定している -->
+    <title>Java Bronze クイズ問題</title>
+</head>
+<body>
+    <!-- 画面内に大きく表示される見出し文字だ -->
+    <h1>Java Bronze クイズ問題一覧</h1>
+
+    <!-- コントローラーから届いたクイズのリスト（questions）を、th:eachを使って1問ずつ繰り返し処理している -->
+    <!-- th:each="変数名 : ${荷台の名前}" の形式で書き、ここでは1問分のデータを「q」という名前で扱っている -->
+    <div th:each="q : ${questions}">
+        
+        <!-- クイズの出席番号（ID）と、問題文を画面に表示している -->
+        <!-- q.getQuestionId() と q.getQuestionText() のデータを呼び出して文字を上書きしている -->
+        <h2>
+            <span>問題番号：</span><span th:text="${q.questionId}">1</span>
+            <span th:text="${q.questionText}">ここに問題文が表示される</span>
+        </h2>
+        
+        <!-- 3つの選択肢を箇条書き（箇条書きリスト）で画面に表示している -->
+        <ul>
+            <!-- 選択肢Aの文字（q.choiceA）を表示している -->
+            <li>選択肢A：<span th:text="${q.choiceA}">選択肢Aの内容</span></li>
+            <!-- 選択肢Bの文字（q.choiceB）を表示している -->
+            <li>選択肢B：<span th:text="${q.choiceB}">選択肢Bの内容</span></li>
+            <!-- 選択肢Cの文字（q.choiceC）を表示している -->
+            <li>選択肢C：<span th:text="${q.choiceC}">選択肢Cの内容</span></li>
+        </ul>
+        
+        <!-- 正解のインデックス番号（0=A, 1=B, 2=C）を画面に表示している -->
+        <p>
+            <span>正解インデックス：</span><span th:text="${q.correctChoiceIndex}">0</span>
+        </p>
+        
+        <!-- 問題と問題の間に区切り線（水平線）を入れて見やすくしている -->
+        <hr>
+    </div>
+</body>
+</html>
+```
+
+#### ③ 動作確認テストの実施
+VS Codeの「▶ボタン（Run）」を押してWebサーバーを起動。ブラウザから `http://localhost:8080/questions` にアクセスし、データベースから取得された本物のクイズデータが、見出し、問題文、選択肢、正解インデックス（1＝選択肢B）とともに正しく描写されていることを目視で確認した。
+
+---
+
+###  技術的な仕組みの解説
+
+- **`xmlns:th="http://thymeleaf.org"` の宣言**
+  HTML内でThymeleafの独自属性（`th:text` など）を正しく認識・処理させるために必須となる記述。
+- **`th:each` による繰り返し描画**
+  コントローラーから受け取ったデータの塊（リスト）から要素を1つずつ取り出し、データが存在する分だけ自動的にHTMLタグを繰り返し生成する構文。
+- **`th:text` による文字列の動的置換**
+  Java側のエンティティに定義されたゲッターメソッド（`getQuestionText()` など）を裏側で呼び出し、HTMLに最初から書かれているダミーの文字列を本物のデータへ上書きする仕組み。
+
+
+## 2026-10-20: オリジナル問題バンク（OriginalQuestionBank.java）の新規作成と移植の開始
+
+### 【目的と全体像】
+前作の資産である「Java SE 11 Bronzeのオリジナル問題」を新プロジェクトへ本格的に移植するフェーズへ移行した。
+一度に大量のデータを移植して環境がパニックを起こすのを防ぐため、「どこつぶ方式」に従い、まずは第1章のクイズデータと基本構造を持つファイルを1つ手動で作成する。
+
+---
+
+### 1. 作業手順と実施内容
+
+#### ① 問題バンク用のファイルの自動生成
+起動クラス（GraduationApplication.java）と同じ `com.example` フォルダの直下に配置するため、ターミナル（PowerShell）に以下のコマンドを入力し、空のファイルを生成した。
+
+```powershell
+New-Item -ItemType File -Force -Path src/main/java/com/example/OriginalQuestionBank.java
+```
+
+#### ② 第1章クイズデータの記述と日本語解説コメントの追加
+新しく作成したファイルを開き、前作から厳選した第1章の5問分のクイズデータ（問題文、選択肢、正解インデックス）を記述した。
+インポート文を含めたすべての行に対して、初心者向けの平易な日本語訳と解説コメントを1行ずつ記述した。
+
+---
+
+###  技術的な仕組み解説
+
+- **`public static List<Question>` メソッドの構造**
+  `static`（静的）キーワードを付与することで、このクラスを新しく実体化（new）しなくても、他のファイルから直接 `OriginalQuestionBank.getChapter1Questions()` と呼び出してデータを一瞬で取得できる構造にしている。
+- **`List`（インターフェース）と `ArrayList`（実装クラス）の組み合わせ**
+  Javaにおける標準的なリスト作成の手順。型の宣言には広い意味を持つ `List` を使い、実体には要素を柔軟に追加できる `ArrayList` を組み合わせることで、拡張性の高いプログラムを記述している。
+
