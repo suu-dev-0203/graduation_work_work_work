@@ -569,3 +569,71 @@ New-Item -ItemType File -Force -Path src/main/java/com/example/service/QuestionS
   このアノテーションを付与することで、自分でインスタンスを生成（new）しなくても、Spring Bootが自動的にデータベース操作用ロボット（Repository）をこのクラスに接続（インジェクション）する。
 - **`List<Question>` による複数データの保持**
   データベースから取得した複数のクイズデータを、1つのまとまり（リスト）として格納し、安全に呼び出し元へ返却するデータ構造を定義している。
+
+
+## 2026-10-20: クイズ画面制御用クラス（QuestionController.java）の手動作成
+
+### 【目的と全体像】
+ユーザーがブラウザで「/questions」のURLにアクセスした際、サービス（QuestionService）を中継してデータベースからクイズデータを取得し、画面（HTML）へ引き渡すコントローラークラスを作成する。
+
+---
+
+### 1. 作業手順と実施内容
+
+#### ① コントローラー用の部屋（フォルダ）へのファイルの自動生成
+既存の `ChapterController.java` と同じ `controller` フォルダにクイズ用のコントローラーを配置するため、ターミナル（PowerShell）に以下のコマンドを入力し、空のファイルを生成した。
+
+```powershell
+New-Item -ItemType File -Force -Path src/main/java/com/example/controller/QuestionController.java
+```
+
+#### ② 画面制御ロジックの記述と日本語解説コメントの追加
+新しく作成したファイルを開き、インポート文を含めたすべてのコードに対して、初心者向けの平易な日本語訳と解説コメントを1行ずつ記述した。
+
+```java
+// [ファイルの住所] このファイルが「com/example/controller」というフォルダに置いてあることを示している
+package com.example.controller;
+
+// [道具の準備] 別の部屋にあるファイルや、Spring Bootの標準的な機能をここで使うために読み込んでいる
+import com.example.entity.Question;           // クイズの「データの箱（Question）」をここで使うために読み込んでいる
+import com.example.service.QuestionService;   // データの仲介を行う「サービス（QuestionService）」を読み込んでいる
+import org.springframework.beans.factory.annotation.Autowired; // 部品を自動で接続するための機能を読み込んでいる
+import org.springframework.stereotype.Controller; // このファイルが画面切り替えを担当する「コントローラー」であることを示すマークだ
+import org.springframework.ui.Model;           // 画面（HTML）にデータを引き渡すための「荷台（Model）」の機能を読み込んでいる
+import org.springframework.web.bind.annotation.GetMapping; // 特定のURLへのアクセスを受け付けるための機能を読み込んでいる
+import java.util.List;                         // 複数のデータをまとめて「リスト」として扱うためのJavaの機能を読み込んでいる
+
+// このファイルが、ブラウザからのアクセスを受け付ける「コントローラー」という役割のクラスであることをシステムに登録している
+@Controller
+public class QuestionController {
+
+    // データ中継部品（QuestionService）を、システムが自動的にここに接続して使える状態にする
+    @Autowired
+    private QuestionService questionService;
+
+    // ユーザーがブラウザで「http://localhost:8080/questions」にアクセスしたときに、以下の処理を実行する
+    @GetMapping("/questions")
+    public String showQuestions(Model model) { // 引数の「Model」は、画面へ持っていくデータを乗せるための荷台だ
+        
+        // サービス部品の「getAllQuestions」を呼び出して、データベースから全クイズデータを取得する
+        List<Question> questions = questionService.getAllQuestions();
+
+        // 荷台（model）に「"questions"」という名前をつけて、取得したクイズデータのリストを載せている
+        model.addAttribute("questions", questions);
+
+        // 画面表示を担当するファイルである「questions.html」を呼び出すように、文字を返している
+        return "questions";
+    }
+}
+```
+
+---
+
+###  技術的な仕組みの解説
+
+- **`@Controller` マークの役割**
+  このマークをクラスに付与することで、Spring Bootが「このファイルはURLからのアクセスを受け付け、画面の切り替えを制御するコンポーネントである」と認識する。
+- **`@GetMapping("/questions")` によるURLの紐付け**
+  ブラウザから「/questions」という要求（GETリクエスト）が送られてきた際に、直後のメソッドを自動的に実行させるためのマッピング設定。
+- **`Model` オブジェクトによるデータの受け渡し**
+  Java側で取得したデータを、HTML（Thymeleaf）テンプレートに渡すためのデータ格納用コンテナ。`model.addAttribute("キー名", データ)` の形式でデータを保持させる。
