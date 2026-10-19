@@ -751,3 +751,21 @@ New-Item -ItemType File -Force -Path src/main/java/com/example/OriginalQuestionB
 - **`List`（インターフェース）と `ArrayList`（実装クラス）の組み合わせ**
   Javaにおける標準的なリスト作成の手順。型の宣言には広い意味を持つ `List` を使い、実体には要素を柔軟に追加できる `ArrayList` を組み合わせることで、拡張性の高いプログラムを記述している。
 
+
+## 2026-10-20: 全8章のオリジナル問題バンク（全4ファイル）の完全移植完了
+
+### 【目的と全体像】
+前作の資産である「Java SE 11 Bronze オリジナル問題」全8章を格納するための4つのデータバンククラス（OriginalQuestionBankシリーズ）をすべて手動で作成し、260問をいつでもデータベースへ投入できる土台を100%完成させた。
+
+---
+
+### 1. 作業手順と実施内容
+
+#### ① 2章〜8章を小分けにする全ファイルの自動生成
+ターミナル（PowerShell）より以下のコマンドを実行し、残りのファイルをすべて同時生成した。
+- `src/main/java/com/example/OriginalQuestionBankChapters2To4.java`
+- `src/main/java/com/example/OriginalQuestionBankChapters5To6.java`
+- `src/main/java/com/example/OriginalQuestionBankChapters7To8.java`
+
+#### ② 各章データの記述と日本語解説コメントの追加
+各ファイルに対して、前作から引き継いだ各章のクイズデータを網羅。インポート文を含めたすべての記述に対し、初心者向けの平易な日本語訳と解説コメントを1行ずつ記述し、エラーなしで保存した。
