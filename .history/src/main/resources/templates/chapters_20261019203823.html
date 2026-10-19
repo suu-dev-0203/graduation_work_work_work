@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!-- th:xmlns をつけることで、このHTMLの中で「Thymeleafの特殊な命令」が使えるようになります -->
+<html lang="ja" xmlns:th="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>章一覧</title>
+</head>
+<body>
+    <h1>Java学習ゲーム：ステージ一覧</h1>
+    
+    <p>データベースから取得した本物のステージ名を表示しています：</p>
+
+    <!-- <ul> は箇条書きのリストを作るタグです -->
+    <ul>
+        <!-- 【最重要】th:each は、Javaの「for文（繰り返し処理）」と全く同じ動きをします。
+             コントローラーから届いた「chapters」というデータの束から、
+             データを1件ずつ取り出して「ch」という名前の変数に入れ、データの数だけ <li> タグを繰り返します。 -->
+        <li th:each="ch : ${chapters}">
+            <!-- th:text を使うことで、ch（1件分のデータ）の中に入っている「getName()（章の名前）」を画面に書き出します -->
+            <span th:text="${ch.name}">ここに仮のステージ名が入ります</span>
+        </li>
+    </ul>
+</body>
+</html>
