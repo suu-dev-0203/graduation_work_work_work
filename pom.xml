@@ -22,11 +22,17 @@
 		<java.version>17</java.version>
 	</properties>
 
-	<dependencies>
+		<dependencies>
 		<!-- 3. Webアプリ（どこつぶのような通信機能）を動かすためのコア部品 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- 画面（HTML）を表示するためのタイムリーフ部品 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
 		</dependency>
 
 		<!-- 4. データベース（JPA）を操作するための部品 -->

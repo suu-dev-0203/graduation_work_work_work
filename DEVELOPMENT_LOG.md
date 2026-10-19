@@ -339,3 +339,40 @@ Spring Bootの配置ルール（templatesフォルダ配下）に従い、Window
 
 ## 2. 次回のスタート地点
 コントローラー（Java）と画面（HTML）の2つの土台が揃ったため、次はアプリを起動してブラウザから `http://localhost:8080/chapters` にアクセスし、この仮画面が正しく表示されるか「通信テスト（答え合わせ）」を行います。
+
+
+## 2026-10-19: コントローラーとHTMLの通信テスト成功およびpom.xmlのエラー解消
+
+## 【今回の目的と全体像】
+作成した `ChapterController.java` と `chapters.html` が正しく連携して、ブラウザに仮画面が表示されるかどうかの答え合わせ（通信テスト）を行うこと。
+
+---
+
+## 1. 発生した問題と具体的な解決手順
+
+通信テストの過程で遭遇した複数のエラーを、手動操作とエディタの機能によって1つずつ解消した。
+
+### ① Whitelabel Error Page（500エラー）の発生と対処
+- **原因：** プロジェクトの設計図である `pom.xml` に、HTML画面を描写するための必須部品「Thymeleaf（タイムリーフ）」が登録されていなかったため、画面の呼び出しに失敗していた。
+- **対処：** `pom.xml` の `<dependencies>` タグ内に以下のThymeleaf依存関係を正しく追加した。
+  ```xml
+  <!-- 画面（HTML）を表示するためのタイムリーフ部品 -->
+  <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-thymeleaf</artifactId>
+  </dependency>
+  ```
+
+### ② クラスパス・エントリの重複エラー（VS Codeの同期パニック）の解消
+- **原因：** `pom.xml` の書き換え時にタグが一部重複し、それを修正したあともVS Codeの内部システム（Java Language Server）が最新の状態を同期できずにパニックを起こし、Javaファイル全体に赤波線のエラーを出す現象が発生した。
+- **対処：** コマンドパレット（`Ctrl + Shift + P`）から **`Java: Clean Java Language Server Workspace`** を実行してエディタのキャッシュをお掃除し、VS Codeを再起動（Restart）させることで、すべての赤波線エラーを一発で消し去ることに成功した。
+
+---
+
+## 2. 動作検証とその結果（答え合わせ）
+- エディタのパニック解消後、`GraduationApplication.java` を再起動。
+- ブラウザで `http://localhost:8080/chapters` にアクセスしたところ、エラーや真っ白な画面が完全に解消され、`chapters.html` に記述した以下のテスト文字が画面上に正しく表示されることを視覚的に確認した。
+  > **Java学習ゲーム：ステージ一覧**
+  > ここにデータベースから読み込んだステージ名が表示されるようになります！
+
+これにより、Webアプリとしての画面表示の通信ルートが100%完璧に開通した。
