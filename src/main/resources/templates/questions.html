@@ -1,0 +1,45 @@
+<!-- このファイルがHTML（Web画面）の記述であることを示している -->
+<!DOCTYPE html>
+<!-- 画面で使う言語を日本語に設定し、Thymeleaf（th:）の機能を使えるようにURLを指定している -->
+<html lang="ja" xmlns:th="http://thymeleaf.org">
+<head>
+    <!-- 画面の文字化けを防ぐための文字コード（UTF-8）を設定している -->
+    <meta charset="UTF-8">
+    <!-- ブラウザのタブに表示されるタイトルを設定している -->
+    <title>Java Bronze クイズ問題</title>
+</head>
+<body>
+    <!-- 画面内に大きく表示される見出し文字だ -->
+    <h1>Java Bronze クイズ問題一覧</h1>
+
+    <!-- コントローラーから届いたクイズのリスト（questions）を、th:eachを使って1問ずつ繰り返し処理している -->
+    <!-- th:each="変数名 : ${荷台の名前}" の形式で書き、ここでは1問分のデータを「q」という名前で扱っている -->
+    <div th:each="q : ${questions}">
+        
+        <!-- クイズの出席番号（ID）と、問題文を画面に表示している -->
+        <!-- q.getQuestionId() と q.getQuestionText() のデータを呼び出して文字を上書きしている -->
+        <h2>
+            <span>問題番号：</span><span th:text="${q.questionId}">1</span>
+            <span th:text="${q.questionText}">ここに問題文が表示される</span>
+        </h2>
+        
+        <!-- 3つの選択肢を箇条書き（箇条書きリスト）で画面に表示している -->
+        <ul>
+            <!-- 選択肢Aの文字（q.choiceA）を表示している -->
+            <li>選択肢A：<span th:text="${q.choiceA}">選択肢Aの内容</span></li>
+            <!-- 選択肢Bの文字（q.choiceB）を表示している -->
+            <li>選択肢B：<span th:text="${q.choiceB}">選択肢Bの内容</span></li>
+            <!-- 選択肢Cの文字（q.choiceC）を表示している -->
+            <li>選択肢C：<span th:text="${q.choiceC}">選択肢Cの内容</span></li>
+        </ul>
+        
+        <!-- 正解のインデックス番号（0=A, 1=B, 2=C）を画面に表示している -->
+        <p>
+            <span>正解インデックス：</span><span th:text="${q.correctChoiceIndex}">0</span>
+        </p>
+        
+        <!-- 問題と問題の間に区切り線（水平線）を入れて見やすくしている -->
+        <hr>
+    </div>
+</body>
+</html>
