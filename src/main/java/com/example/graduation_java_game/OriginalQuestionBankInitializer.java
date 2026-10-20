@@ -6,7 +6,6 @@ import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import com.example.OriginalQuestionBank;
 import com.example.entity.Question;
 import com.example.repository.QuestionRepository;
 // 【重要】「com.example.repository」部屋に住んでいる、優秀な通信ロボット（QuestionRepository）を呼び出している。
@@ -28,8 +27,6 @@ public class OriginalQuestionBankInitializer implements CommandLineRunner {
 
 	@Override
 	// CommandLineRunner インターフェースで決められている「起動時に動く処理」の中身を、自分たちの仕様で書き換えている。
-	@SuppressWarnings("unchecked")
-	// 【追加】「型の安全性に関する細かい警告は、動作に問題ないと分かっているから非表示にしてね」とJavaに命令している。
 	
 	public void run(String... args) throws Exception {
 	// アプリが立ち上がった瞬間に、Spring Boot の指示によってこの中身が自動的に実行される。
@@ -46,7 +43,10 @@ public class OriginalQuestionBankInitializer implements CommandLineRunner {
 		// 「com.example.OriginalQuestionBank」の「getChapter1Questions()」を呼び出し、本物の5問のクイズの束を取得している。
 
 		// 通信ロボットに、取得したクイズの束を丸ごと渡してデータベースへ一括保存させる
-		questionRepository.saveAll(chapter1Questions);
+		questionRepository.saveAll(
+    		java.util.Objects.requireNonNull(chapter1Questions)
+				);
+
 		// リポジトリの「saveAll」という超能力を使い、5問のクイズデータを H2 データベースへ一気に全自動で書き込んで記憶させる。
 	}
 }
