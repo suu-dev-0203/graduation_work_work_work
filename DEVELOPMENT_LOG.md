@@ -804,3 +804,192 @@ New-Item -ItemType File -Force -Path src/main/java/com/example/OriginalQuestionB
   これまでは、起動スイッチの内部に `@Bean` や `initData` という手動投入用の記述を直接書き込んで、クイズ1問や章データを強引にテスト投入していた。しかし、新しく「全自動一括初期化クラス」という優秀な専門ロボットが完成したため、起動クラス側に古いテストコードを残したままだと、お互いがデータベースに対して同時にデータを書き込んでしまい、データがごちゃ混ぜになる原因（データの重複や衝突）になっていた。
 * **書き換えによって得られた成果（役割の明確化）**
   手動投入の記述を丸ごと削ぎ落とし、純粋な「アプリを立ち上げるだけのシンプルな起動スイッチ」へと掃除（リファクタリング）を行った。これにより、データの初期投入の仕事はすべて新しく作った初期化クラスへ完全に引き継がれ、プログラムの役割分担が「起動する係」と「データを自動投入する係」へと綺麗に整理された。
+
+## 2026-10-20: 問題バンクのパッケージ修正・警告解消・問題一覧画面の表示確認
+
+### 1. 今回の目的
+全8章の問題バンクをプロジェクトへ配置した際に発生したJavaのエラーを整理し、アプリを再起動してブラウザから問題一覧を確認する。
+
+### 2. 修正した内容
+
+- `OriginalQuestionBank.java` と各章の問題バンクファイルを `com.example.graduation_java_game` パッケージにそろえ、対応するフォルダへ配置した。
+- `OriginalQuestionBankInitializer.java` から、古いパッケージを参照する不要なimportを取り除き、同じパッケージにある `OriginalQuestionBank` を参照する形にそろえた。
+- IDEで不要と指摘された `@SuppressWarnings("unchecked")` を削除した。
+- `questionRepository.saveAll(chapter1Questions)` に対して、null安全性に関する警告を解消するため `Objects.requireNonNull(chapter1Questions)` を使う形に変更した。
+- 変更後、VS Codeの「問題」パネルに「ワークスペースで問題は検出されていません」と表示されることを確認した。
+
+### 3. ブラウザで確認できたこと
+
+ブラウザで `http://localhost:8080/questions` を開き、「Java Bronze クイズ問題一覧」と問題文・選択肢が表示されることを確認した。したがって、少なくとも現在の実行環境では、アプリが起動し、問題一覧画面へアクセスできている。
+
+### 4. 現時点での注意点
+
+- ブラウザで確認できたのは問題一覧の表示までであり、選択肢をクリックして正誤判定するゲーム機能は、まだ動作確認できていない。
+- 表示画面には選択肢A～Cと正解インデックスが見えている。移植した問題バンクのすべての選択肢・解説が画面に反映されているか、今後HTML・エンティティ・データベースの項目を照合する必要がある。
+- VS Codeの問題一覧が空になったことは確認できたが、この記録時点では `mvn clean compile` の `BUILD SUCCESS` 出力までは確認していない。
+- GitHubへのcommit・pushは、この記録作成時点では未実施。ローカルのGit状態を確認してから保存する。
+
+### 5. 次の作業
+
+1. `DEVELOPMENT_LOG.md` と今回変更したJavaファイルをGitの変更一覧で確認する。
+2. 必要なファイルをcommitし、GitHubの `main` ブランチへpushする。
+3. Mavenでビルド結果を確認する。
+4. 問題一覧を、回答選択・正誤判定・解説表示・次の問題へ進む操作ができる学習ゲーム画面へ発展させる。
+
+## 2026-10-20: GitHubの最新状態へ戻す手順と問題バンクの配置確認手順
+
+### 1. この記録の目的
+
+VS Codeで作業している初心者が、ローカルのファイルをGitHubの`main`ブランチの最新状態へ戻す方法と、`OriginalQuestionBank`シリーズのJavaファイルが正しいフォルダに配置されているか確認する方法を、後から見返せるように記録する。
+
+> **重要：以下のリセット操作は、手元の作業内容を消す可能性がある。** `git reset --hard origin/main`はGit管理下の未保存変更を破棄し、`git clean -fd`はGit管理対象外の新規ファイルやフォルダを削除する。まだGitHubへ保存していないJavaファイルやREADME、開発ログがある場合は、先にバックアップを取る。目的がファイルの移動やエラー修正だけなら、リセットを実行する必要はない。
+
+### 2. GitHubの最新状態へ戻す手順
+
+#### ① VS Codeでターミナルを開く
+
+VS Code上部の「ターミナル」メニューから「新しいターミナル」を選ぶ。ターミナルが開いたら、現在の作業フォルダがプロジェクトのルート（`pom.xml`や`README.md`があるフォルダ）であることを確認する。
+
+#### ② まず現在の変更を確認する
+
+```bash
+git status
+```
+
+このコマンドは、変更したファイルや、Gitがまだ管理していないファイルを表示する。消したくないファイルが表示されたら、リセットを進めずにバックアップを取る。
+
+必要に応じて、プロジェクトフォルダ全体を別の場所へコピーする。特に、GitHubにまだ登録していない新規Javaファイル、`README.md`、`DEVELOPMENT_LOG.md`を残したい場合は、先に退避する。
+
+#### ③ GitHubから`main`ブランチの最新情報を取得する
+
+```bash
+git fetch origin main
+```
+
+`fetch`は、GitHub側の最新情報をパソコンに取得する操作。これだけでは、手元のファイルは書き換わらない。
+
+#### ④ ローカルのGit管理対象ファイルをGitHubの最新状態へ戻す
+
+```bash
+git reset --hard origin/main
+```
+
+この操作は、ローカルのGit管理対象ファイルを`origin/main`と同じコミットの状態へ戻す。GitHubに送信していないローカルの変更は失われるため、必要な変更を退避した後にだけ実行する。
+
+#### ⑤ Git管理対象外のファイルを削除する前に、削除候補を確認する
+
+```bash
+git clean -fdn
+```
+
+`-n`は実際には削除せず、削除候補だけを表示する確認用オプション。表示された一覧に残したいファイルやフォルダが含まれていないことを確認する。
+
+問題がない場合に限り、実際の削除を実行する。
+
+```bash
+git clean -fd
+```
+
+`git clean -fd`は、Git管理対象外のファイルやフォルダを削除する。`git clean -fdn`で候補を見て、必要なファイルが含まれていないことを確認する前に実行しない。
+
+#### ⑥ 同期結果を確認する
+
+```bash
+git status
+```
+
+変更が残っていない場合は、通常、`working tree clean`に相当する表示が出る。ただし、GitHubの`main`に存在しないファイルはリセット・クリーン操作で消えることがある。必要なファイルが残っているか、VS Codeのエクスプローラーでも確認する。
+
+### 3. `OriginalQuestionBank`シリーズの配置を確認する手順
+
+GitHubへ戻す操作とは別に、問題バンクのファイルがどこにあるかを確認する。次のファイルは、パッケージ宣言が`com.example.graduation_java_game`である場合、基本的に次のフォルダに配置する。
+
+```text
+src/main/java/com/example/graduation_java_game/
+    OriginalQuestionBank.java
+    OriginalQuestionBankChapters2To4.java
+    OriginalQuestionBankChapters5To6.java
+    OriginalQuestionBankChapters7To8.java
+    OriginalQuestionBankInitializer.java
+```
+
+#### ① `com/example`直下にあるファイルを確認する
+
+PowerShellターミナルで次を実行する。
+
+```powershell
+Get-ChildItem src/main/java/com/example
+```
+
+フォルダとファイル名を一覧表示するコマンド。ここに`OriginalQuestionBank.java`などが直接置かれているか確認する。
+
+#### ② 移動先のフォルダも確認する
+
+```powershell
+Get-ChildItem src/main/java/com/example/graduation_java_game
+```
+
+すでに同名ファイルが移動先に存在する場合、上書きや重複を避けるため、移動前に中身と更新状況を確認する。
+
+#### ③ 必要なファイルだけを移動する
+
+`com/example`直下に問題バンクのファイルがあり、`graduation_java_game`フォルダ内に同名ファイルがないことを確認できた場合に限り、次のコマンドを使う。
+
+```powershell
+Move-Item src/main/java/com/example/OriginalQuestionBank*.java src/main/java/com/example/graduation_java_game/
+```
+
+`OriginalQuestionBank*.java`の`*`は、`OriginalQuestionBank`で始まり`.java`で終わるファイル名に一致する記号。このため、該当する複数ファイルをまとめて移動できる。
+
+**注意：** 元の場所に該当ファイルがない場合、このコマンドは失敗する。その場合は再実行せず、すでに正しい場所に移動済みかを確認する。また、移動先に同名ファイルがある場合は、先に差分や内容を確認し、必要なコードを誤って失わないようにする。
+
+#### ④ パッケージ宣言とフォルダを一致させる
+
+問題バンク各ファイルの先頭に、次の宣言があることを確認する。
+
+```java
+package com.example.graduation_java_game;
+```
+
+Javaでは、パッケージ名とフォルダ構成が一致している必要がある。宣言だけを変更したり、ファイルだけを移動したりして片方をずらさない。
+
+### 4. 土台となるファイルの存在を確認する
+
+プロジェクトのエクスプローラーで、これまで作成した土台のファイルが存在することを確認する。
+
+```text
+src/main/java/com/example/entity/Chapter.java
+src/main/java/com/example/repository/ChapterRepository.java
+src/main/java/com/example/service/ChapterService.java
+src/main/java/com/example/controller/ChapterController.java
+```
+
+これらが見つからない場合、ファイルを新しく作り直す前に、まずVS Codeで開いているプロジェクトが正しいか、GitHubの`main`にファイルが登録されているかを確認する。ファイルが存在することだけでは、プログラムが正常に動く保証にはならないため、パッケージ宣言と参照先も確認する。
+
+### 5. 作業後にコンパイルと画面表示を確認する
+
+必要な配置を整えたら、プロジェクトのルートフォルダで次を実行する。
+
+```bash
+mvn clean compile
+```
+
+`BUILD SUCCESS`ならMavenによるコンパイルは成功。`BUILD FAILURE`なら、ターミナルに表示された最初のエラーから確認する。
+
+その後、アプリを起動し、ブラウザで次のURLを開く。
+
+```text
+http://localhost:8080/questions
+```
+
+問題一覧が表示されるかを確認する。表示できた場合でも、回答選択・正誤判定・解説表示などのゲーム機能が完成したとは限らないため、各機能は別途テストする。
+
+### 6. 今回の作業で覚えておくこと
+
+- `git fetch origin main`：GitHubの最新情報を取得する。ローカルファイルは直接変更しない。
+- `git reset --hard origin/main`：Git管理対象のローカル変更を破棄して、`origin/main`の状態に戻す。
+- `git clean -fdn`：削除候補の一覧を表示するだけで、削除しない。
+- `git clean -fd`：Git管理対象外のファイルやフォルダを削除する。
+- `Get-ChildItem`：指定したフォルダの中身を一覧表示する。
+- `Move-Item`：ファイルやフォルダを別の場所へ移動する。
+- GitHubの最新状態へ戻すことと、問題バンクを正しいフォルダへ移動することは別の作業。必要なコードを消さないよう、目的に合った手順を選ぶ。
