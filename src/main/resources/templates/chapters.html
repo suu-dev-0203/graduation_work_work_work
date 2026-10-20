@@ -338,12 +338,45 @@
         let currentHp = 5;
         let currentCombo = 0;
         let currentScore = 0;
-
+                //  「ゲーム開始」ボタンを押したときにJavaのAPIを呼び出してセーブデータを自動生成する
         function startGame() {
-            document.getElementById('area-home').classList.remove('active');
-            document.getElementById('area-game').classList.add('active');
-            document.getElementById('effect-zone').innerText = "⚔️ BATTLE START!! 回答を入力してください";
-            document.getElementById('effect-zone').classList.add('effect-active');
+            // 命名固定仕様（Source of Truth）に完全準拠したリクエストデータの作成
+            // 今回はテストとして、第1章（ID:1）、問題数5問固定でサーバーへ送信します
+            const requestData = {
+                chapterId: 1,
+                questionCount: 5
+            };
+
+            // Javaのサーバー窓口（POST /api/game-sessions）へFetch APIで非同期送信
+            fetch('/api/game-sessions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('サーバーエラーが発生しました');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 💡 Java側でのセーブデータ（GameSession）の作成に大成功した場合のみ、画面を切り替える！
+                console.log("Java側でセーブデータの自動生成に成功！ ID:", data.gameSessionId);
+
+                // 1. HOME画面のエリアから非表示にし、問題画面エリアを出現させる
+                document.getElementById('area-home').classList.remove('active');
+                document.getElementById('area-game').classList.add('active');
+                
+                // 2. 右側の演出表示をバトルモードへ変更し、生成された本物のセーブデータIDを表示
+                document.getElementById('effect-zone').innerText = `⚔️ SESSION ID [${data.gameSessionId}] START!! 回答を入力してください`;
+                document.getElementById('effect-zone').classList.add('effect-active');
+            })
+            .catch(error => {
+                console.error('通信失敗:', error);
+                alert('ゲームの開始に失敗しました。サーバーの状態を確認してください。');
+            });
         }
 
         function backToHome() {
