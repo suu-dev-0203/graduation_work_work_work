@@ -2,13 +2,13 @@
 package com.example.service;
 
 // [道具の準備] 別のフォルダにあるプログラムや、Javaの標準的な機能をこのファイルで使うために読み込んでいる
-import java.util.List;           // クイズの「データの箱（Question）」をここで使うために読み込んでいる
+import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired; // データの保存や取得を行う「データ操作の部品（Repository）」を読み込んでいる
-import org.springframework.stereotype.Service; // 別で作った部品を、ここに自動でドッキングさせるための機能を読み込んでいる
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import com.example.entity.Question; // このファイルが、データの受け渡しや加工を担当する「サービス」の役割であることを示すマーク
-import com.example.repository.QuestionRepository;                         // データを複数まとめて「1つのセット（リスト）」として扱うためのJavaの機能を読み込んでいる
+import com.example.entity.Question;
+import com.example.repository.QuestionRepository;
 
 // このファイルが、データ処理や仲介を行う「サービス」という役割のクラスであることをシステムに登録しているマーク
 @Service
@@ -18,9 +18,14 @@ public class QuestionService {
     @Autowired
     private QuestionRepository questionRepository;
 
-    // データベースにあるすべてのクイズデータを取得して、呼び出し元（Controller）にまとめて引き渡すための処理
+    //  ① もともとあった処理：データベースにあるすべてのクイズデータを取得する
     public List<Question> getAllQuestions() {
-        // データ操作部品にある標準機能「findAll（すべて見つける）」を使って、全クイズデータを取得してそのまま返している
         return questionRepository.findAll();
+    }
+
+    //  ② 【新規追加】指定された章のID（chapterId）に紐づく、本物のクイズデータだけを絞り込んで取得する処理
+    public List<Question> getQuestionsByChapter(Long chapterId) {
+        // ※ 最優先仕様（Source of Truth）に従い、リポジトリが用意している章IDでの検索機能を呼び出します
+        return questionRepository.findByChapter_ChapterId(chapterId);
     }
 }

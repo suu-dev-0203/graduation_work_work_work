@@ -30,7 +30,7 @@ public class GameSessionService {
         this.chapterRepository = chapterRepository;
     }
 
-    // 💡 ① 「ゲーム開始」が呼ばれたときに、1つのトランザクションでセーブデータを一括作成する
+    //  ① 「ゲーム開始」が呼ばれたときに、1つのトランザクションでセーブデータを一括作成する
     @Transactional
     public GameSession createSession(Long chapterId, int questionCount) {
         // 1. 指定された章が存在するか確認して取得
@@ -65,7 +65,7 @@ public class GameSessionService {
         return savedGame;
     }
 
-    // 💡 ② 画面から届いた正誤結果を元に、データベースのスコアを一括計算・更新する処理（ココを追加！）
+    //  ② 画面から届いた正誤結果を元に、データベースのスコアを一括計算・更新する処理（ココを追加！）
     @Transactional
     public Map<String, Object> processAnswer(Long gameSessionId, boolean isCorrect) {
         // 1. 対象のゲームセーブデータをデータベースから呼び出す

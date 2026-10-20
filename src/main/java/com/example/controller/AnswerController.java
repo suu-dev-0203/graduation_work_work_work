@@ -1,9 +1,14 @@
 package com.example.controller;
 
-import com.example.service.GameSessionService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.service.GameSessionService;
 
 @RestController
 @RequestMapping("/api/answers")
@@ -16,7 +21,7 @@ public class AnswerController {
         this.gameSessionService = gameSessionService;
     }
 
-    // 💡 選択肢がクリックされたときに「POST /api/answers」で非同期に呼ばれる処理
+    //  選択肢がクリックされたときに「POST /api/answers」で非同期に呼ばれる処理
     @PostMapping
     public ResponseEntity<?> checkAnswer(@RequestBody Map<String, Object> requestBody) {
         // 命名固定仕様（Source of Truth）に従ってJSONキーを厳密に読み取る
