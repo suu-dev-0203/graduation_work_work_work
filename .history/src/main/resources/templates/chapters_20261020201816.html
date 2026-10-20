@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Java Learning System</title>
+    <style>
+        /* === ① 画面全体のリセット（スクロール絶対禁止の盾） === */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100dvh; /* ブラウザの画面ぴったりに固定 */
+            overflow: hidden; /* スクロールバーを強制禁止 */
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #121214;
+            color: #ffffff;
+        }
+
+        /* === ② アプリ全体のコンテナ（左右分割 Flexbox） === */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* === ③ 左側パネル（横幅 45% 固定） === */
+        .left-panel {
+            width: 45%;
+            height: 100%;
+            background-color: #1a1a1e;
+            box-sizing: border-box;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #2a2a30;
+            position: relative; /* 内部パーツの絶対配置の基準 */
+        }
+
+        /* === ④ 状態ごとのエリア（最初は設定画面だけを見せる） === */
+        .state-area {
+            display: none; /* 基本は非表示にする */
+            flex-direction: column;
+            height: 100%;
+            gap: 20px;
+        }
+
+        /* activeクラスがついたエリアだけが画面に出現する仕組み */
+        .state-area.active {
+            display: flex;
+        }
+
+        /* === ⑤ 右側：ゲームエリア（横幅 55% 固定・状態維持） === */
+        .right-panel {
+            width: 55%;
+            height: 100%;
+            background-color: #0f0f11;
+            box-sizing: border-box;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* === ⑥ 装飾パーツ（スクロールさせないコンパクト設計） === */
+        h1, h2 {
+            font-size: 20px;
+            margin: 0;
+            color: #4af6c3; /* 綺麗なセーフティグリーン */
+        }
+        .stage-info {
+            font-size: 14px;
+            color: #aaaaaa;
+        }
+        .setting-section, .question-card {
+            background-color: #26262b;
+            padding: 16px;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        
+        /* 選択肢ボタンのスタイル（A〜Eの5択仕様） */
+        .choice-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+        .choice-button {
+            background-color: #32323a;
+            color: #ffffff;
+            border: 1px solid #44444c;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background-color 0.2s;
+        }
+        .choice-button:hover {
+            background-color: #44444c;
+        }
+
+        /* 下部に固定するボタン */
+        .bottom-button {
+            background-color: #4af6c3;
+            color: #121214;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: auto; /* 一番下へ押し下げる */
+            width: 100%;
+            text-align: center;
+        }
+        
+        .game-placeholder {
+            border: 2px dashed #4af6c3;
+            padding: 40px;
+            text-align: center;
+            border-radius: 12px;
+            color: #4af6c3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- ========================================================================= -->
+        <!-- 左側パネル：状態に応じて中身だけが入れ替わる（右側は一切動かさない） -->
+        <!-- ========================================================================= -->
+        <div class="left-panel">
+            
+            <!-- 【状態：HOME】ゲーム開始前の学習設定画面 -->
+            <div id="area-home" class="state-area active">
+                <h1>Java Learning System</h1>
+                
+                <div class="setting-section">
+                    <h3>1. 学習テーマ（Chapter）</h3>
+                    <ul>
+                        <li th:each="ch : ${chapters}" th:text="${ch.name}">第1章：Javaの基本</li>
+                    </ul>
+                </div>
+
+                <div class="setting-section">
+                    <h3>2. 出題方法</h3>
+                    <p>ランダム / 基礎 / コード読解</p>
+                </div>
+
+                <div class="setting-section">
+                    <h3>3. 問題数</h3>
+                    <p>5問 / 10問 / 15問 / 20問</p>
+                </div>
+
+                <!-- ボタンを押したらJavaScriptの「startGame()」を呼び出す -->
+                <button class="bottom-button" onclick="startGame()">ゲーム開始</button>
+            </div>
+
+            <!-- 【状態：ANSWERING】ゲーム開始後の問題エリア（正規A〜Eの5択仕様） -->
+            <div id="area-game" class="state-area">
+                <div class="stage-info">第1章 / Stage 1 / 第1問目 (全5問)</div>
+                <h2>問題文：Javaのソースコードをコンパイルした後に生成されるファイルはどれか？</h2>
+                
+                <!-- コードブロック（必要な問題のみ表示する枠） -->
+                <div class="question-card" style="font-family: monospace; background-color: #000000; color: #00ff00;">
+                    // [コード読解用テンプレート]<br>
+                    System.out.println("Hello World");
+                </div>
+
+                <!-- A〜Eの5択選択肢の一覧 -->
+                <ul class="choice-list">
+                    <li><button class="choice-button">A. .exeファイル</button></li>
+                    <li><button class="choice-button">B. .classファイル</button></li>
+                    <li><button class="choice-button">C. .javaファイル</button></li>
+                    <li><button class="choice-button">D. .txtファイル</button></li>
+                    <li><button class="choice-button">E. .binファイル</button></li>
+                </ul>
+
+                <button class="bottom-button" style="background-color: #ff5555; color: white;" onclick="backToHome()">一時停止して戻る（テスト用）</button>
+            </div>
+
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- 右側パネル：ゲームエリア（画面状態が変わっても、このエリアは常に右側に維持） -->
+        <!-- ========================================================================= -->
+        <div class="right-panel">
+            <div class="game-placeholder">
+                <h3> ゲームエリア </h3>
+                <p>プレイヤー  vs  敵</p>
+                <p id="game-status-text">状態: HOME画面を表示中</p>
+                <p>敵HP: 5 / Combo: 0 / Score: 0</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 画面制御スクリプト（スクロールを発生させずに左側だけを切り替える脳みそ） -->
+    <!-- ========================================================================= -->
+    <script>
+        //  「ゲーム開始」ボタンを押したときに動く処理
+        function startGame() {
+            // 1. HOME画面のエリアから「active」クラスを取り除いて非表示にする
+            document.getElementById('area-home').classList.remove('active');
+            
+            // 2. 問題画面のエリアに「active」クラスを付与して画面に出現させる
+            document.getElementById('area-game').classList.add('active');
+            
+            // 3. 右側のゲームエリアの状態テキストを書き換えて連動させる
+            document.getElementById('game-status-text').innerText = "状態: ⚔️ バトル進行中（回答待ち）";
+        }
+
+        //  「戻る」ボタンを押したときに動く処理（テスト確認用）
+        function backToHome() {
+            document.getElementById('area-game').classList.remove('active');
+            document.getElementById('area-home').classList.add('active');
+            document.getElementById('game-status-text').innerText = "状態: HOME画面を表示中";
+        }
+    </script>
+
+</body>
+</html>
