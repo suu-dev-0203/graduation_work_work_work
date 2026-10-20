@@ -212,47 +212,120 @@
             </div>
         </div>
     </div>
+    <!-- ========================================================================= -->
+    <!-- ⑥ おざわけん風・即時判定およびクイズ自動入れ替えシステム（JavaScript） -->
+    <!-- ========================================================================= -->
     <script>
-        // 現在のゲーム状態を管理するための初期値の設定
+        /* === 【第2分割】ゲーム状態と見えない引き出し（データ保存箱）の準備 === */
         let currentHp = 5;
         let currentScore = 0;
         let currentCombo = 0;
+        
+        // サーバーのJava窓口から送られてきた本物のクイズデータを一時的にしまっておくための空の引き出し（配列）だ
+        let localQuestions = [];
+        // プレイヤーが今何問目のクイズに挑戦しているかを数えるための数字の置き場所（0が最初の1問目を表す）だ
+        let currentQuestionIndex = 0;
 
-        // ゲーム開始ボタンが押されたときに左側をクイズ画面へ切り替える処理
+        /* === 【第3分割】裏側でAPIからクイズデータを吸い上げて画面を切り替える処理 === */
         function startGame() {
-            document.getElementById("area-home").classList.remove("active");
-            document.getElementById("area-game").classList.add("active");
-            document.getElementById("effect-zone").innerText = "⚔️ バトル開始！回答を選択してください";
+            // 先ほどJava側で作ったクイズ返却用APIの住所を指定してデータを引っ張ってくるFetch命令だ
+            fetch('/api/questions/chapter1')
+                // サーバーから通信が返ってきたらその中身をJavaScriptが読めるJSON形式のデータに変換する
+                .then(response => response.json())
+                // 変換が完了した本物のクイズデータの束（data）を引き出しにガチッと格納する
+                .then(data => {
+                    localQuestions = data;
+                    currentQuestionIndex = 0; // 問題のカウントを一番最初の1問目にリセットしている
+                    
+                    // 学習設定（HOME）のカードを非表示にしてクイズバトルのカードを出現させるクラス切り替え処理だ
+                    document.getElementById("area-home").classList.remove("active");
+                    document.getElementById("area-game").classList.add("active");
+                    
+                    // 下部のメッセージボードの文字をバトル開始のミントグリーンに光らせている
+                    const effectZone = document.getElementById("effect-zone");
+                    effectZone.classList.add("effect-active");
+                    effectZone.innerText = "⚔️ バトル開始！回答を選択してください";
+                    
+                    // 引き出しの中にクイズが無事に入っていれば最初の1問目を画面に描き出す処理を呼び出す
+                    if (localQuestions.length > 0) {
+                        renderQuestion();
+                    } else {
+                        document.getElementById("effect-zone").innerText = "⚠️ クイズデータがデータベースにありません";
+                    }
+                });
         }
 
-        // 正解のボタンが押されたときに敵のHPを右から1マスずつ削る処理
+        /* === 【第4分割】届いたクイズデータで画面の問題文と5つのボタンを自動上書きする処理 === */
+        function renderQuestion() {
+            // 引き出しの中から今解くべき現在の番号のクイズデータをピンポイントで取り出している
+            const q = localQuestions[currentQuestionIndex];
+            
+            // 画面上の進行度（何問目か）の文字を現在の番号に合わせて書き換えている（0番に1を足して1問目にする）
+            document.getElementById("stage-info").innerText = "第1章 / Stage 1 / 第" + (currentQuestionIndex + 1) + "問目 (全" + localQuestions.length + "問)";
+            // 画面上の一番大きな問題文のエリアの文字を本物の問題文へ自動で上書きしている
+            document.getElementById("question-text").innerText = q.questionText;
+            
+            // 画面内にあるA〜Eの5つの選択肢ボタンの文章を本物のクイズデータが持っている選択肢へ上書きしている
+            // 💡 Questionエンティティのフィールド名（choiceA、choiceB...）から本物の文字を流し込む
+            const buttons = document.querySelectorAll(".choice-list .choice-button");
+            buttons[0].innerText = "A. " + q.choiceA;
+            buttons[1].innerText = "B. " + q.choiceB;
+            buttons[2].innerText = "C. " + q.choiceC;
+            buttons[3].innerText = "D. " + q.choiceD;
+            buttons[4].innerText = "E. " + q.choiceE;
+            
+            // 下部のメッセージボードの文字を回答を待っている状態の文言に更新している
+            document.getElementById("effect-zone").innerText = "⚔️ 第" + (currentQuestionIndex + 1) + "問目！回答を選択してください";
+        }
+
+        // 正解のボタンが押されたときに敵の体力を削り次の問題の判定へ進める処理
         function testHit() {
             if (currentHp > 0) {
-                // 現在の体力に応じたブロックを見つけて消灯クラスを付与している
                 document.getElementById("hp" + currentHp).classList.add("empty");
                 currentHp = currentHp - 1;
                 currentScore = currentScore + 100;
                 currentCombo = currentCombo + 1;
                 
-                // 画面上のスコアとコンボの数字を即座に書き換えている
                 document.getElementById("score-val").innerText = currentScore;
                 document.getElementById("combo-val").innerText = currentCombo;
                 document.getElementById("effect-zone").innerText = "💥 クリティカルヒット！敵に1ダメージ！";
                 
-                // 5マスの体力をすべて削り切ったときの完全クリア演出
                 if (currentHp === 0) {
                     document.getElementById("effect-zone").innerText = "🎉 PERFECT STAGE CLEAR！";
                 }
+                
+                // 【第5分割】回答後に1.5秒のディレイを挟んで次の問題へ自動進捗させる処理を呼び出す
+                checkNextQuestion();
             }
         }
 
-        // 不正解のボタンが押されたときにコンボをゼロに戻しミス演出を出す処理
+        // 不正解のボタンが押されたときにコンボをゼロに戻し次の問題の判定へ進める処理
         function testMiss() {
             currentCombo = 0;
             document.getElementById("combo-val").innerText = currentCombo;
-            document.getElementById("effect-zone").style.color = "#ff3333";
             document.getElementById("effect-zone").innerText = "❌ MISS！コンボが途切れてしまった！";
+            
+            // 【第5分割】回答後に1.5秒のディレイを挟んで次の問題へ自動進捗させる処理を呼び出す
+            checkNextQuestion();
+        }
+
+        /* === 【第5分割】1.5秒のディレイを挟んで自動で次の問題へ進める処理 === */
+        function checkNextQuestion() {
+            // 問題番号のカウンターを1つ増やして次の問題の準備をする
+            currentQuestionIndex = currentQuestionIndex + 1;
+            
+            // まだ引き出しの中に次の方の問題が残っているか（全5問未満か）を判定している
+            if (currentQuestionIndex < localQuestions.length) {
+                // 1.5秒の待ち時間を挟んでから次の問題を画面に新しく自動描写している
+                setTimeout(renderQuestion, 1500);
+            } else {
+                // すべての問題を解き切った場合は1.5秒後にバトル終了のメッセージをボードに刻み込む
+                setTimeout(() => {
+                    document.getElementById("effect-zone").innerText = "🏁 全問のステージが終了しました！";
+                }, 1500);
+            }
         }
     </script>
+
 </body>
 </html>
