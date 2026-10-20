@@ -33,57 +33,169 @@
             display: flex;
             flex-direction: column;
             border-right: 2px solid #2a2a30;
-            position: relative; /* 内部パーツの絶対配置の基準 */
+            position: relative;
         }
 
-        /* === ④ 状態ごとのエリア（最初は設定画面だけを見せる） === */
         .state-area {
-            display: none; /* 基本は非表示にする */
+            display: none;
             flex-direction: column;
             height: 100%;
-            gap: 20px;
+            gap: 15px;
         }
 
-        /* activeクラスがついたエリアだけが画面に出現する仕組み */
         .state-area.active {
             display: flex;
         }
 
-        /* === ⑤ 右側：ゲームエリア（横幅 55% 固定・状態維持） === */
+        /* === ④ 右側：ゲームエリア（横幅 55% 固定） === */
         .right-panel {
             width: 55%;
             height: 100%;
-            background-color: #0f0f11;
+            background-color: #0c0c0e; 
             box-sizing: border-box;
             padding: 24px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
+            position: relative;
         }
 
-        /* === ⑥ 装飾パーツ（スクロールさせないコンパクト設計） === */
-        h1, h2 {
-            font-size: 20px;
-            margin: 0;
-            color: #4af6c3; /* 綺麗なセーフティグリーン */
+        /* ⚔️ ゲームエリア内の上部UI（Score, Combo, HP） ⚔️ */
+        .game-header-ui {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, #16161a 0%, #111114 100%);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid #22222a;
+            box-sizing: border-box;
         }
-        .stage-info {
+        
+        .ui-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .stat-score { color: #4af6c3; }
+        .stat-combo { color: #ffaa00; }
+
+        /* 💔 敵HPゲージ（必ず5マスの固定ブロック仕様） 💔 */
+        .enemy-hp-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .hp-label {
             font-size: 14px;
-            color: #aaaaaa;
+            font-weight: bold;
+            color: #ff5555;
         }
+        .hp-bar-slots {
+            display: flex;
+            gap: 4px;
+        }
+        .hp-slot {
+            width: 24px;
+            height: 14px;
+            background-color: #ff3333;
+            border-radius: 3px;
+            box-shadow: 0 0 8px #ff3333;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .hp-slot.empty {
+            background-color: #222226;
+            box-shadow: none;
+        }
+
+        /* 🏜️ 中央の戦闘フィールド（アリーナ） 🏜️ */
+        .battle-arena {
+            width: 100%;
+            flex-grow: 1;
+            margin: 20px 0;
+            background: radial-gradient(circle, #1a1a24 0%, #0c0c0e 70%);
+            border-radius: 12px;
+            border: 1px dashed #3a3a45;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        /* 💎 キャラクターボックス 💎 */
+        .character-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .player-avatar {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #00d2ff 0%, #0066ff 100%);
+            border: 2px solid #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 0 15px #00d2ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+        }
+        .enemy-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff0055 0%, #990022 100%);
+            border: 2px solid #ff5555;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #ff0055;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+        }
+        .char-label {
+            font-size: 12px;
+            font-weight: bold;
+            background-color: #16161a;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #33333b;
+        }
+
+        /* 💥 下部：ゲーム効果・演出通知テキスト 💥 */
+        .battle-effect-zone {
+            width: 100%;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #888899;
+            padding: 8px;
+            background-color: #111114;
+            border-radius: 6px;
+            border: 1px solid #1c1c22;
+            box-sizing: border-box;
+        }
+        .effect-active {
+            color: #4af6c3;
+            text-shadow: 0 0 10px #4af6c3;
+        }
+
+        /* ⑤ 左側装飾パーツのスタイル調整 */
+        h1, h2 { font-size: 20px; margin: 0; color: #4af6c3; }
+        .stage-info { font-size: 14px; color: #aaaaaa; }
         .setting-section, .question-card {
             background-color: #26262b;
             padding: 16px;
             border-radius: 8px;
             box-sizing: border-box;
         }
-        
-        /* 選択肢ボタンのスタイル（A〜Eの5択仕様） */
         .choice-list {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             padding: 0;
             margin: 0;
             list-style: none;
@@ -92,18 +204,14 @@
             background-color: #32323a;
             color: #ffffff;
             border: 1px solid #44444c;
-            padding: 12px;
+            padding: 10px 12px;
             border-radius: 6px;
             text-align: left;
             cursor: pointer;
-            font-size: 15px;
-            transition: background-color 0.2s;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
         }
-        .choice-button:hover {
-            background-color: #44444c;
-        }
-
-        /* 下部に固定するボタン */
         .bottom-button {
             background-color: #4af6c3;
             color: #121214;
@@ -113,17 +221,9 @@
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            margin-top: auto; /* 一番下へ押し下げる */
+            margin-top: auto;
             width: 100%;
             text-align: center;
-        }
-        
-        .game-placeholder {
-            border: 2px dashed #4af6c3;
-            padding: 40px;
-            text-align: center;
-            border-radius: 12px;
-            color: #4af6c3;
         }
     </style>
 </head>
@@ -132,7 +232,7 @@
     <div class="app-container">
 
         <!-- ========================================================================= -->
-        <!-- 左側パネル：状態に応じて中身だけが入れ替わる（右側は一切動かさない） -->
+        <!-- 左側パネル：状態に応じて中身だけが入れ替わる（横幅 45% 固定） -->
         <!-- ========================================================================= -->
         <div class="left-panel">
             
@@ -157,7 +257,6 @@
                     <p>5問 / 10問 / 15問 / 20問</p>
                 </div>
 
-                <!-- ボタンを押したらJavaScriptの「startGame()」を呼び出す -->
                 <button class="bottom-button" onclick="startGame()">ゲーム開始</button>
             </div>
 
@@ -166,61 +265,118 @@
                 <div class="stage-info">第1章 / Stage 1 / 第1問目 (全5問)</div>
                 <h2>問題文：Javaのソースコードをコンパイルした後に生成されるファイルはどれか？</h2>
                 
-                <!-- コードブロック（必要な問題のみ表示する枠） -->
                 <div class="question-card" style="font-family: monospace; background-color: #000000; color: #00ff00;">
                     // [コード読解用テンプレート]<br>
                     System.out.println("Hello World");
                 </div>
 
-                <!-- A〜Eの5択選択肢の一覧 -->
                 <ul class="choice-list">
-                    <li><button class="choice-button">A. .exeファイル</button></li>
-                    <li><button class="choice-button">B. .classファイル</button></li>
-                    <li><button class="choice-button">C. .javaファイル</button></li>
-                    <li><button class="choice-button">D. .txtファイル</button></li>
-                    <li><button class="choice-button">E. .binファイル</button></li>
+                    <li><button class="choice-button" onclick="testHit()">A. .exeファイル（テスト：攻撃）</button></li>
+                    <li><button class="choice-button" onclick="testMiss()">B. .classファイル（テスト：ミス）</button></li>
+                    <li><button class="choice-button" onclick="testHit()">C. .javaファイル</button></li>
+                    <li><button class="choice-button" onclick="testHit()">D. .txtファイル</button></li>
+                    <li><button class="choice-button" onclick="testHit()">E. .binファイル</button></li>
                 </ul>
 
-                <button class="bottom-button" style="background-color: #ff5555; color: white;" onclick="backToHome()">一時停止して戻る（テスト用）</button>
+                <button class="bottom-button" style="background-color: #ff5555; color: white;" onclick="backToHome()">一時停止して戻る</button>
             </div>
 
         </div>
-
         <!-- ========================================================================= -->
-        <!-- 右側パネル：ゲームエリア（画面状態が変わっても、このエリアは常に右側に維持） -->
+        <!-- 右側パネル：サイバーゲームエリア（横幅 55% 固定・修復完了） -->
         <!-- ========================================================================= -->
         <div class="right-panel">
-            <div class="game-placeholder">
-                <h3> ゲームエリア </h3>
-                <p>プレイヤー  vs  敵</p>
-                <p id="game-status-text">状態: HOME画面を表示中</p>
-                <p>敵HP: 5 / Combo: 0 / Score: 0</p>
+            
+            <!-- ① 上部ステータスUI：Score、Combo、そして5マスの敵HP -->
+            <div class="game-header-ui">
+                <div class="ui-stats">
+                    <span class="stat-score">SCORE: <span id="text-score">0</span></span>
+                    <span class="stat-combo">COMBO: <span id="text-combo">0</span></span>
+                </div>
+                
+                <!-- 敵HP：必ず5マスのブロック列（Source of Truth） -->
+                <div class="enemy-hp-container">
+                    <span class="hp-label">ENEMY HP</span>
+                    <div class="hp-bar-slots">
+                        <div id="hp-slot-1" class="hp-slot"></div>
+                        <div id="hp-slot-2" class="hp-slot"></div>
+                        <div id="hp-slot-3" class="hp-slot"></div>
+                        <div id="hp-slot-4" class="hp-slot"></div>
+                        <div id="hp-slot-5" class="hp-slot"></div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-    </div>
+            <!-- 🏜️ ② 中央の戦闘フィールド（アリーナ：ここにガチッと収まります） 🏜️ -->
+            <div class="battle-arena">
+                <div class="character-box">
+                    <div class="player-avatar">🧙</div>
+                    <span class="char-label">PLAYER</span>
+                </div>
+                
+                <div style="font-size: 24px; font-weight: bold; color: #3a3a45; font-style: italic;">VS</div>
+
+                <div class="character-box">
+                    <div class="enemy-avatar">🤖</div>
+                    <span class="char-label" style="color: #ff5555; border-color: #ff3333;">JAVA_ROBOT</span>
+                </div>
+            </div>
+
+            <!-- ③ 下部：ゲーム効果・演出通知テキスト -->
+            <div id="effect-zone" class="battle-effect-zone">
+                待機中: クエストを選択してください
+            </div>
+
+        </div> <!-- right-panelの閉じタグ -->
+
+    </div> <!-- app-containerの閉じタグ -->
 
     <!-- ========================================================================= -->
-    <!-- 画面制御スクリプト（スクロールを発生させずに左側だけを切り替える脳みそ） -->
+    <!-- 画面制御・演出用スクリプト（おざわけん風の即時反応脳みそ） -->
     <!-- ========================================================================= -->
     <script>
-        //  「ゲーム開始」ボタンを押したときに動く処理
+        let currentHp = 5;
+        let currentCombo = 0;
+        let currentScore = 0;
+
         function startGame() {
-            // 1. HOME画面のエリアから「active」クラスを取り除いて非表示にする
             document.getElementById('area-home').classList.remove('active');
-            
-            // 2. 問題画面のエリアに「active」クラスを付与して画面に出現させる
             document.getElementById('area-game').classList.add('active');
-            
-            // 3. 右側のゲームエリアの状態テキストを書き換えて連動させる
-            document.getElementById('game-status-text').innerText = "状態: ⚔️ バトル進行中（回答待ち）";
+            document.getElementById('effect-zone').innerText = "⚔️ BATTLE START!! 回答を入力してください";
+            document.getElementById('effect-zone').classList.add('effect-active');
         }
 
-        //  「戻る」ボタンを押したときに動く処理（テスト確認用）
         function backToHome() {
             document.getElementById('area-game').classList.remove('active');
             document.getElementById('area-home').classList.add('active');
-            document.getElementById('game-status-text').innerText = "状態: HOME画面を表示中";
+            document.getElementById('effect-zone').innerText = "待機中: クエストを選択してください";
+            document.getElementById('effect-zone').classList.remove('effect-active');
+        }
+
+        function testHit() {
+            if (currentHp > 0) {
+                // 敵のHPタンクを1マス空にする
+                document.getElementById(`hp-slot-${currentHp}`).classList.add('empty');
+                currentHp--;
+                
+                // コンボとスコアの加算
+                currentCombo++;
+                currentScore += 100;
+                
+                document.getElementById('text-combo').innerText = currentCombo;
+                document.getElementById('text-score').innerText = currentScore;
+                document.getElementById('effect-zone').innerText = `💥 HIT!! 敵に1ダメージ！ (Combo: ${currentCombo})`;
+                
+                if (currentHp === 0) {
+                    document.getElementById('effect-zone').innerText = "🏆 STAGE CLEAR!! PERFECT!! 🏆";
+                }
+            }
+        }
+
+        function testMiss() {
+            currentCombo = 0;
+            document.getElementById('text-combo').innerText = currentCombo;
+            document.getElementById('effect-zone').innerText = "❌ MISS!! コンボが途切れた！";
         }
     </script>
 
