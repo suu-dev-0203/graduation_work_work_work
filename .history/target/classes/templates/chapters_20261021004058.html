@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Java Learning System</title>
+    <style>
+        /* === ① 画面全体のリセット（スクロール絶対禁止の盾） === */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100dvh; /* ブラウザの画面ぴったりに固定 */
+            overflow: hidden; /* スクロールバーを強制禁止 */
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #121214;
+            color: #ffffff;
+        }
+
+        /* === ② アプリ全体のコンテナ（左右分割 Flexbox） === */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* === ③ 左側パネル（横幅 45% 固定） === */
+        .left-panel {
+            width: 45%;
+            height: 100%;
+            background-color: #1a1a1e;
+            box-sizing: border-box;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #2a2a30;
+            position: relative;
+        }
+
+        .state-area {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            gap: 15px;
+        }
+
+        .state-area.active {
+            display: flex;
+        }
+
+        /* === ④ 右側：ゲームエリア（横幅 55% 固定） === */
+        .right-panel {
+            width: 55%;
+            height: 100%;
+            background-color: #0c0c0e; 
+            box-sizing: border-box;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        /* ⚔️ ゲームエリア内の上部UI（Score, Combo, HP） ⚔️ */
+        .game-header-ui {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, #16161a 0%, #111114 100%);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid #22222a;
+            box-sizing: border-box;
+        }
+        
+        .ui-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .stat-score { color: #4af6c3; }
+        .stat-combo { color: #ffaa00; }
+
+        /* 💔 敵HPゲージ（必ず5マスの固定ブロック仕様） 💔 */
+        .enemy-hp-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .hp-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #ff5555;
+        }
+        .hp-bar-slots {
+            display: flex;
+            gap: 4px;
+        }
+        .hp-slot {
+            width: 24px;
+            height: 14px;
+            background-color: #ff3333;
+            border-radius: 3px;
+            box-shadow: 0 0 8px #ff3333;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .hp-slot.empty {
+            background-color: #222226;
+            box-shadow: none;
+        }
+
+        /* 🏜️ 中央の戦闘フィールド（アリーナ） 🏜️ */
+        .battle-arena {
+            width: 100%;
+            flex-grow: 1;
+            margin: 20px 0;
+            background: radial-gradient(circle, #1a1a24 0%, #0c0c0e 70%);
+            border-radius: 12px;
+            border: 1px dashed #3a3a45;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        /* 💎 キャラクターボックス 💎 */
+        .character-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .player-avatar {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #00d2ff 0%, #0066ff 100%);
+            border: 2px solid #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 0 15px #00d2ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+        }
+        .enemy-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff0055 0%, #990022 100%);
+            border: 2px solid #ff5555;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #ff0055;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+        }
+        .char-label {
+            font-size: 12px;
+            font-weight: bold;
+            background-color: #16161a;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #33333b;
+        }
+
+        /* 💥 下部：ゲーム効果・演出通知テキスト 💥 */
+        .battle-effect-zone {
+            width: 100%;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #888899;
+            padding: 8px;
+            background-color: #111114;
+            border-radius: 6px;
+            border: 1px solid #1c1c22;
+            box-sizing: border-box;
+        }
+        .effect-active {
+            color: #4af6c3;
+            text-shadow: 0 0 10px #4af6c3;
+        }
+
+        /* ⑤ 左側装飾パーツのスタイル調整 */
+        h1, h2 { font-size: 20px; margin: 0; color: #4af6c3; }
+        .stage-info { font-size: 14px; color: #aaaaaa; }
+        .setting-section, .question-card {
+            background-color: #26262b;
+            padding: 16px;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        .choice-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+        .choice-button {
+            background-color: #32323a;
+            color: #ffffff;
+            border: 1px solid #44444c;
+            padding: 10px 12px;
+            border-radius: 6px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .bottom-button {
+            background-color: #4af6c3;
+            color: #121214;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: auto;
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- ========================================================================= -->
+        <!-- 左側パネル：状態に応じて中身だけが入れ替わる（横幅 45% 固定） -->
+        <!-- ========================================================================= -->
+        <div class="left-panel">
+            
+            <!-- 【状態：HOME】ゲーム開始前の学習設定画面 -->
+            <div id="area-home" class="state-area active">
+                <h1>Java Learning System</h1>
+                
+                <div class="setting-section">
+                    <h3>1. 学習テーマ（Chapter）</h3>
+                    <ul>
+                        <li th:each="ch : ${chapters}" th:text="${ch.name}">第1章：Javaの基本</li>
+                    </ul>
+                </div>
+
+                <div class="setting-section">
+                    <h3>2. 出題方法</h3>
+                    <p>ランダム / 基礎 / コード読解</p>
+                </div>
+
+                <div class="setting-section">
+                    <h3>3. 問題数</h3>
+                    <p>5問 / 10問 / 15問 / 20問</p>
+                </div>
+
+                <button class="bottom-button" onclick="startGame()">ゲーム開始</button>
+            </div>
+
+            <!-- 【状態：ANSWERING】ゲーム開始後の問題エリア（正規A〜Eの5択仕様） -->
+            <div id="area-game" class="state-area">
+                <div class="stage-info">第1章 / Stage 1 / 第1問目 (全5問)</div>
+                            <!-- ⏱️ 制限時間タイマーUI（おざわけん風カウントダウン） ⏱️ -->
+            <div class="timer-container" style="background-color: #222226; border: 1px solid #444; border-radius: 6px; padding: 10px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-weight: bold; color: #ff5555; font-size: 14px;">TIME LIMIT:</span>
+                <!-- カウントダウンされる数字（秒） -->
+                <span id="timer-text" style="font-weight: bold; color: #ff3333; font-size: 18px; min-width: 40px; text-shadow: 0 0 8px #ff3333;">10.0s</span>
+                <!-- 視覚的に減っていくゲージバー -->
+                <div style="flex-grow: 1; background-color: #111; height: 10px; border-radius: 5px; overflow: hidden;">
+                    <div id="timer-bar" style="background-color: #ff3333; height: 100%; width: 100%; transition: width 0.1s linear; box-shadow: 0 0 8px #ff3333;"></div>
+                </div>
+            
+                <h2>問題文：Javaのソースコードをコンパイルした後に生成されるファイルはどれか？</h2>
+                
+                <div class="question-card" style="font-family: monospace; background-color: #000000; color: #00ff00;">
+                    // [コード読解用テンプレート]<br>
+                    System.out.println("Hello World");
+                </div>
+
+                <ul class="choice-list">
+                    <li><button class="choice-button" onclick="testHit()">A. .exeファイル（テスト：攻撃）</button></li>
+                    <li><button class="choice-button" onclick="testMiss()">B. .classファイル（テスト：ミス）</button></li>
+                    <li><button class="choice-button" onclick="testHit()">C. .javaファイル</button></li>
+                    <li><button class="choice-button" onclick="testHit()">D. .txtファイル</button></li>
+                    <li><button class="choice-button" onclick="testHit()">E. .binファイル</button></li>
+                </ul>
+
+                <button class="bottom-button" style="background-color: #ff5555; color: white;" onclick="backToHome()">一時停止して戻る</button>
+            </div>
+
+        </div>
+        <!-- ========================================================================= -->
+        <!-- 右側パネル：サイバーゲームエリア（横幅 55% 固定・修復完了） -->
+        <!-- ========================================================================= -->
+        <div class="right-panel">
+            
+            <!-- ① 上部ステータスUI：Score、Combo、そして5マスの敵HP -->
+            <div class="game-header-ui">
+                <div class="ui-stats">
+                    <span class="stat-score">SCORE: <span id="text-score">0</span></span>
+                    <span class="stat-combo">COMBO: <span id="text-combo">0</span></span>
+                </div>
+                
+                <!-- 敵HP：必ず5マスのブロック列（Source of Truth） -->
+                <div class="enemy-hp-container">
+                    <span class="hp-label">ENEMY HP</span>
+                    <div class="hp-bar-slots">
+                        <div id="hp-slot-1" class="hp-slot"></div>
+                        <div id="hp-slot-2" class="hp-slot"></div>
+                        <div id="hp-slot-3" class="hp-slot"></div>
+                        <div id="hp-slot-4" class="hp-slot"></div>
+                        <div id="hp-slot-5" class="hp-slot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🏜️ ② 中央の戦闘フィールド（アリーナ：ここにガチッと収まります） 🏜️ -->
+            <div class="battle-arena">
+                <div class="character-box">
+                    <div class="player-avatar">🧙</div>
+                    <span class="char-label">PLAYER</span>
+                </div>
+                
+                <div style="font-size: 24px; font-weight: bold; color: #3a3a45; font-style: italic;">VS</div>
+
+                <div class="character-box">
+                    <div class="enemy-avatar">🤖</div>
+                    <span class="char-label" style="color: #ff5555; border-color: #ff3333;">JAVA_ROBOT</span>
+                </div>
+            </div>
+
+            <!-- ③ 下部：ゲーム効果・演出通知テキスト -->
+            <div id="effect-zone" class="battle-effect-zone">
+                待機中: クエストを選択してください
+            </div>
+
+        </div> <!-- right-panelの閉じタグ -->
+
+    </div> <!-- app-containerの閉じタグ -->
+
+    <!-- ========================================================================= -->
+    <!-- 画面制御・演出用スクリプト（おざわけん風の即時反応脳みそ）サーバー正誤判定・リアルタイムタイマー同期スクリプト -->
+    <!-- ========================================================================= -->
+    <script>
+        // 🔮 ゲームの進行を管理するための共通の変数（箱）
+        let activeGameSessionId = null; // Javaから届いた本物のセーブデータ出席番号を記憶する箱
+        let currentHp = 5;              // 敵の残り体力を数える箱（初期値は5マス）
+        let currentCombo = 0;           // 現在の連続正解コンボ数を数える箱
+        let serverQuestions = [];       // データベースから届いた本物のクイズ（5問分）をキープする箱
+        let currentQuestionIndex = 0;   // 現在、何問目のクイズを解いているか（0から数えて4問目まで）
+
+        // ⏱️ タイマーをリアルタイムで動かすための変数
+        let countdownTimer = null;      // 10秒の時計を動かしたり止めたりするための記録用
+        let timeLeft = 10.0;           // 制限時間（1問につき10.0秒からスタート）
+
+        // 💡 ① 【ゲーム開始】ボタンを押したときにJavaのAPIを呼び出してセーブデータとクイズを作る処理
+        function startGame() {
+            // 命名固定仕様（Source of Truth）に完全準拠した設定データ
+            const requestData = {
+                chapterId: 1,      // 第1章のクイズを指定
+                questionCount: 5   // 出題数は5問固定
+            };
+
+            // 1. まずはJavaの窓口へ「新しいセーブデータを作って！」と非同期で頼む（POST通信）
+            fetch('/api/game-sessions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) { throw new Error('サーバーエラーが発生しました'); }
+                return response.json();
+            })
+            .then(data => {
+                // サーバーで生成された本物のセーブデータIDを記憶する
+                activeGameSessionId = data.gameSessionId;
+                currentHp = 5;            // 敵のHPを5に満タンリセット
+                currentCombo = 0;         // コンボ数を0にリセット
+                currentQuestionIndex = 0; // 出題順を1問目にリセット
+
+                // 2. 同時にJava側からデータベースにある「本物の5択クイズ一覧」を引っ張ってくる（GET通信）
+                return fetch(`/api/questions?chapterId=${requestData.chapterId}`);
+            })
+            .then(response => {
+                if (!response.ok) { throw new Error('クイズデータの取得に失敗しました'); }
+                return response.json();
+            })
+            .then(questions => {
+                serverQuestions = questions; // 届いた本物のクイズデータを配列へガチッと記憶
+
+                // 1画面完結レイアウトを保ったまま、設定画面を非表示にしてクイズバトル画面を出現させる
+                document.getElementById('area-home').classList.remove('active');
+                document.getElementById('area-game').classList.add('active');
+                
+                // 3. 準備が整ったので、最初（1問目）の本物のクイズを画面に描写する
+                renderQuestion();
+            })
+            .catch(error => {
+                console.error('通信失敗:', error);
+                alert('ゲームの開始に失敗しました。サーバーの起動状態を確認してください。');
+            });
+        }
+
+        // 💡 ② 【クイズの描画】Javaから届いた本物の問題文と5択テキストを画面に流し込む処理
+        function renderQuestion() {
+            // クイズデータが空っぽ、または全5問を解き終わっている場合は処理を中断する
+            if (serverQuestions.length === 0 || currentQuestionIndex >= serverQuestions.length) {
+                return;
+            }
+
+            // 現在解くべき問題のデータを配列から1件取り出す
+            const currentQ = serverQuestions[currentQuestionIndex];
+
+            // 1. 上部の進行度テキストを本物の文字へ書き換え
+            document.querySelector('.stage-info').innerText = `第1章 / Stage 1 / 第${currentQuestionIndex + 1}問目 (全5問)`;
+
+            // 2. 中央の本物の問題文タイトルを書き換え
+            document.querySelector('#area-game h2').innerText = `問題：${currentQ.questionText}`;
+
+            // 3. 5択の選択肢ボタンの中身を、データベースの本物の文字へ1つずつ完全入れ替え
+            const choiceButtons = document.querySelectorAll('.choice-button');
+            currentQ.choices.forEach((choice, idx) => {
+                if (choiceButtons[idx]) {
+                    // 例: 「A. .exeファイル」のように、アルファベットと本物の文字を綺麗にドッキング
+                    choiceButtons[idx].innerText = `${choice.letter}. ${choice.text}`;
+                    choiceButtons[idx].disabled = false; // 前の問題でロックされていたボタンを解除する
+                }
+            });
+
+            // ⏱️ クイズの画面が新しく切り替わったので、10秒タイマーをリセットして新しく始動させる！
+            startQuestionTimer();
+        }
+
+        // ⏱️ ③ 【タイマーの始動】10秒間をミリ秒単位でリアルタイムに削っていくカウントダウン処理
+        function startQuestionTimer() {
+            // すでに動いているタイマーの時計があれば、二重で動かないように一度完全にストップさせる
+            clearInterval(countdownTimer);
+            timeLeft = 10.0; // 制限時間をきっちり10.0秒に戻す
+            
+            // タイマーの見た目（文字と赤いゲージバー）を100%の満タン状態に戻す
+            document.getElementById('timer-text').innerText = "10.0s";
+            document.getElementById('timer-bar').style.width = "100%";
+            document.getElementById('timer-bar').style.backgroundColor = "#ff3333";
+
+            // 0.1秒（100ミリ秒）が経過するごとに、時間を0.1秒ずつ削っていくリアルタイムループを開始
+            countdownTimer = setInterval(() => {
+                timeLeft -= 0.1;
+                
+                // 10秒が完全に経過して、時間切れ（ゼロ）になった場合の判定
+                if (timeLeft <= 0) {
+                    timeLeft = 0;
+                    clearInterval(countdownTimer); // タイマーの時計を停止
+                    handleTimeOut();               // 時間切れ専用のペナルティ処理を呼び出す
+                }
+
+                // 1画面完結を維持したまま、数字のテキストとゲージバーの横幅（%）をミリ秒単位で滑らかに縮小更新
+                document.getElementById('timer-text').innerText = `${timeLeft.toFixed(1)}s`;
+                document.getElementById('timer-bar').style.width = `${(timeLeft / 10.0) * 100}%`;
+                
+                // 残り時間が5秒以下、3秒以下になったら、ゲージの色を変えてハラハラ感を出す演出
+                if (timeLeft <= 3.0) {
+                    document.getElementById('timer-bar').style.backgroundColor = "#ff0000"; // 3秒以下は赤色
+                } else if (timeLeft <= 5.0) {
+                    document.getElementById('timer-bar').style.backgroundColor = "#ffaa00"; // 5秒以下はオレンジ色
+                }
+            }, 100);
+        }
+
+        // 💥 ④ 【回答の送信】A〜Eのいずれかのボタンが押されたときの本物の正誤判定通信
+        function submitAnswer(choiceLetter) {
+            if (activeGameSessionId === null) return;
+
+            // ユーザーが選択肢をクリックした瞬間に、タイマーのカウントダウンをピタッと止める（おざわけん仕様）
+            clearInterval(countdownTimer);
+
+            // 通信中の連続クリックによる誤作動を防ぐため、5つのボタンを一時的にロックして押せなくする
+            document.querySelectorAll('.choice-button').forEach(btn => btn.disabled = true);
+
+            // 命名固定仕様（Source of Truth）に準拠した判定用のデータセット
+            const answerPayload = {
+                gameSessionId: activeGameSessionId,
+                selectedChoice: choiceLetter // 画面でクリックされた文字（'A'〜'E'）
+            };
+
+            // Javaの判定窓口（POST /api/answers）へデータを非同期で弾丸送信！
+            fetch('/api/answers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(answerPayload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Java側で計算された本物の正誤結果を、画面を1ミリもスクロールさせずにリアルタイム反映！
+                if (data.isCorrect) {
+                    // 正解の場合：敵のHPブロックを右から1つ消灯させる（空っぽにする）
+                    if (currentHp > 0) {
+                        document.getElementById(`hp-slot-${currentHp}`).classList.add('empty');
+                        currentHp--;
+                        currentCombo++; // コンボ数を1増やす
+                    }
+                } else {
+                    // 不正解の場合：コンボ数を0にリセット
+                    currentCombo = 0;
+                }
+
+                // 画面に表示されている数字（ScoreとCombo）を最新のデータにリアルタイム書き換え
+                document.getElementById('text-score').innerText = data.score;
+                document.getElementById('text-combo').innerText = currentCombo;
+                
+                // 下部のネオン演出ゾーンへ、Javaが生成した本物のバトルログテキストを表示
+                const effectZone = document.getElementById('effect-zone');
+                effectZone.innerText = `${data.effectMessage} (Combo: ${currentCombo})`;
+                
+                // もしも敵の体力が0（全問正解）になったら、ステージクリアの文字を表示して終了
+                if (currentHp === 0) {
+                    effectZone.innerText = "🏆 STAGE CLEAR!! PERFECT!! 🏆";
+                    effectZone.style.color = "#ffaa00";
+                    return; 
+                }
+
+                // 💡 正誤判定のメッセージを見せたあと、1.5秒待ってから自動で次のクイズへとシュッと切り替える
+                currentQuestionIndex++;
+                if (currentQuestionIndex < serverQuestions.length) {
+                    setTimeout(renderQuestion, 1500); // 1.5秒の猶予を持たせて次問を流し込む
+                } else {
+                    setTimeout(() => { effectZone.innerText = "🏁 全5問のステージが終了しました！"; }, 1500);
+                }
+            })
+            .catch(error => console.error('通信失敗:', error));
+        }
+
+        // ⏳ ⑤ 【時間切れ処理】10秒間ボタン入力がなかった場合の自動ペナルティ動作
+        function handleTimeOut() {
+            currentCombo = 0; // 連続コンボ数をペナルティとして強制的に0にリセット
+            document.getElementById('text-combo').innerText = currentCombo;
+            
+            // 考える時間を終了させるため、5つのボタンをすべてロックして押せなくする
+            document.querySelectorAll('.choice-button').forEach(btn => btn.disabled = true);
+
+            // 下部の演出ゾーンへ時間切れのテキストを表示
+            const effectZone = document.getElementById('effect-zone');
+            effectZone.innerText = "⏰ TIME OUT!! 時間切れペナルティ！コンボ強制終了！";
+            effectZone.style.color = "#ff5555";
+
+            // 回答ボタンを押した時と同様に、1.5秒のメッセージを見せた後、次の問題へ自動スライド進回
+            currentQuestionIndex++;
+            if (currentQuestionIndex < serverQuestions.length) {
+                setTimeout(renderQuestion, 1500); // 1.5秒待って次のクイズへ切り替え
+            } else {
+                setTimeout(() => { effectZone.innerText = "🏁 全5問のステージが終了しました！"; }, 1500);
+            }
+        }
+
+        // 💡 ⑥ 【一時停止して戻る】処理
+        function backToHome() {
+            clearInterval(countdownTimer); // 戻るボタンが押されたら、動いているタイマーの時計を完全にストップさせる
+            document.getElementById('area-game').classList.remove('active');
+            document.getElementById('area-home').classList.add('active');
+            document.getElementById('effect-zone').innerText = "待機中: クエストを選択してください";
+            document.getElementById('effect-zone').classList.remove('effect-active');
+        }
+    </script>
+
+</body>
+</html>

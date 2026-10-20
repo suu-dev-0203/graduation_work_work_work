@@ -1,0 +1,10 @@
+[33mbc25850[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat: QuestionRepositoryにfindByChapter_ChapterIdメソッドを追加しビルドエラーを消去
+[33m3192383[m feat: 正誤判定REST APIの実装および新規5ファイルの具体的な役割定義ログを追記
+[33m6e1598c[m docs: DEVELOPMENT_LOG.mdに新規作成した全5ファイル（Repo/Service/Controller）の役割とJPAリレーション理由を決定版として詳細記録
+[33mbfdb29a[m fix: 右側ゲームエリアに5マスHPとアリーナを肉付け拡張し、タグはみ出しバグの修復と正誤即時連動UIを完成
+[33m3eb4658[m feat: JavaScriptによるスクロールなしの左右分割パネル状態切り替え機能を追加（A〜Eの5択仕様）
+[33mf2fa517[m docs: DEVELOPMENT_LOG.mdにスクロールなし左右分割HOME画面の開通記録を詳細に追記
+[33mc1301ec[m fix: 学習ゲームの問題バンク修正と表示確認
+[33m4739d63[m fix: 学習ゲームの問題バンク修正と表示確認
+[33md19a759[m refactor: 起動クラスを掃除しデータ自動投入を初期化クラスへ完全一本化、ログ更新
+[33md8fe424[m feat: 第1章5問の一括自動投入クラスを作成し開通、ログを更新
