@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseBody; //  データをJSON形式で返すための道具を新しく読み込んでいます
 
 import com.example.entity.Question;
@@ -38,11 +39,12 @@ public class QuestionController {
     // =========================================================================
     //  【ここから新規追加】画面のJavaScriptから呼び出される本物のクイズデータ返却API
     // =========================================================================
-    @GetMapping("/api/questions/chapter1") // ブラウザの裏側で「/api/questions/chapter1」にアクセスされたときに動く
+    @GetMapping("/api/questions/chapter/{chapterId}") // ブラウザの裏側で「/api/questions/chapter/{chapterId}」にアクセスされたときに動く
     @ResponseBody // HTML画面ではなく、クイズのデータ（JSON）をそのままお行儀よく返却するマークだ
-    public List<Question> getChapter1QuestionsJson() {
+    public List<Question> getQuestionsByChapter(@PathVariable Long chapterId) {
         
-        // サービス部品を呼び出して、データベースから取得した第1章のクイズの束をそのまま画面のJavaScriptへ返している
-        return questionService.getAllQuestions();
+        // サービス部品を呼び出して、データベースから取得した{chapterId}章のクイズの束をそのまま画面のJavaScriptへ返している
+        return questionService.getQuestionsByChapter(chapterId);
+
     }
 } 

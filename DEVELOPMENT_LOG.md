@@ -1189,3 +1189,153 @@ JavaScriptとCSSによる「スクロールレス画面状態切り替え」の�
 ###  学んだこと
 - 画面を一切リロード（再読み込み）させずに裏側でデータだけをシュッと入れ替えることで、最優先仕様である「スクロールレスでテンポが気持ちいいゲーム性」が極限まで高まることを目視で確認できた。
 - Javaのコントローラー（データを配る係）と、JavaScriptのFetch（データを貰って画面に塗る係）がガチッと手を結んだときの感動を学んだ。
+
+  
+
+## 2026-10-21：開発環境の調査・Mavenの起動確認とコンパイル成功
+
+### 1. 作業の目的
+
+Java Learning Systemの開発を継続するため、Mavenの実行環境を調査し、プロジェクトのコンパイルが正常に完了することを確認した。
+
+当初、PowerShellで `mvn clean compile` を実行すると、`mvn` コマンドが認識されない問題が発生していた。そのため、Javaのインストール先、環境変数 `JAVA_HOME`、Maven本体の保存場所を順番に確認した。
+
+### 2. 発生していた問題と原因調査
+
+#### 2-1. Mavenコマンドが認識されない
+
+次のコマンドを実行したが、PowerShellで `mvn` が認識されなかった。
+
+```powershell
+mvn clean compile
+```
+
+調査の結果、プロジェクト内には `mvnw.cmd` が存在せず、`mvn` コマンドも通常のコマンドとして実行できない状態だった。
+
+一方、ユーザーのホームディレクトリ内にMaven本体が保存されていることを確認した。
+
+```text
+C:\Users\0501JP\.m2\wrapper\dists\apache-maven-3.9.16\
+```
+
+このため、新しくMavenをインストールするのではなく、保存済みのMaven本体を直接実行する方針とした。
+
+#### 2-2. Javaのインストール先と環境変数の不一致
+
+次のコマンドでJavaのバージョンを確認した。
+
+```powershell
+java -version
+javac -version
+```
+
+確認結果は以下のとおり。
+
+- Java：25.0.3
+- Javaコンパイラ：25.0.3
+- Javaのインストール先：`C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot`
+
+一方、環境変数 `JAVA_HOME` は `C:\JDK-21` を指していたが、指定されたフォルダーは存在しなかった。
+
+そのため、Mavenの起動時にJavaの参照先が正しく認識されず、次のエラーが発生した。
+
+```text
+The JAVA_HOME environment variable is not defined correctly,
+this environment variable is needed to run this program.
+```
+
+### 3. JAVA_HOMEの修正とMavenの起動確認
+
+Windows全体の環境変数は変更せず、現在開いているPowerShellのセッション内で `JAVA_HOME` を一時的に修正した。
+
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot"
+```
+
+次のコマンドでJava実行ファイルの存在を確認した。
+
+```powershell
+Test-Path "$env:JAVA_HOME\bin\java.exe"
+```
+
+結果は `True` となり、Javaの参照先が正しいことを確認した。
+
+続いて、保存済みのMaven本体を直接実行した。
+
+```powershell
+$maven = Get-ChildItem "$env:USERPROFILE\.m2\wrapper\dists\apache-maven-3.9.16" -Directory |
+    Select-Object -First 1
+
+& "$($maven.FullName)\bin\mvn.cmd" -version
+```
+
+実行結果から、以下を確認した。
+
+- Maven：3.9.16
+- Java：25.0.3
+- OS：Windows 11
+
+これにより、Mavenが正常に起動することを確認した。
+
+### 4. プロジェクトのコンパイル
+
+Mavenの起動確認後、プロジェクトのルートディレクトリで次のコマンドを実行した。
+
+```powershell
+& "$($maven.FullName)\bin\mvn.cmd" clean compile
+```
+
+`clean` で既存のビルド成果物を削除した後、`compile` でJavaソースコードをコンパイルした。
+
+#### 実行結果
+
+```text
+Compiling 26 source files with javac [debug release 17] to target\classes
+
+BUILD SUCCESS
+
+Total time: 1.958 s
+```
+
+**コンパイル結果：成功**
+
+| 確認項目 | 結果 |
+|---|---|
+| Maven | 3.9.16 |
+| 実行環境のJava | 25.0.3 |
+| コンパイル対象 | Javaソースコード26ファイル |
+| コンパイル設定 | Java 17（`release 17`） |
+| 処理時間 | 約1.958秒 |
+| ビルド結果 | `BUILD SUCCESS` |
+
+プロジェクトの `pom.xml` では Java 17が指定されている。今回のビルドログでも `release 17` が確認でき、Java 17向けのコンパイルが正常に完了した。
+
+### 5. 今回の作業で確認できたこと
+
+- Mavenコマンドが認識されない原因を調査した。
+- Javaの実際のインストール先と、誤った `JAVA_HOME` の設定を特定した。
+- PowerShellのセッション内で `JAVA_HOME` を修正した。
+- 保存済みのMaven 3.9.16を直接実行できるようにした。
+- `mvn clean compile` 相当の処理で、Javaソースコード26ファイルのコンパイルに成功した。
+
+なお、今回の環境変数の変更は現在のPowerShellのセッション内だけに適用される。PowerShellを閉じて開き直した場合は、必要に応じて再設定する。
+
+また、コンパイル成功はソースコードのコンパイルが完了したことを示すものであり、アプリケーションの起動、画面表示、データベース接続、APIの動作まで確認したものではない。
+
+### 6. 今回の作業で学んだこと
+
+Javaのソースコードに問題がなくても、環境変数やビルドツールの設定が原因で開発コマンドを実行できない場合がある。
+
+今回の作業では、エラーメッセージを確認し、Javaのインストール先、`JAVA_HOME`、Maven本体の保存場所を順番に調査することで、問題を切り分けて解決した。
+
+また、`mvn clean compile` によって、既存のビルド成果物を削除した状態から再コンパイルできることを確認した。
+
+### 7. 次回の作業予定
+
+1. Spring Bootアプリケーションを起動する。
+2. ブラウザから学習画面を表示できるか確認する。
+3. 章別問題取得API `/api/questions/chapter/{chapterId}` の動作を確認する。
+4. 章IDに応じて正しい問題が取得できるか検証する。
+5. 正誤判定、敵のHP、スコア、コンボなど、ゲームの主要機能を実際に操作して確認する。
+6. 動作確認の結果と必要な修正内容を本ファイルに追記する。
+
