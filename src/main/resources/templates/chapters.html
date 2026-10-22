@@ -259,16 +259,26 @@
             // データベースから受け取った問題文を表示する
             document.getElementById("question-text").innerText = q.questionText;
 
-            // 問題画面（area-game）の中にある選択肢ボタンをすべて取得する
-            // HTMLでは専用クラスを使っていないため、親となる画面領域から取得する
+            // 問題画面の中にある選択肢ボタン（A～E）を取得する
             const buttons = document.querySelectorAll("#area-game button");
 
-            // 取得した問題データのA～Eを、それぞれ対応するボタンに表示する
-            buttons[0].innerText = "A. " + q.choiceA;
-            buttons[1].innerText = "B. " + q.choiceB;
-            buttons[2].innerText = "C. " + q.choiceC;
-            buttons[3].innerText = "D. " + q.choiceD;
-            buttons[4].innerText = "E. " + q.choiceE;
+            // APIから受け取った選択肢を、A～Eの順番で配列にまとめる
+            const choices = [q.choiceA, q.choiceB, q.choiceC, q.choiceD, q.choiceE];
+            const choiceLabels = ["A", "B", "C", "D", "E"];
+
+            // 問題によって選択肢の数が違うため、値があるボタンだけ表示する
+            buttons.forEach((button, index) => {
+                const choice = choices[index];
+
+                // null、undefined、空文字は未登録の選択肢として扱う
+                if (choice === null || choice === undefined || String(choice).trim() === "") {
+                    button.style.display = "none";
+                } else {
+                    // 次の問題に選択肢がある場合は、ボタンを再表示する
+                    button.style.display = "";
+                    button.innerText = choiceLabels[index] + ". " + choice;
+                }
+            });
 
             // 回答を待っていることをメッセージ欄に表示する
             document.getElementById("effect-zone").innerText = "⚔️ 第" + (currentQuestionIndex + 1) + "問目！回答を選択してください";
