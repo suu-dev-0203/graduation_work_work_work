@@ -169,12 +169,12 @@
                 <!-- 選択肢を縦並びの箇条書き形式で配置するエリア -->
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <!-- 選択肢Aのボタンで正解テスト用の処理を紐付けている -->
-                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="testHit()">A. ソースコードをバイトコードにコンパイルしJVMで実行する</button>
-                    <!-- 選択肢Bのボタンで不正解テスト用の処理を紐付けている -->
-                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="testMiss()">B. ソースコードをOSが直接実行する</button>
-                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="testMiss()">C. ソースコードを必ずC言語へ変換して実行する</button>
-                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="testMiss()">D. コンパイルせずJVMも使わずに実行する</button>
-                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="testMiss()">E. 実行前にソースコードを手作業で機械語へ書き換える</button>
+                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="checkAnswer(0)">A. 選択肢A</button>
+                    <!-- 正誤判定では、押した選択肢の番号をJavaScriptへ渡す -->
+                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="checkAnswer(1)">B. 選択肢B</button>
+                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="checkAnswer(2)">C. 選択肢C</button>
+                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="checkAnswer(3)">D. 選択肢D</button>
+                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="checkAnswer(4)">E. 選択肢E</button>
                 </div>
             </div>
         </div>
@@ -231,6 +231,21 @@
                     localQuestions = data;
                     currentQuestionIndex = 0;
 
+                    // 新しくゲームを開始するときは、スコア・コンボ・敵HPを初期状態へ戻す
+                    currentHp = 5;
+                    currentScore = 0;
+                    currentCombo = 0;
+                    answerLocked = false;
+
+                    // 敵HPの5マスをすべて表示状態に戻す
+                    for (let i = 1; i <= 5; i++) {
+                        document.getElementById("hp" + i).classList.remove("empty");
+                    }
+
+                    // スコアとコンボの表示も初期化する
+                    document.getElementById("score-val").innerText = currentScore;
+                    document.getElementById("combo-val").innerText = currentCombo;
+
                     // HOME画面を隠し、ゲームの問題画面を表示する
                     document.getElementById("area-home").classList.remove("active");
                     document.getElementById("area-game").classList.add("active");
@@ -284,34 +299,72 @@
             document.getElementById("effect-zone").innerText = "⚔️ 第" + (currentQuestionIndex + 1) + "問目！回答を選択してください";
         }
 
-        // 正解ボタンが押されたとき、敵HP・スコア・コンボを更新する（現在は仮の正解処理）
-        function testHit() {
-            if (currentHp > 0) {
-                document.getElementById("hp" + currentHp).classList.add("empty");
-                currentHp = currentHp - 1;
+        // 回答処理中かどうかを管理する変数
+        // 連続クリックで1問に複数回の判定が発生することを防ぐ
+        let answerLocked = false;
+
+        // 選択肢がクリックされたとき、問題データのcorrectChoiceIndexと比較して正誤判定する
+        function checkAnswer(selectedIndex) {
+            // 回答後の待ち時間中は、同じ問題をもう一度判定しない
+            if (answerLocked) {
+                return;
+            }
+
+            // 現在表示している問題を取得する
+            const currentQuestion = localQuestions[currentQuestionIndex];
+
+            // 問題データが取得できていない場合は処理を中止する
+            if (!currentQuestion) {
+                document.getElementById("effect-zone").innerText = "⚠️ 問題データを取得できませんでした";
+                return;
+            }
+
+            // 現在の問題の正解番号を取得する
+            // APIではA=0、B=1、C=2、D=3、E=4としてcorrectChoiceIndexが保存されている
+            const correctIndex = currentQuestion.correctChoiceIndex;
+
+            // 正解番号と押された選択肢の番号を比較する
+            const isCorrect = selectedIndex === correctIndex;
+
+            // 回答後の二重クリックを防ぐためロックする
+            answerLocked = true;
+
+            if (isCorrect) {
+                // 正解の場合：敵HPを1減らす
+                if (currentHp > 0) {
+                    document.getElementById("hp" + currentHp).classList.add("empty");
+                    currentHp = currentHp - 1;
+                }
+
+                // 正解の場合：スコアを100加算する
                 currentScore = currentScore + 100;
+
+                // 正解の場合：コンボを1増やす
                 currentCombo = currentCombo + 1;
 
+                // 画面上のスコアとコンボを更新する
                 document.getElementById("score-val").innerText = currentScore;
                 document.getElementById("combo-val").innerText = currentCombo;
-                document.getElementById("effect-zone").innerText = "💥 クリティカルヒット！敵に1ダメージ！";
 
+                // 正解したことを画面に表示する
+                document.getElementById("effect-zone").innerText = "💥 正解！敵に1ダメージ！";
+
+                // 敵HPが0になった場合はステージクリアを表示する
                 if (currentHp === 0) {
                     document.getElementById("effect-zone").innerText = "🎉 PERFECT STAGE CLEAR！";
                 }
+            } else {
+                // 不正解の場合：コンボを0に戻す
+                currentCombo = 0;
 
-                // 回答後、次の問題へ進む処理を呼び出す
-                checkNextQuestion();
+                // 画面上のコンボを更新する
+                document.getElementById("combo-val").innerText = currentCombo;
+
+                // 不正解だったことを画面に表示する
+                document.getElementById("effect-zone").innerText = "❌ MISS！正解ではありません";
             }
-        }
 
-        // 不正解ボタンが押されたとき、コンボを0に戻す（現在は仮の不正解処理）
-        function testMiss() {
-            currentCombo = 0;
-            document.getElementById("combo-val").innerText = currentCombo;
-            document.getElementById("effect-zone").innerText = "❌ MISS！コンボが途切れてしまった！";
-
-            // 回答後、次の問題へ進む処理を呼び出す
+            // 回答後、次の問題へ進む
             checkNextQuestion();
         }
 
@@ -322,10 +375,15 @@
 
             // まだ問題が残っている場合は、1.5秒後に次の問題を表示する
             if (currentQuestionIndex < localQuestions.length) {
-                setTimeout(renderQuestion, 1500);
+                setTimeout(() => {
+                    // 次の問題を表示する前に回答ロックを解除する
+                    answerLocked = false;
+                    renderQuestion();
+                }, 1500);
             } else {
                 // すべての問題が終わったら、終了メッセージを表示する
                 setTimeout(() => {
+                    answerLocked = false;
                     document.getElementById("effect-zone").innerText = "🏁 全問のステージが終了しました！";
                 }, 1500);
             }
