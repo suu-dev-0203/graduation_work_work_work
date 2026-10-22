@@ -1400,3 +1400,393 @@ git --no-pager diff -- src/main/java/com/example/controller/QuestionController.j
 Gitの差分確認では、変更内容を表示するための画面が開くことがある。画面の状態に応じて終了操作を行い、必要に応じて `git --no-pager diff` を使うことで、ターミナル上で差分を確認できる。
 
 また、原因が確定していないトラブルは、推測を事実として記録せず、発生状況・試した対処・今後の確認事項を分けて記録することが重要である。
+
+## 2026-10-22：問題データの取得URLと選択肢表示処理の修正
+
+### 1. 今回の目標
+APIから取得した問題文と選択肢を、ゲーム画面に表示できるようにする。
+
+### 2. 変更したファイル
+- `src/main/resources/templates/chapters.html`
+- `DEVELOPMENT_LOG.md`
+
+### 3. 変更内容
+- Java側のAPIに合わせ、問題取得URLを `/api/questions/chapter/1` に変更した。
+- 選択肢ボタンの取得方法を `#area-game button` に変更した。
+- そのほかのゲーム処理は今回の対象外とした。
+
+### 4. 動作確認
+- API確認URL：`http://localhost:8080/api/questions/chapter/1`
+- ゲーム画面確認URL：`http://localhost:8080/chapters`
+- APIの確認結果：【実際の結果を記入】
+- 問題文と選択肢の表示結果：【実際の結果を記入】
+- 総合判定：【成功／一部成功／失敗／未確認】
+
+### 5. 今後の課題
+実際の正解データに基づく正誤判定は未完成。
+今回の問題表示の動作確認後、次の作業として取り組む。
+
+## 2026-10-22：Spring Bootの起動・稼働・終了ログの詳細分析
+
+### 1. 今回の作業目的
+
+Java Learning SystemをSpring Bootで起動し、Mavenの実行ログ、Javaの起動情報、データベース接続、Webサーバーの起動、終了処理までの流れを確認した。
+
+また、ターミナルに表示された各メッセージの意味を理解し、正常に処理された部分と、今後別途確認する必要がある部分を区別した。
+
+### 2. 実行したコマンド
+
+#### 2-1. Javaの実行環境を指定
+
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot"
+```
+
+現在のPowerShellで使用するJavaのインストール先を、環境変数 `JAVA_HOME` に設定した。
+
+- `$env:JAVA_HOME`：PowerShellの環境変数を指定する。
+- `=`：右側の値を左側に代入する。
+- `C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot`：使用するJavaのインストール先。
+
+この設定は、基本的に現在のPowerShellの実行環境に適用される。
+
+#### 2-2. Mavenの保存先を取得
+
+```powershell
+$maven = Get-ChildItem "$env:USERPROFILE\.m2\wrapper\dists\apache-maven-3.9.16" -Directory |
+  Select-Object -First 1
+```
+
+保存済みのMaven関連フォルダを調べ、その中から最初に見つかったフォルダの情報を、変数 `$maven` に格納した。
+
+各部分の意味は以下のとおり。
+
+- `$maven =`：取得したフォルダ情報を変数に保存する。
+- `Get-ChildItem`：指定した場所の中身を取得する。
+- `$env:USERPROFILE`：Windowsのユーザー用フォルダの場所を表す。
+- `.m2\wrapper\dists\apache-maven-3.9.16`：Maven関連ファイルが保存されている場所。
+- `-Directory`：フォルダだけを対象にする。
+- `|`：左側のコマンドの結果を右側のコマンドへ渡す。
+- `Select-Object -First 1`：最初の1件を取得する。
+
+このコマンドでは結果を変数に格納するため、実行しても画面に大量の情報が表示されない。
+
+#### 2-3. Spring Bootアプリケーションを起動
+
+```powershell
+& "$($maven.FullName)\bin\mvn.cmd" spring-boot:run
+```
+
+保存済みのMavenを使用し、Spring Bootアプリケーションを起動した。
+
+- `&`：指定したプログラムを実行する。
+- `$maven.FullName`：Mavenの保存先の完全なパスを取得する。
+- `\bin\mvn.cmd`：Mavenを実行するためのコマンドファイル。
+- `spring-boot:run`：Spring Bootアプリケーションを起動する指示。
+
+このコマンドを実行すると、Mavenがプロジェクトを読み込み、必要なライブラリを確認したあと、Spring Bootアプリケーションを起動する。
+
+### 3. Mavenによるプロジェクトの読み込み
+
+実行ログ：
+
+```text
+[INFO] Scanning for projects...
+[INFO] Building graduation_work_work_work 0.0.1-SNAPSHOT
+[INFO] from pom.xml
+```
+
+Mavenがプロジェクトの設定ファイル `pom.xml` を読み込み、対象プロジェクトを認識した。
+
+`pom.xml` には、プロジェクト情報や依存ライブラリ、ビルドに必要な設定などが記述されている。
+
+この時点では、プロジェクトの読み込みが開始され、対象のプロジェクトが認識されたことを確認できた。
+
+### 4. リソースとコンパイルの処理
+
+実行ログ：
+
+```text
+[INFO] --- resources:3.3.1:resources ---
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] --- compiler:3.11.0:compile ---
+[INFO] Nothing to compile - all classes are up to date
+```
+
+#### 4-1. リソースのコピー
+
+`src/main/resources` に保存されたリソースを、ビルド後のファイルが格納される `target/classes` にコピーする処理が実行された。
+
+#### 4-2. Javaのコンパイル
+
+`Nothing to compile - all classes are up to date` は、今回の実行時点で再コンパイルが必要なJavaクラスがなかったため、コンパイル処理を省略したことを示す。
+
+これはコンパイル処理が失敗したという意味ではない。
+
+ただし、今回のログだけでは、すべてのテストが実行されて合格したことまでは確認できない。
+
+### 5. テスト用ソースコードの確認
+
+実行ログ：
+
+```text
+[INFO] skip non existing resourceDirectory
+C:\Users\0501JP\projects\graduation_work_work_work\src\test\resources
+
+[INFO] No sources to compile
+```
+
+テスト用リソースのフォルダが存在せず、その処理がスキップされたことを示している。
+
+また、`No sources to compile` は、コンパイル対象となるテスト用ソースコードがなかったことを示す。
+
+今回のログからは、テストが失敗したとは判断できない。一方、テストを実施して合格したとも判断できないため、動作確認は別途必要である。
+
+### 6. Mavenによる依存ライブラリのダウンロード
+
+実行ログには、次のようなメッセージが多数表示された。
+
+```text
+Downloading from central:
+https://repo.maven.apache.org/maven2/...
+
+Downloaded from central:
+https://repo.maven.apache.org/maven2/...
+```
+
+Maven Centralから、Spring Bootの実行に必要なライブラリやMavenプラグインなどがダウンロードされた。
+
+初回実行時や、ローカル環境に必要なライブラリが保存されていない場合は、このようなダウンロード処理が実行される。
+
+今回も複数のPOMファイルやJARファイルが取得されたことを確認した。
+
+- POMファイル：ライブラリの情報や依存関係などを記述したファイル。
+- JARファイル：Javaのクラスなどをまとめたファイル。
+- Maven Central：Mavenがライブラリを取得するために利用する公開リポジトリ。
+
+このダウンロード処理は、今回の実行時間が長くなった要因の一つと考えられる。ただし、実行時間のうち何分がダウンロードにかかったかは、今回のログだけでは特定できない。
+
+### 7. Spring BootとJavaの起動情報
+
+実行ログ：
+
+```text
+:: Spring Boot :: (v3.2.5)
+
+Starting GraduationApplication using Java 25.0.3
+```
+
+次の情報を確認した。
+
+| 項目 | 確認結果 |
+|---|---|
+| アプリケーション名 | `GraduationApplication` |
+| Spring Boot | 3.2.5 |
+| Java実行環境 | 25.0.3 |
+| Mavenの起動対象 | `spring-boot:run` |
+
+`GraduationApplication` は、このプロジェクトのSpring Bootアプリケーションを起動するクラスである。
+
+### 8. Spring Data JPAの初期化
+
+実行ログ：
+
+```text
+Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+Finished Spring Data repository scanning in 54 ms. Found 4 JPA repository interfaces.
+```
+
+Spring Data JPAがリポジトリを検出し、初期化を行った。
+
+今回の実行では、4つのJPAリポジトリインターフェースが検出された。
+
+リポジトリは、データベースからデータを取得したり、データを登録・更新・削除したりするために使う仕組みである。
+
+ただし、4つのリポジトリが検出されたことだけでは、それぞれのデータ取得処理がすべて正常に動作することまでは証明されない。
+
+### 9. データベースへの接続
+
+実行ログ：
+
+```text
+HikariPool-1 - Starting...
+HikariPool-1 - Added connection conn0:
+url=jdbc:h2:mem:05e8fdff-e089-4a85-94b5-2746c182ea40 user=SA
+HikariPool-1 - Start completed.
+```
+
+HikariCPによるデータベース接続プールの初期化が完了した。
+
+`jdbc:h2:mem:...` という接続URLから、メモリ上で動作するH2データベースを使用していることを確認した。
+
+メモリ上のデータベースは、設定によってはアプリケーションの終了時にデータが失われる。今回のログでも、終了時にデータベース接続の終了処理が行われている。
+
+また、Hibernate ORM 6.4.4.Finalが読み込まれ、JPAの初期化も行われた。
+
+### 10. Javaのネイティブアクセスに関する警告
+
+実行ログ：
+
+```text
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.apache.tomcat.jni.Library
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+```
+
+Java 25の実行環境で、Tomcatがネイティブライブラリを読み込む処理に関する警告が表示された。
+
+このメッセージは、将来のJava環境では、特定のネイティブアクセスに追加の設定が必要になる可能性を示している。
+
+今回の実行では、この警告が表示されたあともSpring Bootの起動は完了した。
+
+現時点では設定を変更せず、今後必要性を確認する項目として記録した。
+
+### 11. JPAのopen-in-viewに関する警告
+
+実行ログ：
+
+```text
+spring.jpa.open-in-view is enabled by default.
+Therefore, database queries may be performed during view rendering.
+```
+
+JPAの `open-in-view` 設定に関する警告が表示された。
+
+これは、画面の描画中にデータベースへのアクセスが発生する可能性について注意を促すメッセージである。
+
+今回の作業では設定を変更していない。今後、画面表示時のデータベースアクセスを整理するときに、必要に応じて設定を検討する。
+
+### 12. Webサーバーの起動成功
+
+実行ログ：
+
+```text
+Tomcat initialized with port 8080 (http)
+Tomcat started on port 8080 (http) with context path ''
+Started GraduationApplication in 3.149 seconds (process running for 3.405)
+```
+
+Tomcatがポート8080で起動し、Spring Bootアプリケーションの起動が完了した。
+
+ポート8080は、ブラウザからローカルのアプリケーションにアクセスするときに使用するポートである。
+
+そのため、アプリケーションが起動している間は、次のようなURLからアクセスできる。
+
+- `http://localhost:8080/chapters`
+- `http://localhost:8080/api/questions/chapter/1`
+
+ただし、これらのURLが正常にレスポンスを返すかどうかは、ブラウザやAPIを使った別の確認が必要である。
+
+### 13. 問題データの初期登録処理
+
+実行ログ：
+
+```text
+[初期化ロボット] OriginalQuestionBank から正規のクイズデータを安全に読み込み、データベースへ一括格納しました。
+```
+
+アプリケーションの起動時に、`OriginalQuestionBank` から問題データを読み込み、データベースへ登録する処理が実行されたことを示すメッセージを確認した。
+
+ただし、このメッセージだけでは、画面から問題を取得できることや、章IDによる絞り込み、正誤判定が正常に動作することまでは確認できない。
+
+### 14. HTTPリクエストに関連するログ
+
+実行ログ：
+
+```text
+2026-10-22T09:53:47.404+09:00
+Initializing Spring DispatcherServlet 'dispatcherServlet'
+
+2026-10-22T09:53:47.404+09:00
+Completed initialization in 0 ms
+```
+
+Spring MVCのリクエスト処理を担当する `DispatcherServlet` の初期化が行われた。
+
+このログから、Webリクエストの処理に関連するServletが初期化されたことを確認できる。
+
+ただし、今回のログだけでは、どのURLへのリクエストだったか、APIがどのHTTPステータスを返したか、JSONの内容が正しかったかまでは特定できない。
+
+そのため、問題取得APIの確認は別途行う必要がある。
+
+### 15. アプリケーションの終了処理
+
+実行ログ：
+
+```text
+2026-10-22T09:55:34.706+09:00
+Closing JPA EntityManagerFactory for persistence unit 'default'
+
+2026-10-22T09:55:34.712+09:00
+HikariPool-1 - Shutdown initiated...
+
+2026-10-22T09:55:34.713+09:00
+HikariPool-1 - Shutdown completed.
+```
+
+2026年10月22日 09:55:34に、JPAのEntityManagerFactoryを閉じる処理と、データベース接続プールの終了処理が行われた。
+
+`Shutdown initiated` は終了処理の開始を示し、`Shutdown completed` は終了処理の完了を示す。
+
+この結果から、アプリケーションの終了時にデータベース関連の終了処理が行われ、接続プールの終了が完了したことを確認した。
+
+### 16. Mavenの最終結果
+
+実行ログ：
+
+```text
+[INFO] BUILD SUCCESS
+[INFO] Total time:  13:50 min
+[INFO] Finished at: 2026-10-22T09:55:34+09:00
+バッチ ジョブを終了しますか (Y/N)? y
+```
+
+Mavenは `BUILD SUCCESS` と表示して終了した。
+
+- `BUILD SUCCESS`：Mavenの処理が成功として終了したことを示す。
+- `Total time: 13:50 min`：今回のMavenコマンドの処理時間を示す。
+- `Finished at`：処理終了時刻を示す。
+- `バッチ ジョブを終了しますか (Y/N)? y`：Windowsの終了確認に `Y` を入力して終了操作を確定した。
+
+なお、`BUILD SUCCESS` はMavenの処理が正常に終了したことを示すが、ゲームの全機能の動作確認が完了したことを意味するわけではない。
+
+今回のログではSpring Bootが起動し、その後に終了処理が行われたことを確認した。
+
+### 17. 今回の確認結果
+
+| 確認項目 | 結果 |
+|---|---|
+| Mavenによる起動処理 | 成功 |
+| Java 25.0.3での起動 | ログで確認 |
+| Spring Boot 3.2.5の起動 | 成功 |
+| Tomcatのポート8080での起動 | 成功 |
+| JPAリポジトリの検出 | 4件を確認 |
+| H2データベース接続 | 初期化完了を確認 |
+| 問題データの初期登録 | 実行ログを確認 |
+| データベース接続の終了 | 完了を確認 |
+| Mavenの最終結果 | BUILD SUCCESS |
+| APIの正しいレスポンス | 未確認 |
+| ブラウザでの問題文・選択肢の表示 | 未確認 |
+| 実際の正誤判定 | 未確認 |
+| 敵HP・スコア・コンボの連動 | 未確認 |
+
+### 18. 今回学んだこと
+
+Spring Bootアプリケーションの起動では、Mavenによるプロジェクト読み込み、依存ライブラリの取得、コンパイル処理、JPAの初期化、データベース接続、Webサーバーの起動という複数の処理が実行される。
+
+ターミナルのログを読むことで、それぞれの処理がどこまで完了したかを確認できる。
+
+また、警告が表示された場合も、起動成功を示すログと区別して確認することが重要である。
+
+今回の作業によって起動と終了の流れは確認できたが、学習ゲームとしての機能が正常に動作するかは、引き続きブラウザで確認する必要がある。
+
+### 19. 次に行う作業
+
+Spring Bootアプリケーションを再起動し、次の2点を確認する。
+
+1. `http://localhost:8080/api/questions/chapter/1` を開き、問題データがJSON形式で返されるか確認する。
+2. `http://localhost:8080/chapters` を開き、ゲーム開始後に問題文と選択肢が表示されるか確認する。
+
+確認が完了するまでは、正誤判定、敵HP、スコア、コンボなどの新しい機能を同時に変更しない。
