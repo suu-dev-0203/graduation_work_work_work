@@ -1,393 +1,1148 @@
-<!-- このファイルがウェブ画面の記述であることをパソコンに教えている -->
 <!DOCTYPE html>
-<!-- 画面の言葉を日本語に設定しタイムリーフの機能を使えるように住所を指定している -->
-<html lang="ja" xmlns:th="http://thymeleaf.org">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <!-- 画面の文字が化けて読めなくなるのを防ぐための標準的な暗号化ルールを設定している -->
     <meta charset="UTF-8">
-    <!-- ブラウザの一番上のタブに表示されるゲームのタイトル文字を設定している -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f7f8fa">
     <title>Java Learning System</title>
     <style>
-        /* 画面全体の余計な隙間をゼロにしてスクロールバーの発生を絶対に禁止している */
-        html, body {
+        :root {
+            --page-bg: #f7f8fa;
+            --panel-bg: #ffffff;
+            --card-bg: #f4f5f7;
+            --border: #e1e4e8;
+            --text: #25282d;
+            --muted: #747982;
+            --blue: #3987f6;
+            --blue-pale: #e5f0ff;
+            --red: #e65e63;
+            --red-pale: #fff0f0;
+            --green: #229b70;
+            --green-pale: #e9f8f1;
+            --orange: #e7a23a;
+            --shadow: 0 8px 24px rgba(28, 39, 54, 0.04);
+        }
+
+        * { box-sizing: border-box; }
+
+        html { min-height: 100%; background: var(--page-bg); }
+        body {
             margin: 0;
-            padding: 0;
-            height: 100dvh;
-            overflow: hidden;
-            background-color: #121212;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            color: #ffffff;
+            min-height: 100vh;
+            padding: 16px;
+            color: var(--text);
+            background: var(--page-bg);
+            font-family: "Yu Gothic UI", "Meiryo", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.5;
         }
-        /* アプリ全体を囲む外枠でFlexboxを使いデスクトップ画面で左右を美しく横並びにする */
-        .app-container {
+        button, select { font: inherit; }
+        button { -webkit-tap-highlight-color: transparent; }
+
+        .app-shell {
+            width: min(1440px, 100%);
+            min-height: calc(100vh - 32px);
+            margin: 0 auto;
+            padding: 18px;
+            border: 1px solid #e5e7eb;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: var(--shadow);
+        }
+
+        .app-header {
             display: flex;
-            width: 100vw;
-            height: 100vh;
-        }
-        /* 左側の学習設定パネルの横幅を45パーセントに指定し背景を少し明るい黒にしている */
-        .left-panel {
-            width: 45%;
-            height: 100%;
-            background-color: #1e1e1e;
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            border-right: 2px solid #2d2d2d;
-        }
-        /* 右側のゲーム表示エリアの横幅を55パーセントに分配し暗黒のバトルフィールドにする */
-        .right-panel {
-            width: 55%;
-            height: 100%;
-            background-color: #0a0a0a;
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }
-        /* 各設定項目を入れるカード型の枠組みで隙間や丸みをコンパクトに整えている */
-        .setting-card {
-            background-color: #252525;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        /* ゲームタイトルの文字の大きさと鮮やかなネオンミントグリーンの色を設定している */
-        .app-title {
-            color: #00ffab;
-            font-size: 24px;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-        /* 選択肢ボタンや項目名の文字サイズを読みやすく16ピクセルに固定している */
-        .item-text {
-            font-size: 16px;
-            color: #cccccc;
-            margin-top: 5px;
-        }
-        /* ゲーム開始ボタンの横幅をいっぱいにしてミントグリーンで目立たせ下部に固定する */
-        .start-button {
-            width: 100%;
-            background-color: #00ffab;
-            color: #121212;
-            border: none;
-            border-radius: 8px;
-            padding: 15px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: auto;
-            text-align: center;
-        }
-        /* ゲームヘッダー内のスコアやコンボの文字を横一列に並べるための設定 */
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-        /* 対戦アリーナの枠線を点線で囲みキャラクターが中央で対峙する空間を作っている */
-        .battle-arena {
-            flex: 1;
-            border: 2px dashed #333333;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-around;
             align-items: center;
-            position: relative;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 4px 10px 20px;
         }
-        /* 赤く発光する5マスの敵HPゲージの四角い形とネオンの影を設定している */
-        .hp-bar {
+        .brand-title {
+            margin: 0;
+            font-size: clamp(20px, 2.2vw, 26px);
+            font-weight: 750;
+            letter-spacing: -0.035em;
+        }
+        .brand-subtitle {
             display: flex;
-            gap: 5px;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 13px;
         }
-        .hp-block {
-            width: 20px;
-            height: 15px;
-            background-color: #ff3333;
-            box-shadow: 0 0 8px #ff3333;
-            border-radius: 2px;
+        .brand-subtitle .separator { color: #c5c9cf; }
+        .connection-status {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 11px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: white;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 650;
         }
-        /* 体力が減ったときにマスを消灯させて黒くするための設定 */
-        .hp-block.empty {
-            background-color: #331111;
-            box-shadow: none;
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #b4bac3;
         }
-        /* 状態切り替えのためにエリアを非表示にする設定 */
-        .state-area {
-            display: none;
+        .connection-status.ready .status-dot { background: var(--green); }
+        .connection-status.error .status-dot { background: var(--red); }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            align-items: stretch;
+            gap: 16px;
         }
-        /* アクティブなクラスが付いたエリアだけを画面に出現させる設定 */
-        .state-area.active {
+        .panel {
+            min-width: 0;
+            min-height: 590px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 17px;
+            background: var(--panel-bg);
+            box-shadow: 0 2px 8px rgba(31, 41, 55, 0.015);
+        }
+        .learning-panel, .battle-panel {
             display: flex;
             flex-direction: column;
-            height: 100%;
+        }
+        .panel-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .panel-heading h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 750;
+        }
+        .panel-kicker {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .view { display: none; min-height: 0; }
+        .view.active { display: flex; flex-direction: column; flex: 1; }
+        .status-badge {
+            align-self: flex-start;
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 9px;
+            border-radius: 999px;
+            color: var(--blue);
+            background: var(--blue-pale);
+            font-size: 11px;
+            font-weight: 750;
+        }
+        .section-title {
+            margin: 14px 0 10px;
+            font-size: 15px;
+            font-weight: 750;
+        }
+        .chapter-list {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            max-height: 260px;
+            padding: 1px 3px 1px 1px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        .chapter-list::-webkit-scrollbar { width: 6px; }
+        .chapter-list::-webkit-scrollbar-thumb { background: #d8dce2; border-radius: 99px; }
+        .chapter-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 13px;
+            border: 1px solid #dedfe2;
+            border-radius: 11px;
+            text-align: left;
+            color: var(--text);
+            background: #f4f4f5;
+            cursor: pointer;
+            transition: border-color .16s ease, background .16s ease, transform .16s ease;
+        }
+        .chapter-card:hover { border-color: #b5cfff; background: #f8fbff; }
+        .chapter-card:active { transform: translateY(1px); }
+        .chapter-card[aria-pressed="true"] {
+            border-color: var(--blue);
+            background: #f0f6ff;
+            box-shadow: inset 0 0 0 1px rgba(57, 135, 246, .12);
+        }
+        .chapter-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+        .chapter-name { font-size: 14px; font-weight: 750; overflow-wrap: anywhere; }
+        .chapter-description { color: var(--muted); font-size: 11px; }
+        .chapter-count {
+            flex: 0 0 auto;
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .mock-tag {
+            display: inline-block;
+            margin-left: 5px;
+            padding: 1px 5px;
+            border-radius: 4px;
+            color: #925d12;
+            background: #fff0cf;
+            font-size: 10px;
+            vertical-align: 1px;
+        }
+        .loading-message, .empty-message {
+            padding: 15px 12px;
+            border: 1px dashed #d4d8de;
+            border-radius: 10px;
+            color: var(--muted);
+            background: #fafbfc;
+            font-size: 13px;
+        }
+        .setting-divider { height: 1px; margin: 16px 0 13px; background: var(--border); }
+        .setting-label {
+            display: block;
+            margin: 0 0 9px;
+            font-size: 13px;
+            font-weight: 750;
+        }
+        .count-options {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 7px;
+        }
+        .count-option {
+            min-height: 39px;
+            padding: 7px 5px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: #fff;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .16s ease;
+        }
+        .count-option[aria-pressed="true"] {
+            border-color: var(--blue);
+            color: var(--blue);
+            background: var(--blue-pale);
+        }
+        .selected-summary {
+            min-height: 20px;
+            margin: 10px 0 12px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .primary-button, .secondary-button, .choice-button {
+            border: 0;
+            border-radius: 10px;
+            font-weight: 750;
+            cursor: pointer;
+            transition: transform .14s ease, filter .14s ease, border-color .14s ease;
+        }
+        .primary-button {
+            width: 100%;
+            min-height: 47px;
+            margin-top: auto;
+            padding: 12px 16px;
+            color: #fff;
+            background: var(--blue);
+            box-shadow: 0 5px 12px rgba(57, 135, 246, .18);
+        }
+        .primary-button:hover { filter: brightness(1.04); }
+        .primary-button:active, .secondary-button:active, .choice-button:active { transform: translateY(1px); }
+        .primary-button:disabled { cursor: wait; opacity: .65; }
+        .secondary-button {
+            min-height: 40px;
+            padding: 9px 13px;
+            border: 1px solid var(--border);
+            color: #40454d;
+            background: #fff;
+        }
+        .secondary-button:hover { border-color: #aeb5bf; }
+        .secondary-button.accent { border-color: #bdd5ff; color: #246cc9; background: #f3f8ff; }
+        .button-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+        .quiz-view { gap: 12px; }
+        .quiz-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .quiz-step { margin: 0; color: var(--muted); font-size: 12px; font-weight: 700; }
+        .timer-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 112px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .timer-value { min-width: 44px; color: var(--text); font-size: 14px; text-align: right; font-variant-numeric: tabular-nums; }
+        .timer-track { flex: 1; height: 5px; overflow: hidden; border-radius: 99px; background: #eceef1; }
+        .timer-fill { width: 100%; height: 100%; border-radius: inherit; background: var(--blue); transition: width .25s linear, background .2s ease; }
+        .timer-fill.warning { background: var(--red); }
+        .question-card {
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #fbfbfc;
+        }
+        .question-label { margin: 0 0 7px; color: var(--blue); font-size: 11px; font-weight: 800; letter-spacing: .02em; }
+        .question-text { margin: 0; font-size: 15px; font-weight: 700; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .question-code {
+            max-height: 155px;
+            margin: 12px 0 0;
+            padding: 11px;
+            overflow: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #f0f2f5;
+            color: #303744;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+        .choice-list { display: flex; flex-direction: column; gap: 7px; }
+        .choice-button {
+            display: grid;
+            grid-template-columns: 30px minmax(0, 1fr);
+            align-items: center;
+            gap: 9px;
+            width: 100%;
+            min-height: 43px;
+            padding: 9px 11px;
+            border: 1px solid #e0e3e8;
+            color: #363b43;
+            background: #fff;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 550;
+        }
+        .choice-button:hover:not(:disabled) { border-color: #9dc4ff; background: #f5f9ff; }
+        .choice-button:disabled { opacity: .66; cursor: default; }
+        .choice-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 27px;
+            height: 27px;
+            border-radius: 7px;
+            color: #606773;
+            background: #f0f2f5;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .choice-text { min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .quiz-bottom { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: auto; padding-top: 4px; }
+        .quiz-hint { color: var(--muted); font-size: 11px; }
+        .result-panel {
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            background: #fbfcfd;
+        }
+        .result-panel h3 { margin: 0 0 6px; font-size: 20px; }
+        .result-panel p { margin: 6px 0; color: var(--muted); font-size: 13px; white-space: pre-wrap; }
+        .result-score { margin-top: 14px !important; color: var(--text) !important; font-size: 15px !important; font-weight: 750; }
+        .hidden { display: none !important; }
+
+        .battle-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .battle-state {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            color: var(--blue);
+            background: var(--blue-pale);
+            font-size: 11px;
+            font-weight: 750;
+        }
+        .stage-chip { color: var(--muted); font-size: 12px; font-weight: 700; }
+        .hp-section { margin-top: 17px; }
+        .hp-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 9px; color: var(--muted); font-size: 13px; }
+        .hp-heading strong { color: var(--text); font-size: 15px; font-variant-numeric: tabular-nums; }
+        .hp-bar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+        .hp-block {
+            height: 10px;
+            border-radius: 999px;
+            background: var(--red);
+            box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .06);
+            transition: background .22s ease, opacity .22s ease, transform .22s ease;
+        }
+        .hp-block.empty { background: #f0dada; opacity: .65; box-shadow: none; }
+        .arena {
+            position: relative;
+            display: flex;
+            flex: 1;
+            align-items: center;
+            justify-content: space-around;
+            gap: 12px;
+            min-height: 245px;
+            margin-top: 18px;
+            padding: 20px 12px;
+            overflow: hidden;
+            border: 1px solid #edf0f3;
+            border-radius: 15px;
+            background:
+                radial-gradient(ellipse at 22% 80%, rgba(69, 145, 255, .07), transparent 42%),
+                radial-gradient(ellipse at 78% 80%, rgba(230, 94, 99, .06), transparent 42%),
+                #fcfcfd;
+        }
+        .arena::after {
+            position: absolute;
+            right: 8%;
+            bottom: 26px;
+            left: 8%;
+            height: 1px;
+            background: #e9ebef;
+            content: "";
+        }
+        .fighter { z-index: 1; display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
+        .fighter-avatar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: clamp(70px, 10vw, 108px);
+            height: clamp(70px, 10vw, 108px);
+            border: 1px solid #e9edf3;
+            border-radius: 25px;
+            background: white;
+            box-shadow: 0 9px 24px rgba(34, 47, 64, .06);
+            font-size: clamp(38px, 5vw, 54px);
+            line-height: 1;
+        }
+        .fighter-name { max-width: 100%; color: #545b65; font-size: 11px; font-weight: 800; text-align: center; overflow-wrap: anywhere; }
+        .fighter-role { color: #9298a1; font-size: 10px; }
+        .versus { z-index: 1; align-self: center; color: #b4bac2; font-size: 12px; font-weight: 850; letter-spacing: .12em; }
+        .battle-caption { margin: 12px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
+        .effect-zone {
+            min-height: 74px;
+            max-height: 125px;
+            margin-top: 14px;
+            padding: 12px 14px;
+            overflow: auto;
+            border: 1px solid #edf0f3;
+            border-radius: 12px;
+            color: #545b65;
+            background: #fafbfc;
+            font-size: 13px;
+            text-align: center;
+            white-space: pre-line;
+            overflow-wrap: anywhere;
+        }
+        .effect-zone.success { border-color: #c9efdc; color: #18764f; background: var(--green-pale); }
+        .effect-zone.miss { border-color: #f6d3d3; color: #b6474b; background: var(--red-pale); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; padding-top: 15px; }
+        .stat-card { padding: 10px 12px; border: 1px solid #e1e3e6; border-radius: 11px; background: #f4f4f5; }
+        .stat-label { color: var(--muted); font-size: 11px; }
+        .stat-value { margin-top: 2px; color: var(--text); font-size: 21px; font-weight: 800; font-variant-numeric: tabular-nums; }
+        .stat-card.combo .stat-value { color: #b87918; }
+        .footer-note { padding: 13px 4px 0; color: #959aa3; font-size: 11px; text-align: center; }
+
+        .fighter-avatar.attack { animation: attack .42s ease; }
+        .fighter-avatar.damaged { animation: damaged .42s ease; }
+        .fighter-avatar.miss { animation: miss .3s ease; }
+        @keyframes attack { 0% { transform: translateX(0) scale(1); } 45% { transform: translateX(18px) scale(1.08); } 100% { transform: translateX(0) scale(1); } }
+        @keyframes damaged { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(7px) rotate(3deg); } 60% { transform: translateX(-6px) rotate(-3deg); } }
+        @keyframes miss { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+
+        @media (min-width: 1100px) {
+            .workspace { min-height: min(75vh, 820px); }
+            .panel { min-height: 610px; }
+            .chapter-list { max-height: 235px; }
+        }
+        @media (max-width: 900px) {
+            body { padding: 10px; }
+            .app-shell { min-height: calc(100vh - 20px); padding: 12px; border-radius: 17px; }
+            .workspace { grid-template-columns: minmax(0, 1fr); }
+            .panel { min-height: 500px; padding: 16px; }
+            .battle-panel { min-height: 500px; }
+            .chapter-list { max-height: 320px; }
+            .arena { min-height: 210px; }
+            .footer-note { padding-bottom: 4px; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 6px; }
+            .app-shell { padding: 8px; border-radius: 14px; }
+            .app-header { align-items: flex-start; padding: 7px 5px 15px; }
+            .connection-status { padding: 6px 8px; font-size: 10px; }
+            .brand-subtitle { gap: 5px; font-size: 11px; }
+            .panel { padding: 13px; min-height: 470px; }
+            .panel-heading h2 { font-size: 14px; }
+            .chapter-card { padding: 10px; }
+            .chapter-name { font-size: 12px; }
+            .chapter-description { font-size: 10px; }
+            .count-options { gap: 5px; }
+            .count-option { font-size: 12px; }
+            .question-text { font-size: 14px; }
+            .choice-button { font-size: 12px; }
+            .arena { min-height: 195px; }
+            .fighter-avatar { width: 70px; height: 70px; border-radius: 19px; font-size: 39px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
         }
     </style>
 </head>
 <body>
-    <!-- アプリ全体の左右分割コンテナの開始 -->
-    <div class="app-container">
-        <!-- 左側の情報パネルの開始 -->
-        <div class="left-panel">
-            <!-- ゲームのタイトル文字を表示している -->
-            <div class="app-title">Java Learning System</div>
-            <!-- 初期状態のホーム画面エリアの開始 -->
-            <div id="area-home" class="state-area active">
+<div class="app-shell">
+    <header class="app-header">
+        <div>
+            <h1 class="brand-title">Java Learning System</h1>
+            <p class="brand-subtitle">
+                <span>Java Bronze 学習ゲーム</span><span class="separator">|</span>
+                <span>Chapter</span><span class="separator">|</span>
+                <span>Stage</span><span class="separator">|</span><span>Timer</span>
+            </p>
+        </div>
+        <div id="connection-status" class="connection-status" role="status">
+            <span class="status-dot"></span><span id="connection-status-text">API接続確認中</span>
+        </div>
+    </header>
 
-                <!-- 1番目の設定：学習テーマを選択するカード -->
-                <div class="setting-card">
-                    <h3>1. 学習テーマ（Chapter）</h3>
-                    <!-- Javaから届いた章データを1つずつ取り出してループ表示する -->
-                    <div th:each="ch : ${chapters}">
-                        <!-- データベースから読み込んだ章の名前を画面に表示する -->
-                        <div class="item-text" th:text="${ch.name}">ここに本物の章の名前が入ります</div>
+    <main class="workspace">
+        <section class="panel learning-panel" aria-label="学習エリア">
+            <div class="panel-heading">
+                <h2>左側：学習エリア</h2>
+                <span class="panel-kicker">LEARNING</span>
+            </div>
+
+            <section id="home-view" class="view active">
+                <span class="status-badge">ゲーム開始前</span>
+                <h3 class="section-title">学習する章を選ぼう！</h3>
+                <div id="chapter-list" class="chapter-list" aria-label="学習する章">
+                    <div class="loading-message">章データを読み込んでいます...</div>
+                </div>
+
+                <div class="setting-divider"></div>
+                <span class="setting-label">今回プレイする問題数</span>
+                <div id="question-count-options" class="count-options" aria-label="問題数を選択">
+                    <button class="count-option" type="button" data-count="5" aria-pressed="true">5問</button>
+                    <button class="count-option" type="button" data-count="10" aria-pressed="false">10問</button>
+                    <button class="count-option" type="button" data-count="15" aria-pressed="false">15問</button>
+                    <button class="count-option" type="button" data-count="20" aria-pressed="false">20問</button>
+                </div>
+                <p id="selected-summary" class="selected-summary">第1章から5問を出題します。1ステージは5問です。</p>
+                <button id="start-button" class="primary-button" type="button" disabled>章データを読み込み中...</button>
+            </section>
+
+            <section id="quiz-view" class="view" aria-live="polite">
+                <div id="quiz-content">
+                    <div class="quiz-topline">
+                        <p id="stage-info" class="quiz-step">第1章 / Stage 1 / 第1問目</p>
+                        <div class="timer-wrap" aria-label="残り時間">
+                            <span>TIME</span>
+                            <span id="timer-value" class="timer-value">--秒</span>
+                        </div>
+                    </div>
+                    <div class="timer-track" aria-hidden="true"><div id="timer-fill" class="timer-fill"></div></div>
+
+                    <div class="question-card">
+                        <p id="question-label" class="question-label">JAVA BRONZE</p>
+                        <p id="question-text" class="question-text">問題を読み込んでいます...</p>
+                        <pre id="question-code" class="question-code hidden"></pre>
+                    </div>
+
+                    <div id="choice-list" class="choice-list" aria-label="回答選択肢">
+                        <button class="choice-button" type="button" data-index="0"><span class="choice-label">A</span><span class="choice-text">選択肢A</span></button>
+                        <button class="choice-button" type="button" data-index="1"><span class="choice-label">B</span><span class="choice-text">選択肢B</span></button>
+                        <button class="choice-button" type="button" data-index="2"><span class="choice-label">C</span><span class="choice-text">選択肢C</span></button>
+                        <button class="choice-button" type="button" data-index="3"><span class="choice-label">D</span><span class="choice-text">選択肢D</span></button>
+                        <button class="choice-button" type="button" data-index="4"><span class="choice-label">E</span><span class="choice-text">選択肢E</span></button>
+                    </div>
+
+                    <div class="quiz-bottom">
+                        <span class="quiz-hint">正解すると敵に1ダメージ</span>
+                        <button id="back-home-from-quiz" class="secondary-button" type="button">章選択へ戻る</button>
                     </div>
                 </div>
-                <!-- 2番目の設定：出題方法の案内カード -->
-                <div class="setting-card">
-                    <h3>2. 出題方法</h3>
-                    <div class="item-text">ランダム / 基礎 / コード読解</div>
+
+                <div id="stage-failed-panel" class="result-panel hidden">
+                    <span class="status-badge">STAGE FAILED</span>
+                    <h3>もう一度挑戦しよう！</h3>
+                    <p id="stage-failed-message">5問終了しましたが、敵のHPが残っています。</p>
+                    <p>このステージの5問をもう一度プレイできます。</p>
+                    <div class="button-row">
+                        <button id="retry-stage-button" class="primary-button" type="button" style="margin-top:0">このステージをリトライ</button>
+                        <button id="back-home-from-fail" class="secondary-button" type="button">章選択へ戻る</button>
+                    </div>
                 </div>
 
-                <!-- 3番目の設定：プレイ問題数の選択カード -->
-                <div class="setting-card">
-                    <h3>3. 問題数</h3>
-                    <div class="item-text">5問 / 10問 / 15問 / 20問</div>
+                <div id="game-result-panel" class="result-panel hidden">
+                    <span class="status-badge">RESULT</span>
+                    <h3 id="game-result-title">学習終了！</h3>
+                    <p id="game-result-message">今回のプレイ結果です。</p>
+                    <p id="game-result-score" class="result-score">SCORE: 0</p>
+                    <div class="button-row">
+                        <button id="return-home-button" class="primary-button" type="button" style="margin-top:0">別の章を選ぶ</button>
+                    </div>
                 </div>
-                <!-- ゲーム本番を開始するためのミントグリーンのボタン -->
-                <button class="start-button" onclick="startGame()">ゲーム開始</button>
-            </div>
-            <!-- ゲーム開始後に切り替わる問題エリアの開始 -->
-            <div id="area-game" class="state-area">
-                <!-- 現在の進行状況を示す見出し -->
-                <h2 id="stage-info">第1章 / Stage 1 / 第1問目</h2>
-                <!-- クイズの問題文が大きく表示される場所 -->
-                <p id="question-text" style="font-size: 18px; margin-bottom: 20px;">Javaのプログラムの実行方法を最も適切に説明しているものはどれですか？</p>
+            </section>
+        </section>
 
-                <!-- 選択肢を縦並びの箇条書き形式で配置するエリア -->
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <!-- 選択肢Aのボタンで正解テスト用の処理を紐付けている -->
-                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="checkAnswer(0)">A. 選択肢A</button>
-                    <!-- 正誤判定では、押した選択肢の番号をJavaScriptへ渡す -->
-                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="checkAnswer(1)">B. 選択肢B</button>
-                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="checkAnswer(2)">C. 選択肢C</button>
-                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="checkAnswer(3)">D. 選択肢D</button>
-                    <button class="start-button" style="background-color: #252525; color: white; text-align: left;" onclick="checkAnswer(4)">E. 選択肢E</button>
-                </div>
+        <section class="panel battle-panel" aria-label="ゲームエリア">
+            <div class="panel-heading">
+                <h2>右側：ゲームエリア</h2>
+                <span class="panel-kicker">BATTLE</span>
             </div>
-        </div>
-        <!-- 右側のゲーム演出パネルの開始 -->
-        <div class="right-panel">
-            <!-- スコア、コンボ、敵体力を一列に並べる上部ヘッダー -->
-            <div class="game-header">
-                <span style="color: #00ffab;">SCORE: <span id="score-val">0</span></span>
-                <span style="color: #ffaa00;">COMBO: <span id="combo-val">0</span></span>
-                <!-- 敵の体力を示す独立した5マスのブロック列 -->
-                <div class="hp-bar">
-                    <span style="color: #ff3333; margin-right: 10px;">ENEMY HP</span>
-                    <div id="hp1" class="hp-block"></div>
-                    <div id="hp2" class="hp-block"></div>
-                    <div id="hp3" class="hp-block"></div>
-                    <div id="hp4" class="hp-block"></div>
-                    <div id="hp5" class="hp-block"></div>
+
+            <div class="battle-topline">
+                <span id="battle-state" class="battle-state">ゲーム開始前</span>
+                <span id="battle-stage" class="stage-chip">Stage 1</span>
+            </div>
+
+            <div class="hp-section">
+                <div class="hp-heading"><span>ENEMY HP</span><strong id="hp-count">5 / 5</strong></div>
+                <div class="hp-bar" aria-label="敵の体力">
+                    <span id="hp1" class="hp-block"></span>
+                    <span id="hp2" class="hp-block"></span>
+                    <span id="hp3" class="hp-block"></span>
+                    <span id="hp4" class="hp-block"></span>
+                    <span id="hp5" class="hp-block"></span>
                 </div>
             </div>
-            <!-- キャラクター同士が対峙するメイン戦闘フィールド -->
-            <div class="battle-arena">
-                <div style="font-size: 50px; text-align: center;">🧙<br><span style="font-size: 14px; background: #333; padding: 2px 5px; border-radius: 4px;">PLAYER</span></div>
-                <div style="font-size: 24px; color: #444;">VS</div>
-                <div style="font-size: 50px; text-align: center;">🤖<br><span style="font-size: 14px; background: #333; padding: 2px 5px; border-radius: 4px;">JAVA_ROBOT</span></div>
+
+            <div class="arena">
+                <div id="player-unit" class="fighter">
+                    <div id="player-avatar" class="fighter-avatar" aria-label="プレイヤー">🧙</div>
+                    <div id="player-name" class="fighter-name">PLAYER</div>
+                    <div class="fighter-role">プレイヤー</div>
+                </div>
+                <div class="versus">VS</div>
+                <div id="enemy-unit" class="fighter">
+                    <div id="enemy-avatar" class="fighter-avatar" aria-label="敵">🤖</div>
+                    <div id="enemy-name" class="fighter-name">JAVA ROBOT</div>
+                    <div class="fighter-role">ENEMY</div>
+                </div>
             </div>
-            <!-- 戦闘のヒットやミスのログメッセージがリアルタイムに表示される下部エリア -->
-            <div id="effect-zone" style="margin-top: 20px; padding: 15px; background: #151515; border-radius: 8px; text-align: center; font-size: 18px; color: #00ffab;">
-                待機中: クエストを選択してください
+            <p class="battle-caption">正解するとプレイヤーが攻撃。不正解・時間切れは MISS！</p>
+            <div id="effect-zone" class="effect-zone" role="status" aria-live="polite">待機中：学習する章を選んでゲームを開始してください。</div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">SCORE</div>
+                    <div id="score-val" class="stat-value">0</div>
+                </div>
+                <div class="stat-card combo">
+                    <div class="stat-label">COMBO</div>
+                    <div id="combo-val" class="stat-value">0</div>
+                </div>
             </div>
-        </div>
-    </div>
-    <!-- ========================================================================= -->
-    <!-- 即時判定およびクイズ自動入れ替えシステム（JavaScript） -->
-    <!-- ========================================================================= -->
-    <script>
-        /* ゲーム中に変化する数値を保存する変数 */
-        let currentHp = 5;
-        let currentScore = 0;
-        let currentCombo = 0;
+        </section>
+    </main>
+    <p class="footer-note">Java Bronze の問題を解きながら、5問ごとのステージクリアを目指そう。</p>
+</div>
 
-        // Java側から受け取った問題データを一時保存する配列
-        let localQuestions = [];
-        // 現在何問目に挑戦しているかを保存する（最初は0番目）
-        let currentQuestionIndex = 0;
+<script>
+    // ゲーム全体で使う状態を保存する変数
+    let availableChapters = [];
+    let selectedChapter = 1;
+    let selectedQuestionCount = 5;
+    let localQuestions = [];
+    let currentQuestionIndex = 0;
+    let currentHp = 5;
+    let currentScore = 0;
+    let currentCombo = 0;
+    let clearedStages = 0;
+    let answerLocked = false;
+    let timerInterval = null;
+    let timerDuration = 0;
+    let timeRemaining = 0;
+    let failedStageStartIndex = 0;
 
-        /* APIから問題データを取得し、問題画面へ切り替える処理 */
-        function startGame() {
-            // Java側のAPIが定義しているURLに合わせ、章ID「1」の問題を取得する
-            fetch('/api/questions/chapter/1')
-                // サーバーから返ってきたJSONをJavaScriptのデータに変換する
-                .then(response => response.json())
-                // 取得した問題データを保存して、問題画面を表示する
-                .then(data => {
-                    localQuestions = data;
-                    currentQuestionIndex = 0;
+    const choiceLabels = ["A", "B", "C", "D", "E"];
+    const playerAvatars = ["🧙", "🥷", "⚔️", "🧑‍💻", "🧑‍🎓", "🧑‍⚕️", "🏹", "🛡️"];
+    const enemyAvatars = ["🤖", "👾", "🐲", "🦾", "👹", "🛸", "🐉", "👺"];
 
-                    // 新しくゲームを開始するときは、スコア・コンボ・敵HPを初期状態へ戻す
-                    currentHp = 5;
-                    currentScore = 0;
-                    currentCombo = 0;
-                    answerLocked = false;
+    const element = (id) => document.getElementById(id);
 
-                    // 敵HPの5マスをすべて表示状態に戻す
-                    for (let i = 1; i <= 5; i++) {
-                        document.getElementById("hp" + i).classList.remove("empty");
-                    }
+    // 章一覧APIから章名と問題数を取得する
+    async function loadChapters() {
+        const list = element("chapter-list");
+        setConnectionStatus("connecting", "API接続中");
+        try {
+            const response = await fetch("/api/questions/chapters?genre=BRONZE");
+            if (!response.ok) {
+                throw new Error("章データを取得できませんでした（HTTP " + response.status + "）");
+            }
+            const data = await response.json();
+            if (!Array.isArray(data) || data.length === 0) {
+                throw new Error("章データが見つかりませんでした");
+            }
 
-                    // スコアとコンボの表示も初期化する
-                    document.getElementById("score-val").innerText = currentScore;
-                    document.getElementById("combo-val").innerText = currentCombo;
+            availableChapters = data.slice().sort((a, b) => Number(a.chapter) - Number(b.chapter));
+            if (!availableChapters.some(chapter => Number(chapter.chapter) === selectedChapter)) {
+                selectedChapter = Number(availableChapters[0].chapter);
+            }
+            renderChapterCards();
+            updateSelectedSummary();
+            element("start-button").disabled = false;
+            element("start-button").textContent = "ゲーム開始";
+            setConnectionStatus("ready", "API接続OK");
+        } catch (error) {
+            list.replaceChildren();
+            const message = document.createElement("div");
+            message.className = "empty-message";
+            message.textContent = error.message + "。Spring Bootの起動状態を確認してください。";
+            list.appendChild(message);
+            element("start-button").disabled = true;
+            element("start-button").textContent = "章データを読み込めません";
+            setConnectionStatus("error", "API接続エラー");
+            element("effect-zone").textContent = "章データの読み込みに失敗しました。";
+            console.error("章データの読み込みエラー:", error);
+        }
+    }
 
-                    // HOME画面を隠し、ゲームの問題画面を表示する
-                    document.getElementById("area-home").classList.remove("active");
-                    document.getElementById("area-game").classList.add("active");
+    function setConnectionStatus(state, text) {
+        const status = element("connection-status");
+        status.classList.remove("ready", "error");
+        if (state === "ready") status.classList.add("ready");
+        if (state === "error") status.classList.add("error");
+        element("connection-status-text").textContent = text;
+    }
 
-                    // メッセージ欄にバトル開始を表示する
-                    const effectZone = document.getElementById("effect-zone");
-                    effectZone.classList.add("effect-active");
-                    effectZone.innerText = "⚔️ バトル開始！回答を選択してください";
+    // 取得した章データから章選択カードを作る
+    function renderChapterCards() {
+        const list = element("chapter-list");
+        list.replaceChildren();
 
-                    // 問題が1問以上取得できたときだけ、最初の問題を表示する
-                    if (localQuestions.length > 0) {
-                        renderQuestion();
-                    } else {
-                        effectZone.innerText = "⚠️ クイズデータがデータベースにありません";
-                    }
-                });
+        availableChapters.forEach(chapter => {
+            const chapterNumber = Number(chapter.chapter);
+            const card = document.createElement("button");
+            card.type = "button";
+            card.className = "chapter-card";
+            card.setAttribute("aria-pressed", String(chapterNumber === selectedChapter));
+
+            const main = document.createElement("span");
+            main.className = "chapter-main";
+
+            const name = document.createElement("span");
+            name.className = "chapter-name";
+            name.textContent = chapter.title || ("第" + chapterNumber + "章");
+            if (chapter.isMock) {
+                const mockTag = document.createElement("span");
+                mockTag.className = "mock-tag";
+                mockTag.textContent = "模擬問題";
+                name.appendChild(mockTag);
+            }
+
+            const description = document.createElement("span");
+            description.className = "chapter-description";
+            description.textContent = chapter.description || "Java Bronzeの学習問題";
+
+            const count = document.createElement("span");
+            count.className = "chapter-count";
+            count.textContent = String(chapter.questionCount ?? 0) + "問";
+
+            main.append(name, description);
+            card.append(main, count);
+            card.addEventListener("click", () => {
+                selectedChapter = chapterNumber;
+                renderChapterCards();
+                updateSelectedSummary();
+                element("effect-zone").className = "effect-zone";
+                element("effect-zone").textContent = "第" + selectedChapter + "章を選択しました。問題数を選んで開始してください。";
+            });
+            list.appendChild(card);
+        });
+    }
+
+    function updateSelectedSummary() {
+        const chapter = availableChapters.find(item => Number(item.chapter) === selectedChapter);
+        const title = chapter ? chapter.title : ("第" + selectedChapter + "章");
+        element("selected-summary").textContent = title + "から" + selectedQuestionCount + "問を出題します。1ステージは5問です。";
+    }
+
+    function resetBattle() {
+        currentHp = 5;
+        currentScore = 0;
+        currentCombo = 0;
+        clearedStages = 0;
+        updateHpDisplay();
+        element("score-val").textContent = "0";
+        element("combo-val").textContent = "0";
+        element("effect-zone").className = "effect-zone";
+        element("effect-zone").textContent = "⚔️ バトル開始！問題に回答してください。";
+        element("battle-state").textContent = "BATTLE START";
+        updateBattleStage(1);
+    }
+
+    // 選択した章・問題数に合わせてJSON形式の問題データを取得する
+    async function startGame() {
+        const startButton = element("start-button");
+        startButton.disabled = true;
+        startButton.textContent = "問題を読み込み中...";
+        element("effect-zone").className = "effect-zone";
+        element("effect-zone").textContent = "📚 問題データを読み込んでいます...";
+
+        try {
+            stopQuestionTimer();
+            const url = "/api/questions/chapter/" + encodeURIComponent(selectedChapter) +
+                "?genre=BRONZE&limit=" + encodeURIComponent(selectedQuestionCount);
+            const response = await fetch(url);
+            if (!response.ok) {
+                let message = "問題データを取得できませんでした（HTTP " + response.status + "）";
+                try {
+                    const errorBody = await response.json();
+                    if (errorBody.message) message = errorBody.message;
+                } catch (_) { /* エラー本文がJSONでなければ初期メッセージを使用する */ }
+                throw new Error(message);
+            }
+
+            const data = await response.json();
+            if (!Array.isArray(data) || data.length === 0) {
+                throw new Error("選択した章に問題がありません");
+            }
+            if (data.some(question => !question.questionId || !Array.isArray(question.choices))) {
+                throw new Error("問題データの形式が正しくありません");
+            }
+
+            localQuestions = data;
+            currentQuestionIndex = 0;
+            answerLocked = false;
+            resetBattle();
+            element("home-view").classList.remove("active");
+            element("quiz-view").classList.add("active");
+            element("quiz-content").classList.remove("hidden");
+            element("stage-failed-panel").classList.add("hidden");
+            element("game-result-panel").classList.add("hidden");
+            renderQuestion();
+        } catch (error) {
+            element("effect-zone").className = "effect-zone miss";
+            element("effect-zone").textContent = "⚠️ " + error.message;
+            console.error("ゲーム開始エラー:", error);
+        } finally {
+            startButton.disabled = false;
+            startButton.textContent = "ゲーム開始";
+        }
+    }
+
+    // 現在の問題、選択肢、制限時間を画面に表示する
+    function renderQuestion() {
+        const question = localQuestions[currentQuestionIndex];
+        if (!question) {
+            finishGame();
+            return;
         }
 
-        /* 取得した問題文と選択肢を画面へ表示する処理 */
-        function renderQuestion() {
-            // 配列から、現在表示する問題を取り出す
-            const q = localQuestions[currentQuestionIndex];
+        answerLocked = false;
+        element("quiz-content").classList.remove("hidden");
+        element("stage-failed-panel").classList.add("hidden");
+        element("game-result-panel").classList.add("hidden");
+        element("question-label").textContent =
+            (question.checklist || "JAVA BRONZE") + (question.difficulty ? " ・ " + question.difficulty : "");
+        element("question-text").textContent = question.questionText || "問題文が登録されていません。";
 
-            // 現在の問題番号と全体の問題数を表示する
-            document.getElementById("stage-info").innerText = "第1章 / Stage 1 / 第" + (currentQuestionIndex + 1) + "問目 (全" + localQuestions.length + "問)";
-            // データベースから受け取った問題文を表示する
-            document.getElementById("question-text").innerText = q.questionText;
+        const code = element("question-code");
+        if (question.codeBlock && String(question.codeBlock).trim() !== "") {
+            code.textContent = question.codeBlock;
+            code.classList.remove("hidden");
+        } else {
+            code.textContent = "";
+            code.classList.add("hidden");
+        }
 
-            // 問題画面の中にある選択肢ボタン（A～E）を取得する
-            const buttons = document.querySelectorAll("#area-game button");
+        const stageNumber = Math.floor(currentQuestionIndex / 5) + 1;
+        const inStageQuestion = (currentQuestionIndex % 5) + 1;
+        element("stage-info").textContent = "第" + question.chapter + "章 / Stage " + stageNumber + " / 第" + inStageQuestion + "問目（全" + localQuestions.length + "問）";
+        updateBattleStage(stageNumber);
+        element("player-avatar").textContent = playerAvatars[(stageNumber - 1) % playerAvatars.length];
+        element("enemy-avatar").textContent = enemyAvatars[(stageNumber - 1) % enemyAvatars.length];
+        element("player-name").textContent = "PLAYER " + stageNumber;
+        element("enemy-name").textContent = "JAVA ENEMY " + stageNumber;
 
-            // APIから受け取った選択肢を、A～Eの順番で配列にまとめる
-            const choices = [q.choiceA, q.choiceB, q.choiceC, q.choiceD, q.choiceE];
-            const choiceLabels = ["A", "B", "C", "D", "E"];
+        const choices = Array.isArray(question.choices) ? question.choices : [];
+        const buttons = document.querySelectorAll(".choice-button");
+        buttons.forEach((button, index) => {
+            const choice = choices[index];
+            const text = button.querySelector(".choice-text");
+            if (typeof choice !== "string" || choice.trim() === "") {
+                button.classList.add("hidden");
+                button.disabled = true;
+                text.textContent = "";
+            } else {
+                button.classList.remove("hidden");
+                button.disabled = false;
+                text.textContent = choice;
+            }
+        });
 
-            // 問題によって選択肢の数が違うため、値があるボタンだけ表示する
-            buttons.forEach((button, index) => {
-                const choice = choices[index];
+        element("effect-zone").className = "effect-zone";
+        element("effect-zone").textContent = "⚔️ 第" + inStageQuestion + "問目！回答を選択してください。";
+        startQuestionTimer(question.timeLimitSeconds);
+    }
 
-                // null、undefined、空文字は未登録の選択肢として扱う
-                if (choice === null || choice === undefined || String(choice).trim() === "") {
-                    button.style.display = "none";
-                } else {
-                    // 次の問題に選択肢がある場合は、ボタンを再表示する
-                    button.style.display = "";
-                    button.innerText = choiceLabels[index] + ". " + choice;
+    // 各問題に設定された制限時間をカウントダウンする
+    function startQuestionTimer(seconds) {
+        stopQuestionTimer();
+        timerDuration = Math.max(1, Number(seconds) || 30);
+        timeRemaining = timerDuration;
+        updateTimerDisplay();
+        timerInterval = window.setInterval(() => {
+            if (answerLocked) return;
+            timeRemaining -= 1;
+            updateTimerDisplay();
+            if (timeRemaining <= 0) {
+                stopQuestionTimer();
+                if (!answerLocked) {
+                    answerLocked = true;
+                    setChoiceButtonsDisabled(true);
+                    displayAnswerResult({
+                        correct: false,
+                        explanation: "制限時間内に回答できませんでした。次の問題に進みます。"
+                    }, true);
                 }
+            }
+        }, 1000);
+    }
+
+    function stopQuestionTimer() {
+        if (timerInterval !== null) {
+            window.clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    function updateTimerDisplay() {
+        element("timer-value").textContent = timeRemaining + "秒";
+        const percentage = timerDuration > 0 ? Math.max(0, (timeRemaining / timerDuration) * 100) : 0;
+        const fill = element("timer-fill");
+        fill.style.width = percentage + "%";
+        fill.classList.toggle("warning", timeRemaining <= 5);
+    }
+
+    function setChoiceButtonsDisabled(disabled) {
+        document.querySelectorAll(".choice-button").forEach(button => {
+            if (!button.classList.contains("hidden")) button.disabled = disabled;
+        });
+    }
+
+    // 選択した回答をサーバーへ送り、返ってきた判定結果でゲームを更新する
+    async function checkAnswer(selectedIndex) {
+        if (answerLocked) return;
+
+        const question = localQuestions[currentQuestionIndex];
+        if (!question) return;
+        const selectedChoice = question.choices[selectedIndex];
+        if (typeof selectedChoice !== "string") return;
+
+        answerLocked = true;
+        stopQuestionTimer();
+        setChoiceButtonsDisabled(true);
+        element("effect-zone").className = "effect-zone";
+        element("effect-zone").textContent = "回答を判定しています...";
+
+        try {
+            const response = await fetch("/api/answers", {
+                method: "POST",
+                headers: { "Content-Type": "application/json; charset=utf-8" },
+                body: JSON.stringify({
+                    questionId: question.questionId,
+                    selectedChoice: selectedChoice
+                })
             });
 
-            // 回答を待っていることをメッセージ欄に表示する
-            document.getElementById("effect-zone").innerText = "⚔️ 第" + (currentQuestionIndex + 1) + "問目！回答を選択してください";
+            let result;
+            try {
+                result = await response.json();
+            } catch (_) {
+                throw new Error("サーバーから正しい形式の回答が返されませんでした");
+            }
+            if (!response.ok) {
+                throw new Error(result.message || "正誤判定に失敗しました（HTTP " + response.status + "）");
+            }
+            if (typeof result.correct !== "boolean") {
+                throw new Error("正誤判定APIの応答にcorrectがありません");
+            }
+            displayAnswerResult(result, false);
+        } catch (error) {
+            // 通信エラーの場合は、回答を再送信できるようにする
+            answerLocked = false;
+            setChoiceButtonsDisabled(false);
+            element("effect-zone").className = "effect-zone miss";
+            element("effect-zone").textContent = "⚠️ 回答判定に失敗しました。もう一度選択してください。\n" + error.message;
+            console.error("回答判定エラー:", error);
+            startQuestionTimer(Math.max(timeRemaining, 10));
+        }
+    }
+
+    // APIから受け取った正誤判定をスコア・HP・コンボと演出に反映する
+    function displayAnswerResult(result, timedOut) {
+        stopQuestionTimer();
+        setChoiceButtonsDisabled(true);
+        const effect = element("effect-zone");
+        const player = element("player-avatar");
+        const enemy = element("enemy-avatar");
+        player.classList.remove("attack", "damaged", "miss");
+        enemy.classList.remove("attack", "damaged", "miss");
+
+        // CSSアニメーションを連続して再生できるように、クラスを付け直す
+        void player.offsetWidth;
+        void enemy.offsetWidth;
+
+        if (result.correct === true) {
+            if (currentHp > 0) {
+                element("hp" + currentHp).classList.add("empty");
+                currentHp -= 1;
+            }
+            currentScore += 100;
+            currentCombo += 1;
+            element("score-val").textContent = String(currentScore);
+            element("combo-val").textContent = String(currentCombo);
+            updateHpDisplay();
+            player.classList.add("attack");
+            enemy.classList.add("damaged");
+            effect.className = "effect-zone success";
+            effect.textContent = "💥 正解！敵に1ダメージ！\n" + (result.explanation || "よくできました！");
+        } else {
+            currentCombo = 0;
+            element("combo-val").textContent = "0";
+            enemy.classList.add("attack");
+            player.classList.add("miss");
+            effect.className = "effect-zone miss";
+            if (timedOut) {
+                effect.textContent = "⌛ TIME UP！MISS！\n" + (result.explanation || "時間切れです。");
+            } else {
+                effect.textContent = "❌ MISS！\n正解：" + (result.correctChoiceText || "確認できません") + "\n" +
+                    (result.selectedChoiceExplanation || result.explanation || "解説を確認して次へ進みましょう。");
+            }
         }
 
-        // 回答処理中かどうかを管理する変数
-        // 連続クリックで1問に複数回の判定が発生することを防ぐ
-        let answerLocked = false;
+        // 現在の回答の演出が見えるよう、少し待ってから次へ進む
+        window.setTimeout(advanceAfterQuestion, 1600);
+    }
 
-        // 選択肢がクリックされたとき、問題データのcorrectChoiceIndexと比較して正誤判定する
-        function checkAnswer(selectedIndex) {
-            // 回答後の待ち時間中は、同じ問題をもう一度判定しない
-            if (answerLocked) {
-                return;
-            }
+    // 1問終了後、5問単位でステージのクリア・失敗を判定する
+    function advanceAfterQuestion() {
+        currentQuestionIndex += 1;
+        const completedStageQuestions = currentQuestionIndex % 5 === 0;
 
-            // 現在表示している問題を取得する
-            const currentQuestion = localQuestions[currentQuestionIndex];
+        if (completedStageQuestions) {
+            if (currentHp === 0) {
+                clearedStages += 1;
+                const completedStageNumber = currentQuestionIndex / 5;
+                element("battle-state").textContent = "STAGE CLEAR!";
+                element("effect-zone").className = "effect-zone success";
+                element("effect-zone").textContent = "🎉 STAGE " + completedStageNumber + " CLEAR！敵を倒しました！";
 
-            // 問題データが取得できていない場合は処理を中止する
-            if (!currentQuestion) {
-                document.getElementById("effect-zone").innerText = "⚠️ 問題データを取得できませんでした";
-                return;
-            }
-
-            // 現在の問題の正解番号を取得する
-            // APIではA=0、B=1、C=2、D=3、E=4としてcorrectChoiceIndexが保存されている
-            const correctIndex = currentQuestion.correctChoiceIndex;
-
-            // 正解番号と押された選択肢の番号を比較する
-            const isCorrect = selectedIndex === correctIndex;
-
-            // 回答後の二重クリックを防ぐためロックする
-            answerLocked = true;
-
-            if (isCorrect) {
-                // 正解の場合：敵HPを1減らす
-                if (currentHp > 0) {
-                    document.getElementById("hp" + currentHp).classList.add("empty");
-                    currentHp = currentHp - 1;
-                }
-
-                // 正解の場合：スコアを100加算する
-                currentScore = currentScore + 100;
-
-                // 正解の場合：コンボを1増やす
-                currentCombo = currentCombo + 1;
-
-                // 画面上のスコアとコンボを更新する
-                document.getElementById("score-val").innerText = currentScore;
-                document.getElementById("combo-val").innerText = currentCombo;
-
-                // 正解したことを画面に表示する
-                document.getElementById("effect-zone").innerText = "💥 正解！敵に1ダメージ！";
-
-                // 敵HPが0になった場合はステージクリアを表示する
-                if (currentHp === 0) {
-                    document.getElementById("effect-zone").innerText = "🎉 PERFECT STAGE CLEAR！";
+                if (currentQuestionIndex >= localQuestions.length) {
+                    window.setTimeout(finishGame, 1300);
+                } else {
+                    window.setTimeout(() => {
+                        currentHp = 5;
+                        updateHpDisplay();
+                        answerLocked = false;
+                        renderQuestion();
+                    }, 1300);
                 }
             } else {
-                // 不正解の場合：コンボを0に戻す
-                currentCombo = 0;
-
-                // 画面上のコンボを更新する
-                document.getElementById("combo-val").innerText = currentCombo;
-
-                // 不正解だったことを画面に表示する
-                document.getElementById("effect-zone").innerText = "❌ MISS！正解ではありません";
+                failedStageStartIndex = currentQuestionIndex - 5;
+                element("quiz-content").classList.add("hidden");
+                element("stage-failed-panel").classList.remove("hidden");
+                element("game-result-panel").classList.add("hidden");
+                element("stage-failed-message").textContent =
+                    "Stage " + (failedStageStartIndex / 5 + 1) + " はクリアできませんでした。敵のHPが " + currentHp + " 残っています。";
+                element("battle-state").textContent = "STAGE FAILED";
+                element("battle-stage").textContent = "Stage " + (failedStageStartIndex / 5 + 1);
+                element("effect-zone").className = "effect-zone miss";
+                element("effect-zone").textContent = "敵を倒しきれませんでした。ステージの5問にもう一度挑戦できます。";
             }
-
-            // 回答後、次の問題へ進む
-            checkNextQuestion();
+            return;
         }
 
-        /* 少し待ってから次の問題へ進める処理 */
-        function checkNextQuestion() {
-            // 次の問題番号に進める
-            currentQuestionIndex = currentQuestionIndex + 1;
-
-            // まだ問題が残っている場合は、1.5秒後に次の問題を表示する
-            if (currentQuestionIndex < localQuestions.length) {
-                setTimeout(() => {
-                    // 次の問題を表示する前に回答ロックを解除する
-                    answerLocked = false;
-                    renderQuestion();
-                }, 1500);
-            } else {
-                // すべての問題が終わったら、終了メッセージを表示する
-                setTimeout(() => {
-                    answerLocked = false;
-                    document.getElementById("effect-zone").innerText = "🏁 全問のステージが終了しました！";
-                }, 1500);
-            }
+        if (currentQuestionIndex < localQuestions.length) {
+            renderQuestion();
+        } else {
+            finishGame();
         }
-    </script>
+    }
+
+    function retryCurrentStage() {
+        currentQuestionIndex = failedStageStartIndex;
+        currentHp = 5;
+        currentCombo = 0;
+        answerLocked = false;
+        updateHpDisplay();
+        element("combo-val").textContent = "0";
+        element("battle-state").textContent = "BATTLE START";
+        element("stage-failed-panel").classList.add("hidden");
+        element("quiz-content").classList.remove("hidden");
+        renderQuestion();
+    }
+
+    function updateHpDisplay() {
+        for (let i = 1; i <= 5; i++) {
+            element("hp" + i).classList.toggle("empty", i > currentHp);
+        }
+        element("hp-count").textContent = currentHp + " / 5";
+    }
+
+    function updateBattleStage(stageNumber) {
+        element("battle-stage").textContent = "Stage " + stageNumber;
+    }
+
+    // 全問題のプレイ終了時に結果を表示する
+    function finishGame() {
+        stopQuestionTimer();
+        answerLocked = true;
+        element("quiz-content").classList.add("hidden");
+        element("stage-failed-panel").classList.add("hidden");
+        element("game-result-panel").classList.remove("hidden");
+        element("game-result-title").textContent = "学習終了！";
+        element("game-result-message").textContent =
+            "今回の問題数：" + localQuestions.length + "問\nステージクリア数：" + clearedStages + " / " + Math.ceil(localQuestions.length / 5);
+        element("game-result-score").textContent = "SCORE: " + currentScore;
+        element("battle-state").textContent = "RESULT";
+        element("effect-zone").className = "effect-zone success";
+        element("effect-zone").textContent = "🏁 プレイ終了！おつかれさまでした。";
+    }
+
+    function returnToHome() {
+        stopQuestionTimer();
+        answerLocked = false;
+        element("quiz-view").classList.remove("active");
+        element("home-view").classList.add("active");
+        element("effect-zone").className = "effect-zone";
+        element("effect-zone").textContent = "待機中：学習する章を選んでゲームを開始してください。";
+        element("battle-state").textContent = "ゲーム開始前";
+        element("battle-stage").textContent = "Stage 1";
+        currentHp = 5;
+        updateHpDisplay();
+    }
+
+    // 画面のボタンに処理を登録する
+    document.querySelectorAll(".count-option").forEach(button => {
+        button.addEventListener("click", () => {
+            selectedQuestionCount = Number(button.dataset.count);
+            document.querySelectorAll(".count-option").forEach(option => {
+                option.setAttribute("aria-pressed", String(option === button));
+            });
+            updateSelectedSummary();
+        });
+    });
+
+    document.querySelectorAll(".choice-button").forEach(button => {
+        button.addEventListener("click", () => checkAnswer(Number(button.dataset.index)));
+    });
+
+    element("start-button").addEventListener("click", startGame);
+    element("retry-stage-button").addEventListener("click", retryCurrentStage);
+    element("back-home-from-quiz").addEventListener("click", returnToHome);
+    element("back-home-from-fail").addEventListener("click", returnToHome);
+    element("return-home-button").addEventListener("click", returnToHome);
+
+    // ページ表示後に、章一覧をAPIから読み込む
+    loadChapters();
+</script>
 </body>
 </html>

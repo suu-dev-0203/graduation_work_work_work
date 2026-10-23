@@ -2155,3 +2155,163 @@ Spring Bootからの読み込みやゲーム画面との連携は、引き続き
 3. JavaScriptからAPIを呼び出し、選択した章の問題を取得できるようにする。
 4. 1ステージ5問の出題、正誤判定、敵HP、スコアなどのゲーム処理と連携する。
 5. 実際にアプリケーションを起動し、一連の動作を確認する。
+
+2026-10-23：JSON問題データの読み込み処理とAPIの実装
+1. 作業の目的
+前段階で作成した src/main/resources/data/java-bronze.json を、Spring Bootアプリケーションから読み込み、画面へ問題データを渡せるようにする作業を進めた。
+
+あわせて、問題文・選択肢の取得と正誤判定をAPIに分け、ブラウザ側に正解番号を渡さず、Java側で回答を判定する構成に変更した。これにより、JSONを問題データの管理元として使い、将来問題ジャンルを追加するときにも同じ読み込み・判定処理を再利用できる形を目指した。
+2. QuestionService.java の変更
+問題データをデータベースに登録された内容だけに依存せず、JSONファイルから読み込めるように QuestionService.java を変更した。
+
+主な変更内容は次のとおり。
+- Jacksonの ObjectMapper を使い、JSONをJavaで扱える形式に読み込む。
+- @PostConstruct を利用し、Spring Beanの初期化時に classpath*:data/*.json に該当するJSONファイルを読み込む。
+- 読み込んだ章情報と問題情報を、APIから利用できるようにService内へ保持する。
+- 各問題に questionId が設定されていることを確認する。
+- choices が5件であることを確認する。
+- answer が選択肢の番号として有効な0～4の範囲にあることを確認する。
+- ジャンル、章番号、問題数を使って取得対象を絞り込めるようにする。
+- 出題候補からランダムに問題を選び、選択肢も並べ替えて返す処理を用意する。
+- 画面表示用の問題データには、正解番号 answer を含めない。
+- 回答を受けたときは、JSON内の正解選択肢と送信された選択肢の文章を照合する。
+Serviceには、章情報を取得する getJsonChapters(...)、章の問題を取得する getJsonQuestionsByChapter(...)、問題IDの有無を確認する hasJsonQuestion(...)、回答を判定する checkJsonAnswer(...) などの処理を追加した。
+
+既存のデータベースを利用するメソッドも残しているため、今回の変更ですべてのDB関連処理を削除したわけではない。
+3. 問題取得APIの追加・変更
+QuestionController.java を変更し、JSON問題データを画面側から取得するためのAPIを用意した。
+メソッド	URL	用途
+GET	/api/questions/chapters?genre=BRONZE	指定ジャンルの章一覧を取得する
+GET	/api/questions/chapter/{chapterId}?genre=BRONZE&limit=5	指定章から指定件数までの問題を取得する
+
+
+問題取得APIでは、問題ID、ジャンル、章番号、模擬問題フラグ、チェック項目、テーマ、難易度、問題文、コード、選択肢、制限時間など、画面に必要な情報を返す構成にした。一方で、正解番号の answer は返さないようにした。
+
+limit は5問・10問・15問・20問を指定する想定とし、API側で許可する値を検証する。取得できる問題が指定件数より少ない場合、取得数はその章に存在する問題数に依存する。
+4. AnswerController.java の変更
+AnswerController.java の POST /api/answers を、JSON問題データに対応させた。
+
+リクエストは、次の2項目をJSON形式で送信する。
+{
+  "questionId": "BRONZE-CH1-16",
+  "selectedChoice": "選択した選択肢の文章"
+}
+以前の実装では、選択肢が特定の文字列（B）かどうかを使って正解を決める仮の判定が入っていた。この固定判定をやめ、QuestionService.checkJsonAnswer(...) を呼び出して、問題データに登録された正解と実際に選ばれた選択肢の文章を照合する構成に変更した。
+
+正常なリクエストでは、少なくとも問題ID、正誤、正解選択肢、基本解説、詳細解説、復習ヒントなどを返す。選んだ選択肢に対応する解説がある場合は、その内容も返す。入力が不正な場合はHTTP 400、問題IDが見つからない場合はHTTP 404として扱う。
+5. 古い問題バンク関連ファイルの整理
+JSONを問題データの管理元にする方針に合わせ、既存のJava問題バンクとステージ用の一部クラスを整理した。
+
+削除したファイルは次のとおり。
+- src/main/java/com/example/graduation_java_game/OriginalQuestionBank.java
+- src/main/java/com/example/graduation_java_game/OriginalQuestionBankChapters2To4.java
+- src/main/java/com/example/graduation_java_game/OriginalQuestionBankChapters5To6.java
+- src/main/java/com/example/graduation_java_game/OriginalQuestionBankChapters7To8.java
+- src/main/java/com/example/graduation_java_game/OriginalQuestionBankInitializer.java
+- src/main/java/com/example/entity/StageDefinition.java
+- src/main/java/com/example/entity/StageQuestion.java
+削除前に、プロジェクト内のJavaソースからこれらのクラス名への参照を検索し、参照が見つからないことを確認してから削除した。
+
+特に旧 OriginalQuestionBankInitializer.java には、起動時にデータベースの問題を削除して旧問題バンクから再登録する処理があった。旧初期化処理を削除したことで、JSONを読み込む構成と旧初期化処理が並行して実行される状態を避けることを意図した。
+
+ただし、ファイル削除後の最新状態については、Mavenでの再コンパイルとSpring Bootの再起動を改めて実行し、削除したクラスへの参照が残っていないことを最終確認する必要がある。
+6. APIの動作確認
+PowerShellから、稼働中のSpring Bootアプリケーションへリクエストを送信し、APIの返却内容を確認した。
+6-1. 章一覧API
+GET /api/questions/chapters?genre=BRONZE を実行し、章情報がJSON配列として返ることを確認した。返却データには第1章から第8章までが含まれていた。
+
+返された章ごとの問題数は、JSONファイルの内訳と一致していた。
+章	APIで確認した問題数
+第1章	20問
+第2章	35問
+第3章	35問
+第4章	35問
+第5章	35問
+第6章	35問
+第7章	30問
+第8章	35問
+
+
+合計は260問であり、第8章の isMock は true、第1～7章は false として返ることを確認した。
+6-2. 問題取得API
+GET /api/questions/chapter/1?genre=BRONZE&limit=5 を実行し、第1章から5問の問題データが取得できることを確認した。
+
+返却された問題オブジェクトには questionId、questionText、choices、timeLimitSeconds などが含まれ、正解番号の answer は含まれていなかった。これは画面側に正解情報を渡さず、回答をサーバー側で判定するための意図した仕様である。
+6-3. PowerShellの配列構造の確認
+PowerShellでAPIレスポンスを読み込んだ際、最初は $questions.Count が1となり、$questions[0] の中に5問分の配列が入っている状態が発生した。その状態では、問題IDを1件ずつ取得できず、問題IDが複数つながった値として送られる問題が起きた。
+
+JSON文字列を ConvertFrom-Json で読み込んだ後、配列の型と件数を確認し、外側に1要素だけの配列があり、その要素がさらに配列である場合に内側の配列を取り出すようにした。
+
+修正後は、$questions.Count が5となり、$questions[0].questionId と $questions[1].questionId からそれぞれ別の問題IDを取得できた。これはPowerShellでのテストコード上の配列処理の問題であり、JSONファイル自体が二重配列形式だったという意味ではない。
+6-4. 正誤判定API
+問題ID BRONZE-CH1-16 に対して、選択肢Aの文章を送信して正誤判定を実行した。APIから correct: false と正解選択肢、解説、詳細解説、復習ヒント、選択肢ごとの解説が返ることを確認した。
+
+当該問題では選択肢Bが正解であり、選択肢Aを送信して correct: false となったため、確認した結果は問題データの正解設定と一致していた。
+7. PowerShellでの日本語表示とUTF-8の確認
+最初のPowerShellテストでは、日本語の選択肢や解説が文字化けして表示され、送信した選択肢が問題データ内の文字列と一致せずHTTP 400になるケースがあった。
+
+その後、問題取得レスポンスを一時ファイルに保存し、Get-Content -Raw -Encoding UTF8 で読み込む方法を使用した。リクエスト送信時も、JSON文字列を [System.Text.Encoding]::UTF8.GetBytes(...) でUTF-8のバイト列に変換して送信した。
+
+APIの応答についても、一時ファイルに保存してUTF-8として読み込み直すと、日本語の正解選択肢と解説が正しく表示されることを確認した。したがって、今回確認した直接の問題はPowerShellの入出力・表示手順にあり、Javaの正誤判定ロジックを文字化け対策のために変更する必要はなかった。
+8. chapters.html の画面再構成
+以前の chapters.html は暗色の画面デザインで、章選択や問題数選択が固定表示に近い状態だった。また、問題の選択肢を choiceA～choiceE から取得し、correctChoiceIndex を使ってブラウザ側で正誤判定する旧形式が残っていた。新しいAPIの形式は choices 配列を使用し、正解情報を問題取得時に返さないため、画面側のデータ参照と判定方法を更新する必要があった。
+
+さらに、修正作業中の画面スクリプトでは let answerLocked = false; が重複して宣言されている状態も確認した。同じスコープで let を重複宣言するとJavaScriptの構文エラーになるため、画面を更新する際には変数宣言を1か所にまとめる必要がある。
+
+これらを踏まえ、送付された画面イメージを参考に、白基調の左右分割レイアウトに再構成した chapters.html を作成した。主な構成・機能は次のとおり。
+- 左側に章選択、問題数設定、問題文、コード、選択肢を配置する。
+- 右側に敵HP、キャラクター、バトル演出、スコア、コンボを配置する。
+- /api/questions/chapters?genre=BRONZE から章情報を読み込み、章カードを動的に表示する。
+- 章ごとの問題数を表示し、第8章には模擬問題の表示を付ける。
+- 5問・10問・15問・20問の出題数を選択できるようにする。
+- /api/questions/chapter/{chapterId}?genre=BRONZE&limit={questionCount} から、選択した章の問題データを取得する。
+- JSONの choices 配列を使用し、timeLimitSeconds に応じた制限時間を表示する。
+- 選択肢がクリックされたら、問題IDと選択肢の文章を /api/answers へ送信し、サーバーから返された正誤判定を使って画面を更新する。
+- 正解時はHPを1減らし、スコアとコンボを更新する。不正解時はコンボを0に戻し、正解選択肢と解説を表示する。
+- 5問を1ステージとして扱い、敵HPが0になればクリア、倒しきれなかった場合は同じ5問へ再挑戦できる画面を表示する。
+- プレイ終了時に問題数、ステージクリア数、スコアを表示する。
+作成したHTML内のJavaScriptは、Node.jsの node --check により構文エラーがないことを確認した。一方、実際のSpring Bootアプリケーション上でこのファイルを配置して開き、章選択からゲーム終了までをブラウザで通して確認する作業も完了した。構文チェックの成功は、API連携を含む実行時動作すべての成功を意味するものではない。
+9. 変更・追加・削除したファイルの整理
+今回の作業で関係した主なファイルは次のとおり。
+ファイル	変更内容
+src/main/resources/data/java-bronze.json	Bronzeの全260問を保持するデータファイル
+convert_java_bronze_bank.py	元のJava問題バンクをJSONへ変換するスクリプト
+src/main/java/com/example/service/QuestionService.java	JSON読み込み、章・問題取得、正誤判定処理を追加
+src/main/java/com/example/controller/QuestionController.java	章一覧と問題取得のAPIを追加・変更
+src/main/java/com/example/controller/AnswerController.java	JSON問題データを使ったサーバー側の正誤判定に変更
+src/main/resources/templates/chapters.html	白基調の左右分割画面に再構成するファイルを作成
+src/main/java/com/example/graduation_java_game/ 配下の旧問題バンク関連ファイル	JSON管理への移行に合わせて削除
+src/main/java/com/example/entity/StageDefinition.java	参照確認後に削除
+src/main/java/com/example/entity/StageQuestion.java	参照確認後に削除
+
+
+変更されたファイルのコンパイル・実行確認、Gitの差分確認、コミット、GitHubへのプッシュは、それぞれ別の作業として確認する必要がある。
+10. 現時点で確認できたことと、未完了のこと
+確認できたこと
+- JSONファイルからAPI経由で章一覧を取得できた。
+- 章一覧APIから8章の情報と各章の問題数を取得できた。
+- 問題取得APIから第1章の問題を5問取得できた。
+- 問題取得レスポンスに正解番号が含まれていないことを確認した。
+- UTF-8で回答を送信すると、サーバー側で正誤判定できた。
+- 正誤判定APIから正解選択肢と解説情報が返ることを確認した。
+- PowerShell側の配列構造と日本語表示の問題を切り分けた。
+- 新しい chapters.html のJavaScript構文チェックに成功した。
+まだ確認が必要なこと
+- 旧問題バンク関連クラスとステージ関連クラスの削除後に、Mavenでクリーンビルドできること。
+- 削除後のアプリを再起動し、起動時にJSON260問を読み込めること。
+- 新しい chapters.html を実プロジェクトへ配置し、ブラウザで章一覧・問題取得・回答判定を一連で確認すること。
+- 制限時間切れ、通信エラー、ステージ失敗、ステージ再挑戦、全問終了の挙動を確認すること。
+- HP、スコア、コンボ、ステージ進行は現状クライアント側で管理しているため、データベースの GameSession や StageSession と永続的に連携する作業は未完了である。
+- 回答履歴、間違えた問題の保存、結果画面からの復習、履歴・正答率の保存などは別途実装と確認が必要である。
+- 現段階で行ったAPIテストは部分的な確認であり、アプリケーション全体の完成を意味しない。
+11. 次に行う作業
+1. 新しい chapters.html を src/main/resources/templates/chapters.html に配置する。
+2. git status と差分確認で、変更・削除されたファイルを確認する。
+3. Javaの JAVA_HOME とMaven Wrapperのパスを指定し、clean compile を実行する。
+4. ビルドに成功したらSpring Bootを起動し、ログにJSON問題260問の読み込み完了が出ることを確認する。
+5. /chapters をブラウザで開き、章カードが8章分表示されることを確認する。
+6. 第1章を選び、5問・10問などを設定して開始し、問題文・コード・選択肢・制限時間が表示されることを確認する。
+7. 正解、不正解、制限時間切れをそれぞれ実行し、画面表示とAPIの応答が想定どおりか確認する。
+8. 5問すべて正解した場合のステージクリアと、クリアできない場合の再挑戦を確認する。
+9. ブラウザのConsoleとSpring Bootのログにエラーがないことを確認する。
+10. 実際に確認できた内容だけをこのログへ追記し、その後、変更内容を確認して日本語のコミットメッセージで記録する。

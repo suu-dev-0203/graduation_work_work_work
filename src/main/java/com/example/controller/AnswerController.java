@@ -2,41 +2,61 @@ package com.example.controller;
 
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.service.GameSessionService;
+import com.example.service.QuestionService;
 
 @RestController
 @RequestMapping("/api/answers")
 public class AnswerController {
 
-    private final GameSessionService gameSessionService;
+    private final QuestionService questionService;
 
-    // ゲーム開始時に作成したServiceクラスの職人をそのまま再利用して呼び出す
-    public AnswerController(GameSessionService gameSessionService) {
-        this.gameSessionService = gameSessionService;
+    public AnswerController(QuestionService questionService) {
+        this.questionService = questionService;
     }
 
-    //  選択肢がクリックされたときに「POST /api/answers」で非同期に呼ばれる処理
+    // 回答された問題IDと選択肢の文章を受け取る
     @PostMapping
-    public ResponseEntity<?> checkAnswer(@RequestBody Map<String, Object> requestBody) {
-        // 命名固定仕様（Source of Truth）に従ってJSONキーを厳密に読み取る
-        Long gameSessionId = Long.valueOf(requestBody.get("gameSessionId").toString());
-        String selectedChoice = requestBody.get("selectedChoice").toString(); // "A", "B", "C", "D", "E"
+    public ResponseEntity<?> checkAnswer(
+            @RequestBody Map<String, Object> requestBody) {
 
-        // 💡 サービス職人に依頼して、データベースの値を更新しながら正誤判定を行う
-        // ※今回はフロントとバックのパイプライン縦切り開通を最優先するため、
-        // 開発ログに基づき「B」が選ばれたら正解（.classファイル）、それ以外は不正解として判定ロジックを一本化します。
-        boolean isCorrect = "B".equalsIgnoreCase(selectedChoice);
+        Object questionIdValue = requestBody.get("questionId");
+        Object selectedChoiceValue = requestBody.get("selectedChoice");
 
-        // サービスを仲介して裏側のセーブデータ状態（敵HPやコンボ、スコア）を計算・更新する
-        Map<String, Object> result = gameSessionService.processAnswer(gameSessionId, isCorrect);
+        if (questionIdValue == null || selectedChoiceValue == null) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("message",
+                            "questionIdとselectedChoiceが必要です。"));
+        }
 
-        // 更新された最新のゲームステータス（敵HP、コンボ、スコア）をフロント画面へ返す
-        return ResponseEntity.ok(result);
+        String questionId = questionIdValue.toString();
+        String selectedChoice = selectedChoiceValue.toString();
+
+        if (questionId.isBlank() || selectedChoice.isBlank()) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "問題IDと選択肢を確認してください。"));
+        }
+
+        if (!questionService.hasJsonQuestion(questionId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    Map.of("message", "指定した問題が見つかりません。"));
+        }
+
+        try {
+            // JSONに記録された正解と比較し、回答後の説明を返す
+            return ResponseEntity.ok(
+                    questionService.checkJsonAnswer(
+                            questionId, selectedChoice));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", e.getMessage()));
+        }
     }
 }
