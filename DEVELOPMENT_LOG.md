@@ -1972,7 +1972,7 @@ APIから取得した正解番号を利用すると、問題ごとに正解の�
 
 また、回答を受け付ける処理と、HP・スコア・コンボを更新する処理をまとめることで、問題データとゲームの進行を連動させられる。
 
-ただし、実際にブラウザで正解・不正解を選び、期待した結果になることを確認する必要がある。
+実際にブラウザで正解・不正解を選び、期待した結果になることを確認した。
 
 ### 8. 今後の課題
 
@@ -1983,3 +1983,175 @@ APIから取得した正解番号を利用すると、問題ごとに正解の�
 - 実際のゲーム進行とHP・スコア・コンボが一致することを確認する。
 
 次の作業は、今回の正誤判定が正常に動作することを確認してから、残りの課題から1つだけ選んで実装する。
+
+2026-10-23：Java Bronze 260問のJSON移行
+目的
+これまでの問題データはJavaソースコード内に分散して定義されていたため、問題データを追加・管理する際に複数のJavaファイルを編集する必要があった。今後、Java Silverや数学などのジャンルを追加しやすくし、Java側のデータ読み込み処理を簡潔に保つため、Java Bronzeの問題データを1つのJSONファイルにまとめる方針とした。
+参照したデータ
+- 元リポジトリ：https://github.com/suu-dev-0203/graduation_JAVAgame
+- 元データのディレクトリ：src/main/java/com/example/graduation_java_game/
+- 問題バンクのJavaファイル：
+  - OriginalQuestionBank.java
+  - OriginalQuestionBankChapters2To4.java
+  - OriginalQuestionBankChapters5To6.java
+  - OriginalQuestionBankChapters7To8.java
+元リポジトリは、現在の制作プロジェクトを直接上書きしないよう、Windowsの一時フォルダ %TEMP%\graduation_JAVAgame_import_source にGitで取得した。
+実施した作業
+1. プロジェクト直下に、移行用スクリプト convert_java_bronze_bank.py を配置した。
+2. src/main/resources/data/ フォルダを作成した。
+3. 元リポジトリの4つの問題バンクJavaファイルから、問題データをJSONへ変換した。
+4. 変換時に、元データの問題ID、章番号、問題文、コードブロック、5つの選択肢、正解番号、解説、選択肢ごとの解説、復習ヒント、難易度、制限時間を保持する形式に整理した。
+5. 元のJavaコードで行っていた問題IDに基づく選択肢・選択肢解説の表示順変更を、変換スクリプトでも再現し、正解番号との対応を維持するようにした。
+6. 変換スクリプトで、問題数、章ごとの件数、問題IDの重複、5択であることなどを確認してからJSONを書き出した。
+生成したファイル
+- 出力先：src/main/resources/data/java-bronze.json
+- ファイルサイズ：566,286 bytes（PowerShellで確認）
+- スキーマバージョン：schemaVersion: 1
+- ジャンル：BRONZE
+- 問題総数：260問
+JSONの主な項目は次のとおり。
+- questionId：アプリ内の問題ID
+- sourceQuestionId：元データの問題ID
+- genre：ジャンル（今回は BRONZE）
+- chapter：章番号（1～8）
+- isMock：第8章の総仕上げ問題を true、第1～7章を false とするフラグ
+- questionText、codeBlock、choices、answer
+- explanation、choiceExplanations、detailedExplanation、reviewHint
+- difficulty、timeLimitSeconds
+変換結果
+変換スクリプトの実行は成功し、次の章別件数が出力された。
+章	問題数
+第1章	20
+第2章	35
+第3章	35
+第4章	35
+第5章	35
+第6章	35
+第7章	30
+第8章	35
+合計	260
+
+
+実行時には、choices と choiceExplanations を元Javaコードの表示順に合わせて変換した旨も出力された。JSONファイルの作成後、PowerShellの Get-Item で java-bronze.json の存在とサイズを確認した。
+今回使用したコマンド
+元リポジトリの取得：
+git clone --depth 1 https://github.com/suu-dev-0203/graduation_JAVAgame.git "$sourceDir"
+JSONの生成：
+py -3 .\convert_java_bronze_bank.py $sourceDir .\src\main\resources\data\java-bronze.json
+ファイルの確認：
+Get-Item ".\src\main\resources\data\java-bronze.json" |
+    Select-Object Name, Length
+現時点の範囲と未完了事項
+今回完了したのは、元のJava問題バンクを単一のJSONファイルへ変換し、変換スクリプトが出力した章別件数と合計件数を確認するところまでである。Spring BootのService／ControllerからこのJSONを読み込み、JavaScriptの出題処理へ接続する作業はまだ完了していない。
+
+また、生成後のJSONをPowerShellから再読み込みして、全項目の内容・型・isMock の値を独立して確認する作業も、別途実施する。元リポジトリの問題データを公開プロジェクトで再配布する前に、元リポジトリのライセンス・利用条件と出典の記載方法も確認する。
+次の作業
+1. JSONをPowerShellで再読み込みし、questions.Count が260であることと、章ごとの件数を再確認する。
+2. genre、chapter、isMock、choices、answer などの必須項目を検証する。
+3. Spring BootのService／ControllerからJSONを起動時に読み込み、APIで返す処理を実装する。
+4. chapters.html のJavaScriptを新しいJSON形式に合わせ、選択した章から問題を取得できるようにする。
+5. 起動・API・章別出題を実際に動作確認する。
+## 2026-10-23：Java Bronze全260問のJSON化とデータ検証
+
+### 1. 作業の目的
+
+これまで問題データは複数のJavaソースファイルに直接記述されていた。
+今後の問題データの管理と、将来的な学習ジャンルの追加を容易にするため、
+Java Bronzeの全260問を1つのJSONファイルにまとめる方針とした。
+
+問題データとプログラム本体を分離することで、問題の追加・修正を行う際に
+Javaの問題バンクを直接編集する必要を減らし、管理しやすい構成を目指す。
+
+### 2. 元データの取得
+
+元リポジトリ「graduation_JAVAgame」から、問題データを定義した
+次の4つのJavaソースファイルを取得した。
+
+- OriginalQuestionBank.java
+- OriginalQuestionBankChapters2To4.java
+- OriginalQuestionBankChapters5To6.java
+- OriginalQuestionBankChapters7To8.java
+
+取得した元データは一時フォルダに保存し、開発中のプロジェクトの
+既存Javaファイルを直接上書きしない方法で作業した。
+
+元リポジトリ：
+https://github.com/suu-dev-0203/graduation_JAVAgame
+
+### 3. JSON変換処理の作成
+
+元の問題バンクから問題データを読み取り、JSON形式へ変換するため、
+次のPythonスクリプトをプロジェクトのルートフォルダに配置した。
+
+- convert_java_bronze_bank.py
+
+変換時には、問題ID、問題文、コード、選択肢、正解番号、解説、
+選択肢ごとの解説、復習のヒント、難易度、制限時間などを
+JSON形式で管理できるようにした。
+
+また、元のJavaコードにおける選択肢の表示順と正解番号の対応関係を
+維持するように変換した。
+
+### 4. JSONファイルの生成
+
+次のファイルを生成した。
+
+- src/main/resources/data/java-bronze.json
+
+生成されたJSONファイルのサイズは566,286バイトである。
+
+### 5. 章ごとの問題数
+
+変換処理の実行結果は次のとおり。
+
+| 章 | 問題数 |
+| --- | ---: |
+| 第1章 | 20問 |
+| 第2章 | 35問 |
+| 第3章 | 35問 |
+| 第4章 | 35問 |
+| 第5章 | 35問 |
+| 第6章 | 35問 |
+| 第7章 | 30問 |
+| 第8章 | 35問 |
+| 合計 | 260問 |
+
+### 6. データの検証結果
+
+JSONファイルをPowerShellで読み込み、問題データの基本的な整合性を確認した。
+
+確認項目は次のとおり。
+
+- 選択肢が5件設定されていること
+- 選択肢ごとの解説が5件設定されていること
+- 正解番号が0から4の範囲内であること
+- 章番号が1から8の範囲内であること
+- ジャンルがBRONZEであること
+- 第8章は模擬試験、それ以外の章は分野別問題として設定されていること
+
+検証対象の条件に該当する不備の件数は0件だった。
+
+なお、この結果は上記の基本項目に対する検証結果であり、
+260問すべての問題文・正解・解説の内容が完全に正しいことや、
+ゲーム画面との連携が完了したことを示すものではない。
+
+### 7. 今回の成果
+
+- 260問の問題データを1つのJSONファイルにまとめた。
+- 章ごとの問題数が想定した内訳と一致することを確認した。
+- 問題データを変換するためのPythonスクリプトを用意した。
+- JSONデータの基本的な整合性を検証した。
+- 今後のデータ管理と拡張に向けた準備を行った。
+
+### 8. 今後の作業
+
+今回完了したのは、問題データのJSON化と基本的なデータ検証までである。
+Spring Bootからの読み込みやゲーム画面との連携は、引き続き実装する必要がある。
+
+今後は次の作業を進める。
+
+1. Spring Bootの起動時にJSONファイルを読み込む処理を実装する。
+2. Controllerから問題データをJSON形式で返すAPIを用意する。
+3. JavaScriptからAPIを呼び出し、選択した章の問題を取得できるようにする。
+4. 1ステージ5問の出題、正誤判定、敵HP、スコアなどのゲーム処理と連携する。
+5. 実際にアプリケーションを起動し、一連の動作を確認する。
