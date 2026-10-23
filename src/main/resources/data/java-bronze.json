@@ -683,7 +683,7 @@
       "theme": "int型の宣言と初期化",
       "difficulty": "EASY",
       "questionText": "次のコードを実行したとき、表示される値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int count = 4; System.out.println(count); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int count = 4;\n        System.out.println(count);\n    }\n}",
       "choices": [
         "何も表示されない",
         "4",
@@ -807,7 +807,7 @@
       "theme": "識別子の大文字小文字",
       "difficulty": "EASY",
       "questionText": "次のコードの表示結果はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int score = 3; int Score = 8; System.out.println(score + Score); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int score = 3;\n        int Score = 8;\n        System.out.println(score + Score);\n    }\n}",
       "choices": [
         "11",
         "6",
@@ -838,7 +838,7 @@
       "theme": "整数リテラルの8進数表記",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 010; System.out.println(n); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 010;\n        System.out.println(n);\n    }\n}",
       "choices": [
         "コンパイルエラー",
         "8",
@@ -869,7 +869,7 @@
       "theme": "変数の再代入",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int level = 2; level = 5; System.out.println(level); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int level = 2;\n        level = 5;\n        System.out.println(level);\n    }\n}",
       "choices": [
         "コンパイルエラー",
         "0",
@@ -900,7 +900,7 @@
       "theme": "Stringリテラルの文字列長",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { String word = \"Java\"; System.out.println(word.length()); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        String word = \"Java\";\n        System.out.println(word.length());\n    }\n}",
       "choices": [
         "5",
         "Java",
@@ -993,7 +993,7 @@
       "theme": "ローカル変数の初期化",
       "difficulty": "EASY",
       "questionText": "次のmainメソッド内のコードについて正しい説明はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int total; System.out.println(total); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int total;\n        System.out.println(total);\n    }\n}",
       "choices": [
         "実行時に必ず0が表示される。",
         "intの宣言自体が不正である。",
@@ -1024,7 +1024,7 @@
       "theme": "エスケープシーケンス",
       "difficulty": "EASY",
       "questionText": "次のコードの出力について正しい説明はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { System.out.println(\"A\\nB\"); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        System.out.println(\"A\\nB\");\n    }\n}",
       "choices": [
         "AとBの間に空白が表示される。",
         "Bだけが表示される。",
@@ -1055,7 +1055,7 @@
       "theme": "整数型から浮動小数点型への拡大変換",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 7; double d = n; System.out.println(d); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 7;\n        double d = n;\n        System.out.println(d);\n    }\n}",
       "choices": [
         "7",
         "7.7",
@@ -1086,7 +1086,7 @@
       "theme": "縮小変換に必要なキャスト",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { double d = 9.8; int n = (int) d; System.out.println(n); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        double d = 9.8;\n        int n = (int) d;\n        System.out.println(n);\n    }\n}",
       "choices": [
         "9",
         "10",
@@ -1117,7 +1117,7 @@
       "theme": "int同士の除算",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int result = 7 / 2; System.out.println(result); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int result = 7 / 2;\n        System.out.println(result);\n    }\n}",
       "choices": [
         "コンパイルエラー",
         "3",
@@ -1148,7 +1148,7 @@
       "theme": "charの数値変換",
       "difficulty": "ADVANCED",
       "questionText": "次のコードの表示結果はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { char c = 'A'; int n = c; System.out.println(n); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        char c = 'A';\n        int n = c;\n        System.out.println(n);\n    }\n}",
       "choices": [
         "コンパイルエラー",
         "0",
@@ -1179,7 +1179,7 @@
       "theme": "キャストによる小数部の切り捨て",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { double d = -3.9; int n = (int) d; System.out.println(n); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        double d = -3.9;\n        int n = (int) d;\n        System.out.println(n);\n    }\n}",
       "choices": [
         "3",
         "コンパイルエラー",
@@ -1210,7 +1210,7 @@
       "theme": "final変数の再代入",
       "difficulty": "ADVANCED",
       "questionText": "次のコードについて正しい説明はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { final int limit = 10; limit = 12; } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        final int limit = 10;\n        limit = 12;\n    }\n}",
       "choices": [
         "limitは12になり、正常に実行される。",
         "finalは実行時に値を0にする。",
@@ -1241,7 +1241,7 @@
       "theme": "ローカル変数の有効範囲",
       "difficulty": "ADVANCED",
       "questionText": "次のコードでコンパイルエラーになる理由はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { { int value = 4; } System.out.println(value); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        {\n            int value = 4;\n        }\n        System.out.println(value);\n    }\n}",
       "choices": [
         "valueの有効範囲がブロック内に限られるため。",
         "int型はブロック内で宣言できないため。",
@@ -1303,7 +1303,7 @@
       "theme": "小数リテラルとfloat変数",
       "difficulty": "ADVANCED",
       "questionText": "次のコードについて正しい説明はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { float rate = 2.5F; System.out.println(rate); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        float rate = 2.5F;\n        System.out.println(rate);\n    }\n}",
       "choices": [
         "long型の値が代入される。",
         "文字列\"2.5\"が出力される。",
@@ -1396,7 +1396,7 @@
       "theme": "算術演算での数値昇格",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { byte a = 10; byte b = 20; System.out.println(a + b); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        byte a = 10;\n        byte b = 20;\n        System.out.println(a + b);\n    }\n}",
       "choices": [
         "0",
         "30",
@@ -1458,7 +1458,7 @@
       "theme": "式の型と代入可能性",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードがコンパイルできない原因はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 1; n = n + 1L; } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 1;\n        n = n + 1L;\n    }\n}",
       "choices": [
         "1LはJava 11で使えないため。",
         "intとlongは加算できないため。",
@@ -1489,7 +1489,7 @@
       "theme": "charの加算結果の型",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する結果はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { char c = 'A'; System.out.println(c + 1); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        char c = 'A';\n        System.out.println(c + 1);\n    }\n}",
       "choices": [
         "B",
         "A1",
@@ -1520,7 +1520,7 @@
       "theme": "インスタンスフィールドの既定値",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { int count; public static void main(String[] args) { System.out.println(new Main().count); } }",
+      "codeBlock": "class Main {\n    int count;\n    public static void main(String[] args) {\n        System.out.println(new Main().count);\n    }\n}",
       "choices": [
         "0",
         "コンパイルエラー",
@@ -1551,7 +1551,7 @@
       "theme": "定数式の縮小変換",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードについて正しい説明はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { byte b = 1 + 2; System.out.println(b); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        byte b = 1 + 2;\n        System.out.println(b);\n    }\n}",
       "choices": [
         "byte変数には正の値を代入できない。",
         "定数式の値がbyteの範囲内なのでコンパイルでき、3が表示される。",
@@ -1582,7 +1582,7 @@
       "theme": "16進数整数リテラル",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 0x10; System.out.println(n); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 0x10;\n        System.out.println(n);\n    }\n}",
       "choices": [
         "0",
         "コンパイルエラー",
@@ -1613,7 +1613,7 @@
       "theme": "booleanと数値の非互換性",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードのコンパイル結果はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { boolean ready = 1; System.out.println(ready); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        boolean ready = 1;\n        System.out.println(ready);\n    }\n}",
       "choices": [
         "trueが表示される。",
         "falseが表示される。",
@@ -1675,7 +1675,7 @@
       "theme": "定数参照の更新可能性",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードについて正しい説明はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { final String name = \"Mika\"; System.out.println(name); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        final String name = \"Mika\";\n        System.out.println(name);\n    }\n}",
       "choices": [
         "nameは自動的にnullになる。",
         "\"Mika\"が表示され、コードはコンパイルできる。",
@@ -1706,7 +1706,7 @@
       "theme": "数値リテラルの型と代入",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードがコンパイルできない理由はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { float f = 1.0; } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        float f = 1.0;\n    }\n}",
       "choices": [
         "変数名fは予約語のため。",
         "Javaではfloat型を宣言できないため。",
@@ -1768,7 +1768,7 @@
       "theme": "加算と減算",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int value = 9 - 4 + 2; System.out.println(value); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int value = 9 - 4 + 2;\n        System.out.println(value);\n    }\n}",
       "choices": [
         "9",
         "コンパイルエラー",
@@ -1799,7 +1799,7 @@
       "theme": "剰余演算子",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { System.out.println(17 % 5); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        System.out.println(17 % 5);\n    }\n}",
       "choices": [
         "5",
         "12",
@@ -1892,7 +1892,7 @@
       "theme": "if文の真偽判定",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する文字はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int age = 20; if (age >= 18) System.out.println(\"adult\"); else System.out.println(\"minor\"); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int age = 20;\n        if (age >= 18) System.out.println(\"adult\");\n        else System.out.println(\"minor\");\n    }\n}",
       "choices": [
         "何も表示されない",
         "adult",
@@ -1954,7 +1954,7 @@
       "theme": "else ifの条件選択",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int score = 75; if (score >= 80) System.out.println(\"A\"); else if (score >= 60) System.out.println(\"B\"); else System.out.println(\"C\"); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int score = 75;\n        if (score >= 80) System.out.println(\"A\");\n        else if (score >= 60) System.out.println(\"B\");\n        else System.out.println(\"C\");\n    }\n}",
       "choices": [
         "C",
         "AとB",
@@ -2016,7 +2016,7 @@
       "theme": "後置インクリメント",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する2つの値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 2; System.out.println(n++); System.out.println(n); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 2;\n        System.out.println(n++);\n        System.out.println(n);\n    }\n}",
       "choices": [
         "2の後に3",
         "3の後に3",
@@ -2078,7 +2078,7 @@
       "theme": "三項演算子の選択",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する文字はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 6; String label = n % 2 == 0 ? \"even\" : \"odd\"; System.out.println(label); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 6;\n        String label = n % 2 == 0 ? \"even\" : \"odd\";\n        System.out.println(label);\n    }\n}",
       "choices": [
         "true",
         "6",
@@ -2171,7 +2171,7 @@
       "theme": "短絡評価の論理積",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 0; boolean result = n != 0 && 10 / n > 1; System.out.println(result); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 0;\n        boolean result = n != 0 && 10 / n > 1;\n        System.out.println(result);\n    }\n}",
       "choices": [
         "0",
         "false",
@@ -2202,7 +2202,7 @@
       "theme": "短絡評価の論理和",
       "difficulty": "ADVANCED",
       "questionText": "次のコードの実行結果として正しいものはどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 0; boolean result = n == 0 || 10 / n > 1; System.out.println(result); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 0;\n        boolean result = n == 0 || 10 / n > 1;\n        System.out.println(result);\n    }\n}",
       "choices": [
         "コンパイルエラー",
         "0",
@@ -2233,7 +2233,7 @@
       "theme": "前置インクリメント",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 4; System.out.println(++n); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 4;\n        System.out.println(++n);\n    }\n}",
       "choices": [
         "6",
         "コンパイルエラー",
@@ -2264,7 +2264,7 @@
       "theme": "複合代入と暗黙キャスト",
       "difficulty": "ADVANCED",
       "questionText": "次のコードについて正しい説明はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { short s = 2; s += 3; System.out.println(s); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        short s = 2;\n        s += 3;\n        System.out.println(s);\n    }\n}",
       "choices": [
         "複合代入はshortへ代入できずコンパイルエラーになる。",
         "3が表示される。",
@@ -2295,7 +2295,7 @@
       "theme": "ifとelseの対応",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する文字はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 5; if (n > 0) if (n > 10) System.out.println(\"X\"); else System.out.println(\"Y\"); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 5;\n        if (n > 0) if (n > 10) System.out.println(\"X\");\n        else System.out.println(\"Y\");\n    }\n}",
       "choices": [
         "Y",
         "X",
@@ -2357,7 +2357,7 @@
       "theme": "条件演算子の型",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 3; int result = n > 0 ? 8 : 2; System.out.println(result); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 3;\n        int result = n > 0 ? 8 : 2;\n        System.out.println(result);\n    }\n}",
       "choices": [
         "true",
         "3",
@@ -2419,7 +2419,7 @@
       "theme": "浮動小数点数の比較結果",
       "difficulty": "ADVANCED",
       "questionText": "次のコードでx == 0.3の評価結果はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { double x = 0.1 + 0.2; System.out.println(x == 0.3); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        double x = 0.1 + 0.2;\n        System.out.println(x == 0.3);\n    }\n}",
       "choices": [
         "false",
         "true",
@@ -2450,7 +2450,7 @@
       "theme": "前置否定と比較の優先順位",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { boolean a = false; boolean b = true; System.out.println(!a && b); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        boolean a = false;\n        boolean b = true;\n        System.out.println(!a && b);\n    }\n}",
       "choices": [
         "コンパイルエラー",
         "true",
@@ -2481,7 +2481,7 @@
       "theme": "switch文のbreakによる脱出",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 2; switch (n) { case 1: System.out.print(\"A\"); break; case 2: System.out.print(\"B\"); break; default: System.out.print(\"C\"); } } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 2;\n        switch (n) {\n            case 1: System.out.print(\"A\");\n            break;\n            case 2: System.out.print(\"B\");\n            break;\n            default: System.out.print(\"C\");\n        }\n    }\n}",
       "choices": [
         "BC",
         "何も表示されない",
@@ -2512,7 +2512,7 @@
       "theme": "switchのフォールスルー",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する文字列はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 1; switch (n) { case 1: System.out.print(\"A\"); case 2: System.out.print(\"B\"); break; default: System.out.print(\"C\"); } } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 1;\n        switch (n) {\n            case 1: System.out.print(\"A\");\n            case 2: System.out.print(\"B\");\n            break;\n            default: System.out.print(\"C\");\n        }\n    }\n}",
       "choices": [
         "B",
         "ABC",
@@ -2543,7 +2543,7 @@
       "theme": "switchのcase定数",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のswitch文について正しい説明はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 2; final int limit = 2; switch (n) { case limit: System.out.println(\"match\"); break; default: System.out.println(\"other\"); } } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 2;\n        final int limit = 2;\n        switch (n) {\n            case limit: System.out.println(\"match\");\n            break;\n            default: System.out.println(\"other\");\n        }\n    }\n}",
       "choices": [
         "caseには変数を使えないため必ずエラーになる。",
         "limitはfinalでも定数式ではないため必ずエラーになる。",
@@ -2574,7 +2574,7 @@
       "theme": "Stringの等価性比較",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { String a = new String(\"ok\"); String b = new String(\"ok\"); System.out.println(a == b); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        String a = new String(\"ok\");\n        String b = new String(\"ok\");\n        System.out.println(a == b);\n    }\n}",
       "choices": [
         "false",
         "true",
@@ -2636,7 +2636,7 @@
       "theme": "条件演算子の右結合",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次の式の値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 2; String s = n > 0 ? n > 1 ? \"X\" : \"Y\" : \"Z\"; System.out.println(s); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 2;\n        String s = n > 0 ? n > 1 ? \"X\" : \"Y\" : \"Z\";\n        System.out.println(s);\n    }\n}",
       "choices": [
         "true",
         "コンパイルエラー",
@@ -2667,7 +2667,7 @@
       "theme": "整数のオーバーフロー",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = Integer.MAX_VALUE; System.out.println(n + 1); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = Integer.MAX_VALUE;\n        System.out.println(n + 1);\n    }\n}",
       "choices": [
         "2147483648",
         "Integer.MAX_VALUE",
@@ -2729,7 +2729,7 @@
       "theme": "後置演算と代入の評価順",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int x = 3; int y = x++ + 2; System.out.println(x + \",\" + y); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int x = 3;\n        int y = x++ + 2;\n        System.out.println(x + \",\" + y);\n    }\n}",
       "choices": [
         "コンパイルエラー",
         "4,5",
@@ -2791,7 +2791,7 @@
       "theme": "if elseによる範囲判定",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示するラベルはどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int temperature = 0; if (temperature < 0) System.out.println(\"cold\"); else if (temperature <= 10) System.out.println(\"cool\"); else System.out.println(\"warm\"); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int temperature = 0;\n        if (temperature < 0) System.out.println(\"cold\");\n        else if (temperature <= 10) System.out.println(\"cool\");\n        else System.out.println(\"warm\");\n    }\n}",
       "choices": [
         "warm",
         "coldとcool",
@@ -2853,7 +2853,7 @@
       "theme": "for文の反復回数",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int sum = 0; for (int i = 1; i <= 3; i++) sum += i; System.out.println(sum); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int sum = 0;\n        for (int i = 1; i <= 3; i++) sum += i;\n        System.out.println(sum);\n    }\n}",
       "choices": [
         "5",
         "0",
@@ -2884,7 +2884,7 @@
       "theme": "while文の条件判定",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 3; while (n > 0) n--; System.out.println(n); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 3;\n        while (n > 0) n--;\n        System.out.println(n);\n    }\n}",
       "choices": [
         "1",
         "3",
@@ -2915,7 +2915,7 @@
       "theme": "do-while文の最低実行回数",
       "difficulty": "EASY",
       "questionText": "次のコードの出力行数は何行ですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 5; do { System.out.println(n); } while (n < 0); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 5;\n        do {\n            System.out.println(n);\n        }\n        while (n < 0);\n    }\n}",
       "choices": [
         "1行",
         "0行",
@@ -2946,7 +2946,7 @@
       "theme": "配列のlength",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int[] data = new int[4]; System.out.println(data.length); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int[] data = new int[4];\n        System.out.println(data.length);\n    }\n}",
       "choices": [
         "コンパイルエラー",
         "4",
@@ -3008,7 +3008,7 @@
       "theme": "int配列の既定値",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int[] values = new int[2]; System.out.println(values[1]); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int[] values = new int[2];\n        System.out.println(values[1]);\n    }\n}",
       "choices": [
         "null",
         "未初期化エラー",
@@ -3039,7 +3039,7 @@
       "theme": "拡張forによる走査",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する合計はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int sum = 0; for (int n : new int[] {2, 4, 6}) sum += n; System.out.println(sum); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int sum = 0;\n        for (int n : new int[] {\n            2, 4, 6\n        }\n        ) sum += n;\n        System.out.println(sum);\n    }\n}",
       "choices": [
         "6",
         "246",
@@ -3070,7 +3070,7 @@
       "theme": "breakによるループ終了",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int i = 0; while (true) { i++; if (i == 3) break; } System.out.println(i); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int i = 0;\n        while (true) {\n            i++;\n            if (i == 3) break;\n        }\n        System.out.println(i);\n    }\n}",
       "choices": [
         "3",
         "2",
@@ -3101,7 +3101,7 @@
       "theme": "continueによる反復スキップ",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int sum = 0; for (int i = 1; i <= 4; i++) { if (i == 2) continue; sum += i; } System.out.println(sum); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int sum = 0;\n        for (int i = 1; i <= 4; i++) {\n            if (i == 2) continue;\n            sum += i;\n        }\n        System.out.println(sum);\n    }\n}",
       "choices": [
         "4",
         "8",
@@ -3132,7 +3132,7 @@
       "theme": "String配列の初期化",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { String[] names = {\"Aki\", \"Ren\"}; System.out.println(names[0]); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        String[] names = {\n            \"Aki\", \"Ren\"\n        };\n        System.out.println(names[0]);\n    }\n}",
       "choices": [
         "0",
         "null",
@@ -3163,7 +3163,7 @@
       "theme": "for文の更新式",
       "difficulty": "EASY",
       "questionText": "次のコードの出力回数は何回ですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { for (int i = 0; i < 5; i += 2) System.out.println(i); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        for (int i = 0; i < 5; i += 2) System.out.println(i);\n    }\n}",
       "choices": [
         "5回",
         "2回",
@@ -3194,7 +3194,7 @@
       "theme": "whileループの反復条件",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int i = 1; int count = 0; while (i < 8) { i *= 2; count++; } System.out.println(count); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int i = 1;\n        int count = 0;\n        while (i < 8) {\n            i *= 2;\n            count++;\n        }\n        System.out.println(count);\n    }\n}",
       "choices": [
         "3",
         "4",
@@ -3225,7 +3225,7 @@
       "theme": "for文の複数初期化式",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int sum = 0; for (int i = 0, j = 3; i < 3; i++, j--) sum += i + j; System.out.println(sum); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int sum = 0;\n        for (int i = 0, j = 3; i < 3; i++, j--) sum += i + j;\n        System.out.println(sum);\n    }\n}",
       "choices": [
         "コンパイルエラー",
         "9",
@@ -3256,7 +3256,7 @@
       "theme": "拡張forでの要素受け取り",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する文字列はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { String s = \"\"; for (String part : new String[] {\"J\", \"a\", \"v\", \"a\"}) s += part; System.out.println(s); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        String s = \"\";\n        for (String part : new String[] {\n            \"J\", \"a\", \"v\", \"a\"\n        }\n        ) s += part;\n        System.out.println(s);\n    }\n}",
       "choices": [
         "null",
         "コンパイルエラー",
@@ -3287,7 +3287,7 @@
       "theme": "参照変数間の配列共有",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int[] a = {1, 2}; int[] b = a; b[0] = 9; System.out.println(a[0]); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int[] a = {\n            1, 2\n        };\n        int[] b = a;\n        b[0] = 9;\n        System.out.println(a[0]);\n    }\n}",
       "choices": [
         "2",
         "0",
@@ -3318,7 +3318,7 @@
       "theme": "配列参照の再代入",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int[] a = {1}; int[] b = {2}; a = b; a[0] = 7; System.out.println(b[0]); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int[] a = {\n            1\n        };\n        int[] b = {\n            2\n        };\n        a = b;\n        a[0] = 7;\n        System.out.println(b[0]);\n    }\n}",
       "choices": [
         "2",
         "1",
@@ -3349,7 +3349,7 @@
       "theme": "要素参照と実行時境界",
       "difficulty": "ADVANCED",
       "questionText": "次のコードの結果として正しいものはどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int[] a = new int[2]; System.out.println(a[2]); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int[] a = new int[2];\n        System.out.println(a[2]);\n    }\n}",
       "choices": [
         "実行時にArrayIndexOutOfBoundsExceptionが発生する。",
         "0が表示される。",
@@ -3380,7 +3380,7 @@
       "theme": "配列変数の初期化",
       "difficulty": "ADVANCED",
       "questionText": "次のコードについて正しい説明はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int[] a; a = {1, 2}; } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int[] a;\n        a = {\n            1, 2\n        };\n    }\n}",
       "choices": [
         "中括弧はint配列に使えない。",
         "配列初期化子だけで代入しているためコンパイルエラーになる。",
@@ -3411,7 +3411,7 @@
       "theme": "ループ変数のブロックスコープ",
       "difficulty": "ADVANCED",
       "questionText": "次のコードがコンパイルできない理由はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { for (int i = 0; i < 1; i++) { } System.out.println(i); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        for (int i = 0; i < 1; i++) {\n        }\n        System.out.println(i);\n    }\n}",
       "choices": [
         "条件i < 1が不正なため。",
         "空のループ本体は不正なため。",
@@ -3442,7 +3442,7 @@
       "theme": "do-while文のセミコロン",
       "difficulty": "ADVANCED",
       "questionText": "次のコードについて正しい説明はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 0; do { n++; } while (n < 1); System.out.println(n); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 0;\n        do {\n            n++;\n        }\n        while (n < 1);\n        System.out.println(n);\n    }\n}",
       "choices": [
         "whileの後のセミコロンがあるためコンパイルエラーになる。",
         "条件を一度も調べず無限ループになる。",
@@ -3504,7 +3504,7 @@
       "theme": "一次元配列のlengthと最後の要素",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int[] values = {3, 5, 7}; System.out.println(values[values.length - 1]); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int[] values = {\n            3, 5, 7\n        };\n        System.out.println(values[values.length - 1]);\n    }\n}",
       "choices": [
         "コンパイルエラー",
         "7",
@@ -3535,7 +3535,7 @@
       "theme": "ネストしたループの反復回数",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int count = 0; for (int i = 0; i < 2; i++) for (int j = 0; j < 3; j++) count++; System.out.println(count); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int count = 0;\n        for (int i = 0; i < 2; i++) for (int j = 0; j < 3; j++) count++;\n        System.out.println(count);\n    }\n}",
       "choices": [
         "2",
         "23",
@@ -3566,7 +3566,7 @@
       "theme": "forループの実行順序",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する文字列はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { for (int i = 0; i < 3; i++) System.out.print(i); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        for (int i = 0; i < 3; i++) System.out.print(i);\n    }\n}",
       "choices": [
         "03",
         "321",
@@ -3597,7 +3597,7 @@
       "theme": "continueと更新式",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int count = 0; for (int i = 0; i < 4; i++) { if (i == 2) continue; count++; } System.out.println(count); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int count = 0;\n        for (int i = 0; i < 4; i++) {\n            if (i == 2) continue;\n            count++;\n        }\n        System.out.println(count);\n    }\n}",
       "choices": [
         "4",
         "2",
@@ -3628,7 +3628,7 @@
       "theme": "breakの対象となるループ",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する合計はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int sum = 0; for (int i = 1; i <= 3; i++) { for (int j = 1; j <= 3; j++) { if (j == 2) break; sum += i; } } System.out.println(sum); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int sum = 0;\n        for (int i = 1; i <= 3; i++) {\n            for (int j = 1; j <= 3; j++) {\n                if (j == 2) break;\n                sum += i;\n            }\n        }\n        System.out.println(sum);\n    }\n}",
       "choices": [
         "6",
         "18",
@@ -3659,7 +3659,7 @@
       "theme": "配列の要素代入と更新",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int[] data = {3, 5, 7}; data[1]++; System.out.println(data[1]); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int[] data = {\n            3, 5, 7\n        };\n        data[1]++;\n        System.out.println(data[1]);\n    }\n}",
       "choices": [
         "コンパイルエラー",
         "6",
@@ -3690,7 +3690,7 @@
       "theme": "配列要素の型と代入",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードについて正しい説明はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int[] values = new int[2]; values[0] = 4; values[1] = 9; System.out.println(values[0] + values[1]); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int[] values = new int[2];\n        values[0] = 4;\n        values[1] = 9;\n        System.out.println(values[0] + values[1]);\n    }\n}",
       "choices": [
         "0が表示される。",
         "コンパイルエラーになる。",
@@ -3721,7 +3721,7 @@
       "theme": "参照型配列要素の既定値",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する結果はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { String[] words = new String[2]; System.out.println(words[0] == null); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        String[] words = new String[2];\n        System.out.println(words[0] == null);\n    }\n}",
       "choices": [
         "0",
         "空文字列",
@@ -3752,7 +3752,7 @@
       "theme": "int配列要素の既定値",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int[] values = new int[3]; values[1] = 8; System.out.println(values[0]); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int[] values = new int[3];\n        values[1] = 8;\n        System.out.println(values[0]);\n    }\n}",
       "choices": [
         "0",
         "8",
@@ -3783,7 +3783,7 @@
       "theme": "拡張forと配列要素の変更",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int[] a = {1, 2}; for (int n : a) n++; System.out.println(a[0]); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int[] a = {\n            1, 2\n        };\n        for (int n : a) n++;\n        System.out.println(a[0]);\n    }\n}",
       "choices": [
         "コンパイルエラー",
         "1",
@@ -3814,7 +3814,7 @@
       "theme": "配列参照のnullと生成",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードの結果として正しいものはどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int[] a = null; System.out.println(a.length); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int[] a = null;\n        System.out.println(a.length);\n    }\n}",
       "choices": [
         "コンパイルエラーになる。",
         "実行時にArrayIndexOutOfBoundsExceptionが発生する。",
@@ -3845,7 +3845,7 @@
       "theme": "無限ループの終了条件",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードについて正しい説明はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int n = 0; while (n < 3) { System.out.print(n); n++; } } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int n = 0;\n        while (n < 3) {\n            System.out.print(n);\n            n++;\n        }\n    }\n}",
       "choices": [
         "0だけ表示する。",
         "無限に数字を表示する。",
@@ -3876,7 +3876,7 @@
       "theme": "入れ子ループとcontinue",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int count = 0; for (int i = 0; i < 2; i++) { for (int j = 0; j < 3; j++) { if (j == 1) continue; count++; } } System.out.println(count); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int count = 0;\n        for (int i = 0; i < 2; i++) {\n            for (int j = 0; j < 3; j++) {\n                if (j == 1) continue;\n                count++;\n            }\n        }\n        System.out.println(count);\n    }\n}",
       "choices": [
         "6",
         "2",
@@ -3907,7 +3907,7 @@
       "theme": "配列リテラルとlengthによる走査",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードが表示する合計はどれですか？",
-      "codeBlock": "class Main { public static void main(String[] args) { int[] a = {2, 4, 6, 8}; int sum = 0; for (int i = 0; i < a.length; i++) sum += a[i]; System.out.println(sum); } }",
+      "codeBlock": "class Main {\n    public static void main(String[] args) {\n        int[] a = {\n            2, 4, 6, 8\n        };\n        int sum = 0;\n        for (int i = 0; i < a.length; i++) sum += a[i];\n        System.out.println(sum);\n    }\n}",
       "choices": [
         "20",
         "4",
@@ -3938,7 +3938,7 @@
       "theme": "メソッド呼び出しの実行",
       "difficulty": "EASY",
       "questionText": "次のコードを実行したとき、表示される内容はどれですか？",
-      "codeBlock": "class Greeting {\n    static void say() { System.out.println(\"こんにちは\"); }\n    public static void main(String[] args) { say(); }\n}",
+      "codeBlock": "class Greeting {\n    static void say() {\n        System.out.println(\"こんにちは\");\n    }\n    public static void main(String[] args) {\n        say();\n    }\n}",
       "choices": [
         "say",
         "コンパイルエラーになる。",
@@ -4000,7 +4000,7 @@
       "theme": "仮引数と実引数",
       "difficulty": "EASY",
       "questionText": "次の呼び出しで、メソッドの仮引数valueに渡される値はどれですか？",
-      "codeBlock": "class Sample {\n    static void show(int value) { System.out.println(value); }\n    public static void main(String[] args) { show(7); }\n}",
+      "codeBlock": "class Sample {\n    static void show(int value) {\n        System.out.println(value);\n    }\n    public static void main(String[] args) {\n        show(7);\n    }\n}",
       "choices": [
         "0",
         "7",
@@ -4031,7 +4031,7 @@
       "theme": "戻り値の受け取り",
       "difficulty": "EASY",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Calc {\n    static int twice(int n) { return n * 2; }\n    public static void main(String[] args) { System.out.println(twice(4)); }\n}",
+      "codeBlock": "class Calc {\n    static int twice(int n) {\n        return n * 2;\n    }\n    public static void main(String[] args) {\n        System.out.println(twice(4));\n    }\n}",
       "choices": [
         "4",
         "6",
@@ -4062,7 +4062,7 @@
       "theme": "複数引数の順序",
       "difficulty": "EASY",
       "questionText": "この呼び出しでメソッドが表示する内容はどれですか？",
-      "codeBlock": "class Pair {\n    static void show(int first, int second) { System.out.println(first + \":\" + second); }\n    public static void main(String[] args) { show(3, 8); }\n}",
+      "codeBlock": "class Pair {\n    static void show(int first, int second) {\n        System.out.println(first + \":\" + second);\n    }\n    public static void main(String[] args) {\n        show(3, 8);\n    }\n}",
       "choices": [
         "first:second",
         "コンパイルエラー",
@@ -4341,7 +4341,7 @@
       "theme": "戻り値型のみの差",
       "difficulty": "ADVANCED",
       "questionText": "同じ引数リストを持つ次の2宣言の扱いはどれですか？",
-      "codeBlock": "class Meter {\n    int read() { return 1; }\n    double read() { return 1.0; }\n}",
+      "codeBlock": "class Meter {\n    int read() {\n        return 1;\n    }\n    double read() {\n        return 1.0;\n    }\n}",
       "choices": [
         "常にint版だけが利用できる。",
         "実行時にランダムに決まる。",
@@ -4372,7 +4372,7 @@
       "theme": "呼び出し時の引数型",
       "difficulty": "ADVANCED",
       "questionText": "どのオーバーロードが呼び出され、何が表示されますか？",
-      "codeBlock": "class Select {\n    static void show(int n) { System.out.println(\"int\"); }\n    static void show(double n) { System.out.println(\"double\"); }\n    public static void main(String[] args) { show(3); }\n}",
+      "codeBlock": "class Select {\n    static void show(int n) {\n        System.out.println(\"int\");\n    }\n    static void show(double n) {\n        System.out.println(\"double\");\n    }\n    public static void main(String[] args) {\n        show(3);\n    }\n}",
       "choices": [
         "double",
         "intとdoubleの両方",
@@ -4403,7 +4403,7 @@
       "theme": "拡大変換を伴う選択",
       "difficulty": "ADVANCED",
       "questionText": "整数リテラル2を渡したとき、呼び出されるメソッドはどれですか？",
-      "codeBlock": "class Choose {\n    static void call(long x) { System.out.println(\"long\"); }\n    static void call(double x) { System.out.println(\"double\"); }\n    public static void main(String[] args) { call(2); }\n}",
+      "codeBlock": "class Choose {\n    static void call(long x) {\n        System.out.println(\"long\");\n    }\n    static void call(double x) {\n        System.out.println(\"double\");\n    }\n    public static void main(String[] args) {\n        call(2);\n    }\n}",
       "choices": [
         "call(long)",
         "call(double)",
@@ -4434,7 +4434,7 @@
       "theme": "ローカル変数の有効範囲",
       "difficulty": "ADVANCED",
       "questionText": "次のコードはコンパイルできますか？",
-      "codeBlock": "class Scope {\n    static void first() { int count = 1; }\n    static void second() { System.out.println(count); }\n}",
+      "codeBlock": "class Scope {\n    static void first() {\n        int count = 1;\n    }\n    static void second() {\n        System.out.println(count);\n    }\n}",
       "choices": [
         "できる。countはクラス全体で共有される。",
         "できない。countはfirstのローカル変数でsecondから見えない。",
@@ -4496,7 +4496,7 @@
       "theme": "フィールドと仮引数の区別",
       "difficulty": "ADVANCED",
       "questionText": "次のコンストラクター実行後、obj.valueの値はどれですか？",
-      "codeBlock": "class Item {\n    int value;\n    Item(int value) { this.value = value; }\n    public static void main(String[] args) { Item obj = new Item(9); System.out.println(obj.value); }\n}",
+      "codeBlock": "class Item {\n    int value;\n    Item(int value) {\n        this.value = value;\n    }\n    public static void main(String[] args) {\n        Item obj = new Item(9);\n        System.out.println(obj.value);\n    }\n}",
       "choices": [
         "null",
         "コンパイルエラー",
@@ -4527,7 +4527,7 @@
       "theme": "staticメソッドからのインスタンス参照",
       "difficulty": "ADVANCED",
       "questionText": "次のコードでコンパイルエラーとなる理由はどれですか？",
-      "codeBlock": "class Status {\n    int level = 1;\n    static void printLevel() { System.out.println(level); }\n}",
+      "codeBlock": "class Status {\n    int level = 1;\n    static void printLevel() {\n        System.out.println(level);\n    }\n}",
       "choices": [
         "staticメソッドから特定のインスタンスなしにインスタンスフィールドlevelを参照している。",
         "levelはint型である。",
@@ -4589,7 +4589,7 @@
       "theme": "プリミティブフィールドの既定値",
       "difficulty": "ADVANCED",
       "questionText": "次のコードの出力はどれですか？",
-      "codeBlock": "class Defaults {\n    boolean active;\n    char mark;\n    public static void main(String[] args) { Defaults d = new Defaults(); System.out.println(d.active + \":\" + (int)d.mark); }\n}",
+      "codeBlock": "class Defaults {\n    boolean active;\n    char mark;\n    public static void main(String[] args) {\n        Defaults d = new Defaults();\n        System.out.println(d.active + \":\" + (int)d.mark);\n    }\n}",
       "choices": [
         "null:null",
         "コンパイルエラー",
@@ -4620,7 +4620,7 @@
       "theme": "参照型フィールドの既定値",
       "difficulty": "ADVANCED",
       "questionText": "次のコードの出力はどれですか？",
-      "codeBlock": "class Note {\n    String text;\n    public static void main(String[] args) { Note n = new Note(); System.out.println(n.text == null); }\n}",
+      "codeBlock": "class Note {\n    String text;\n    public static void main(String[] args) {\n        Note n = new Note();\n        System.out.println(n.text == null);\n    }\n}",
       "choices": [
         "空文字列",
         "コンパイルエラー",
@@ -4651,7 +4651,7 @@
       "theme": "プリミティブ値の値渡し",
       "difficulty": "ADVANCED",
       "questionText": "次のコードが表示する値はどれですか？",
-      "codeBlock": "class Pass {\n    static void change(int n) { n = 99; }\n    public static void main(String[] args) { int value = 4; change(value); System.out.println(value); }\n}",
+      "codeBlock": "class Pass {\n    static void change(int n) {\n        n = 99;\n    }\n    public static void main(String[] args) {\n        int value = 4;\n        change(value);\n        System.out.println(value);\n    }\n}",
       "choices": [
         "99",
         "0",
@@ -4682,7 +4682,7 @@
       "theme": "参照型とプリミティブ型の候補",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次の呼び出しで選ばれるメソッドはどれですか？",
-      "codeBlock": "class Overload {\n    static void show(Object x) { System.out.println(\"Object\"); }\n    static void show(String x) { System.out.println(\"String\"); }\n    public static void main(String[] args) { show(\"java\"); }\n}",
+      "codeBlock": "class Overload {\n    static void show(Object x) {\n        System.out.println(\"Object\");\n    }\n    static void show(String x) {\n        System.out.println(\"String\");\n    }\n    public static void main(String[] args) {\n        show(\"java\");\n    }\n}",
       "choices": [
         "show(String)",
         "両方のメソッド",
@@ -4713,7 +4713,7 @@
       "theme": "可変長引数の呼び出し",
       "difficulty": "BRONZE_STYLE",
       "questionText": "このコードが表示する値はどれですか？",
-      "codeBlock": "class VarArgs {\n    static int count(String... words) { return words.length; }\n    public static void main(String[] args) { System.out.println(count(\"a\", \"b\", \"c\")); }\n}",
+      "codeBlock": "class VarArgs {\n    static int count(String... words) {\n        return words.length;\n    }\n    public static void main(String[] args) {\n        System.out.println(count(\"a\", \"b\", \"c\"));\n    }\n}",
       "choices": [
         "2",
         "3",
@@ -4775,7 +4775,7 @@
       "theme": "戻り値の型不一致",
       "difficulty": "BRONZE_STYLE",
       "questionText": "このメソッド宣言のコンパイル結果として正しいものはどれですか？",
-      "codeBlock": "class ReturnType {\n    static int getNumber() { return \"5\"; }\n}",
+      "codeBlock": "class ReturnType {\n    static int getNumber() {\n        return \"5\";\n    }\n}",
       "choices": [
         "戻り値は常に0になる。",
         "コンパイルでき、5を返す。",
@@ -4806,7 +4806,7 @@
       "theme": "コンストラクター呼び出し順",
       "difficulty": "BRONZE_STYLE",
       "questionText": "new順序を実行したとき、表示される順番はどれですか？",
-      "codeBlock": "class Start {\n    Start() { System.out.print(\"C\"); }\n    public static void main(String[] args) { new Start(); System.out.print(\"M\"); }\n}",
+      "codeBlock": "class Start {\n    Start() {\n        System.out.print(\"C\");\n    }\n    public static void main(String[] args) {\n        new Start();\n        System.out.print(\"M\");\n    }\n}",
       "choices": [
         "Cのみ",
         "Mのみ",
@@ -4837,7 +4837,7 @@
       "theme": "同名変数とthis",
       "difficulty": "BRONZE_STYLE",
       "questionText": "mainの最後に表示される値はどれですか？",
-      "codeBlock": "class Score {\n    int points = 10;\n    void set(int points) { points = points; }\n    public static void main(String[] args) { Score s = new Score(); s.set(4); System.out.println(s.points); }\n}",
+      "codeBlock": "class Score {\n    int points = 10;\n    void set(int points) {\n        points = points;\n    }\n    public static void main(String[] args) {\n        Score s = new Score();\n        s.set(4);\n        System.out.println(s.points);\n    }\n}",
       "choices": [
         "4",
         "10",
@@ -4868,7 +4868,7 @@
       "theme": "共有状態の更新",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードの出力はどれですか？",
-      "codeBlock": "class Visit {\n    static int total;\n    Visit() { total++; }\n    public static void main(String[] args) { new Visit(); new Visit(); System.out.println(Visit.total); }\n}",
+      "codeBlock": "class Visit {\n    static int total;\n    Visit() {\n        total++;\n    }\n    public static void main(String[] args) {\n        new Visit();\n        new Visit();\n        System.out.println(Visit.total);\n    }\n}",
       "choices": [
         "0",
         "1",
@@ -4899,7 +4899,7 @@
       "theme": "this()の位置",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコンストラクター宣言がコンパイルエラーになる理由はどれですか？",
-      "codeBlock": "class Box {\n    Box() { System.out.println(\"start\"); this(1); }\n    Box(int size) { }\n}",
+      "codeBlock": "class Box {\n    Box() {\n        System.out.println(\"start\");\n        this(1);\n    }\n    Box(int size) {\n    }\n}",
       "choices": [
         "コンストラクターはオーバーロードできない。",
         "引数にintを指定できない。",
@@ -4930,7 +4930,7 @@
       "theme": "配列と可変長引数の曖昧性",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次の呼び出しのコンパイル結果として正しいものはどれですか？",
-      "codeBlock": "class Ambiguous {\n    static void print(String[] values) { }\n    static void print(String... values) { }\n    public static void main(String[] args) { print(new String[0]); }\n}",
+      "codeBlock": "class Ambiguous {\n    static void print(String[] values) {\n    }\n    static void print(String... values) {\n    }\n    public static void main(String[] args) {\n        print(new String[0]);\n    }\n}",
       "choices": [
         "実行時に選択される。",
         "両方が順に実行される。",
@@ -4961,7 +4961,7 @@
       "theme": "インスタンスメソッドの呼び出し",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のmain内の呼び出しについて正しい説明はどれですか？",
-      "codeBlock": "class Printer {\n    void print() { System.out.println(\"ok\"); }\n    public static void main(String[] args) { print(); }\n}",
+      "codeBlock": "class Printer {\n    void print() {\n        System.out.println(\"ok\");\n    }\n    public static void main(String[] args) {\n        print();\n    }\n}",
       "choices": [
         "インスタンスメソッドをstatic文脈から対象なしに呼んでいるためコンパイルエラー。",
         "表示okとなる。",
@@ -4992,7 +4992,7 @@
       "theme": "フィールドの初期値とブロック変数",
       "difficulty": "BRONZE_STYLE",
       "questionText": "コードが表示する値はどれですか？",
-      "codeBlock": "class Values {\n    int number;\n    void show() { int number = 6; System.out.println(this.number + number); }\n    public static void main(String[] args) { new Values().show(); }\n}",
+      "codeBlock": "class Values {\n    int number;\n    void show() {\n        int number = 6;\n        System.out.println(this.number + number);\n    }\n    public static void main(String[] args) {\n        new Values().show();\n    }\n}",
       "choices": [
         "0",
         "6",
@@ -5674,7 +5674,7 @@
       "theme": "参照型と実行メソッド",
       "difficulty": "ADVANCED",
       "questionText": "出力結果はどれですか？",
-      "codeBlock": "class Parent { void speak() { System.out.println(\"P\"); } }\nclass Child extends Parent { @Override void speak() { System.out.println(\"C\"); } }\nclass Demo { public static void main(String[] args) { Parent p = new Child(); p.speak(); } }",
+      "codeBlock": "class Parent {\n    void speak() {\n        System.out.println(\"P\");\n    }\n}\nclass Child extends Parent {\n    @Override void speak() {\n        System.out.println(\"C\");\n    }\n}\nclass Demo {\n    public static void main(String[] args) {\n        Parent p = new Child();\n        p.speak();\n    }\n}",
       "choices": [
         "何も表示されない。",
         "コンパイルエラー",
@@ -5705,7 +5705,7 @@
       "theme": "staticメソッドと動的ディスパッチ",
       "difficulty": "ADVANCED",
       "questionText": "次のコードで表示される文字はどれですか？",
-      "codeBlock": "class Parent { static void show() { System.out.println(\"P\"); } }\nclass Child extends Parent { static void show() { System.out.println(\"C\"); } }\nclass Demo { public static void main(String[] args) { Parent ref = new Child(); ref.show(); } }",
+      "codeBlock": "class Parent {\n    static void show() {\n        System.out.println(\"P\");\n    }\n}\nclass Child extends Parent {\n    static void show() {\n        System.out.println(\"C\");\n    }\n}\nclass Demo {\n    public static void main(String[] args) {\n        Parent ref = new Child();\n        ref.show();\n    }\n}",
       "choices": [
         "C",
         "PC",
@@ -5798,7 +5798,7 @@
       "theme": "ダウンキャストの実行時安全性",
       "difficulty": "BRONZE_STYLE",
       "questionText": "このコードの結果として正しいものはどれですか？",
-      "codeBlock": "class Animal {}\nclass Dog extends Animal {}\nclass Cat extends Animal {}\nclass Demo { public static void main(String[] args) { Animal a = new Cat(); Dog d = (Dog) a; } }",
+      "codeBlock": "class Animal {\n}\nclass Dog extends Animal {\n}\nclass Cat extends Animal {\n}\nclass Demo {\n    public static void main(String[] args) {\n        Animal a = new Cat();\n        Dog d = (Dog) a;\n    }\n}",
       "choices": [
         "Dogへのキャストは常に成功する。",
         "コンパイル時に必ず型不一致で拒否される。",
@@ -5860,7 +5860,7 @@
       "theme": "抽象クラスの具象サブクラス",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードのコンパイル結果として正しいものはどれですか？",
-      "codeBlock": "abstract class Shape { abstract double area(); }\nclass Circle extends Shape { double area() { return 1.0; } }",
+      "codeBlock": "abstract class Shape {\n    abstract double area();\n}\nclass Circle extends Shape {\n    double area() {\n        return 1.0;\n    }\n}",
       "choices": [
         "コンパイルエラー。abstractクラスを継承できない。",
         "コンパイルエラー。抽象メソッドは戻り値を持てない。",
@@ -5891,7 +5891,7 @@
       "theme": "抽象メソッドの本体",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次の宣言がコンパイルエラーとなる理由はどれですか？",
-      "codeBlock": "abstract class Worker { abstract void work() { } }",
+      "codeBlock": "abstract class Worker {\n    abstract void work() {\n    }\n}",
       "choices": [
         "abstractメソッドにはメソッド本体を記述できない。",
         "abstractクラスにメソッドを置けない。",
@@ -6046,7 +6046,7 @@
       "theme": "インターフェース型の参照",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードで最後に呼ばれるprocessの実装はどれですか？",
-      "codeBlock": "interface Action { void process(); }\nclass Fast implements Action { public void process() { System.out.println(\"fast\"); } }\nclass Demo { public static void main(String[] args) { Action a = new Fast(); a.process(); } }",
+      "codeBlock": "interface Action {\n    void process();\n}\nclass Fast implements Action {\n    public void process() {\n        System.out.println(\"fast\");\n    }\n}\nclass Demo {\n    public static void main(String[] args) {\n        Action a = new Fast();\n        a.process();\n    }\n}",
       "choices": [
         "Actionには本体がないため呼び出せずコンパイルエラー。",
         "Fastのprocess実装。",
@@ -6077,7 +6077,7 @@
       "theme": "コンストラクター連鎖とメソッド呼び出し",
       "difficulty": "BRONZE_STYLE",
       "questionText": "次のコードを実行したときの出力はどれですか？",
-      "codeBlock": "class Parent {\n    Parent() { show(); }\n    void show() { System.out.print(\"P\"); }\n}\nclass Child extends Parent {\n    int value = 5;\n    @Override void show() { System.out.print(value); }\n    public static void main(String[] args) { new Child(); }\n}",
+      "codeBlock": "class Parent {\n    Parent() {\n        show();\n    }\n    void show() {\n        System.out.print(\"P\");\n    }\n}\nclass Child extends Parent {\n    int value = 5;\n    @Override void show() {\n        System.out.print(value);\n    }\n    public static void main(String[] args) {\n        new Child();\n    }\n}",
       "choices": [
         "コンパイルエラー",
         "5",

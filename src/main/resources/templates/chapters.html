@@ -492,7 +492,487 @@
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
         }
-    </style>
+        /* ===== 画面全体をビューポートに固定し、余白と角丸を減らす ===== */
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        body {
+            height: 100vh;
+            height: 100dvh;
+            background: #ffffff;
+        }
+        .app-shell {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            min-height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            border: 0;
+            border-radius: 0;
+            background: #ffffff;
+            box-shadow: none;
+        }
+        .app-header {
+            flex: 0 0 auto;
+            min-height: 54px;
+            padding: 7px 16px 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        .brand-title {
+            font-size: clamp(18px, 1.6vw, 22px);
+        }
+        .brand-subtitle {
+            gap: 7px;
+            font-size: 12px;
+        }
+        .connection-status {
+            padding: 5px 9px;
+            border-radius: 5px;
+        }
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            flex: 1 1 auto;
+            min-width: 0;
+            min-height: 0;
+            gap: 0;
+            overflow: hidden;
+        }
+        .panel {
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+            min-height: 0;
+            padding: 10px 14px;
+            overflow: hidden;
+            border: 0;
+            border-radius: 0;
+            background: #ffffff;
+            box-shadow: none;
+        }
+        .learning-panel {
+            border-right: 1px solid var(--border);
+        }
+        .panel-heading {
+            flex: 0 0 auto;
+            margin-bottom: 9px;
+        }
+        .panel-heading h2 {
+            font-size: 15px;
+        }
+        .panel-kicker {
+            font-size: 10px;
+        }
+        .view {
+            min-height: 0;
+            overflow: hidden;
+        }
+        .view.active {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* 章選択欄だけを内部スクロールにし、ページ全体は動かさない */
+        #home-view.active {
+            min-height: 0;
+        }
+        .status-badge {
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+        .section-title {
+            flex: 0 0 auto;
+            margin: 8px 0 7px;
+            font-size: 14px;
+        }
+        .chapter-list {
+            flex: 1 1 auto;
+            min-height: 70px;
+            max-height: none;
+            gap: 6px;
+            padding: 0 2px 0 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        .chapter-card {
+            flex: 0 0 auto;
+            padding: 8px 10px;
+            border-radius: 5px;
+        }
+        .chapter-name {
+            font-size: 13px;
+        }
+        .chapter-description {
+            font-size: 10px;
+            line-height: 1.35;
+        }
+        .chapter-count {
+            font-size: 11px;
+        }
+        .setting-divider {
+            flex: 0 0 auto;
+            margin: 9px 0 8px;
+        }
+        .setting-label {
+            flex: 0 0 auto;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+        .count-options {
+            flex: 0 0 auto;
+            gap: 6px;
+        }
+        .count-option {
+            min-height: 34px;
+            padding: 5px 4px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .selected-summary {
+            flex: 0 0 auto;
+            min-height: 0;
+            margin: 7px 0;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .primary-button {
+            flex: 0 0 auto;
+            min-height: 39px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            box-shadow: none;
+            font-size: 13px;
+        }
+        .secondary-button {
+            min-height: 34px;
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        /* 問題、コード、選択肢を狭い高さに整理する */
+        #quiz-view.active {
+            min-height: 0;
+        }
+        #quiz-content {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            gap: 7px;
+            min-height: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        .quiz-view {
+            gap: 7px;
+        }
+        .quiz-topline {
+            flex: 0 0 auto;
+            gap: 8px;
+        }
+        .quiz-step {
+            font-size: 11px;
+            line-height: 1.3;
+        }
+        .timer-wrap {
+            flex: 0 0 auto;
+            min-width: 96px;
+            gap: 6px;
+            font-size: 11px;
+        }
+        .timer-value {
+            min-width: 38px;
+            font-size: 12px;
+        }
+        .timer-track {
+            flex: 0 0 auto;
+            height: 4px;
+        }
+        .question-card {
+            flex: 0 0 auto;
+            max-width: 100%;
+            padding: 9px 10px;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .question-label {
+            margin-bottom: 5px;
+            font-size: 10px;
+        }
+        .question-text {
+            font-size: 14px;
+            line-height: 1.45;
+        }
+        .question-code {
+            max-width: 100%;
+            max-height: clamp(66px, 15vh, 130px);
+            margin-top: 8px;
+            padding: 8px;
+            overflow: auto;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.55;
+            tab-size: 4;
+            white-space: pre-wrap;
+            overflow-wrap: normal;
+            word-break: normal;
+            hyphens: none;
+        }
+        .choice-list {
+            flex: 1 1 auto;
+            min-height: 0;
+            gap: 5px;
+            padding: 0 2px 0 0;
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        .choice-button {
+            flex: 0 0 auto;
+            grid-template-columns: 26px minmax(0, 1fr);
+            gap: 7px;
+            min-height: 36px;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .choice-label {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .choice-text {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: normal;
+        }
+        .quiz-bottom {
+            flex: 0 0 auto;
+            min-height: 34px;
+            margin-top: auto;
+            padding-top: 2px;
+        }
+        .quiz-hint {
+            font-size: 10px;
+        }
+        .result-panel {
+            max-height: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .result-panel h3 {
+            font-size: 17px;
+        }
+        .result-panel p {
+            font-size: 12px;
+        }
+        .button-row {
+            margin-top: 8px;
+        }
+
+        /* 右側の戦闘画面は残りの高さを使い、外枠を減らす */
+        .battle-topline {
+            flex: 0 0 auto;
+        }
+        .battle-state {
+            padding: 3px 7px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+        .stage-chip {
+            font-size: 11px;
+        }
+        .hp-section {
+            flex: 0 0 auto;
+            margin-top: 11px;
+        }
+        .hp-heading {
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+        .hp-heading strong {
+            font-size: 14px;
+        }
+        .hp-bar {
+            gap: 4px;
+        }
+        .hp-block {
+            height: 8px;
+            border-radius: 3px;
+            box-shadow: none;
+        }
+        .arena {
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: none;
+            margin-top: 11px;
+            padding: 10px 8px;
+            border-radius: 6px;
+        }
+        .arena::after {
+            bottom: 15px;
+            right: 7%;
+            left: 7%;
+        }
+        .fighter-avatar {
+            width: clamp(60px, 7vw, 86px);
+            height: clamp(60px, 7vw, 86px);
+            border-radius: 10px;
+            background: #f8fafc;
+            box-shadow: none;
+            font-size: clamp(34px, 4vw, 46px);
+        }
+        .fighter-name {
+            font-size: 10px;
+        }
+        .fighter-role {
+            font-size: 9px;
+        }
+        .battle-caption {
+            flex: 0 0 auto;
+            margin: 7px 0 0;
+            font-size: 11px;
+        }
+        .effect-zone {
+            flex: 0 0 auto;
+            min-height: 48px;
+            max-height: 82px;
+            margin-top: 8px;
+            padding: 8px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .stats-grid {
+            flex: 0 0 auto;
+            gap: 8px;
+            margin-top: 8px;
+            padding-top: 0;
+        }
+        .stat-card {
+            padding: 7px 10px;
+            border-radius: 5px;
+        }
+        .stat-label {
+            font-size: 10px;
+        }
+        .stat-value {
+            margin-top: 0;
+            font-size: 19px;
+        }
+        .footer-note {
+            display: none;
+        }
+
+        /* 狭いPC画面でも左右分割と固定表示を保つ */
+        @media (max-width: 900px) {
+            body { padding: 0; }
+            .app-shell { min-height: 0; padding: 0; border-radius: 0; }
+            .workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 0; }
+            .panel, .battle-panel { min-height: 0; padding: 8px 10px; }
+            .app-header { padding-right: 10px; padding-left: 10px; }
+            .panel-kicker { display: none; }
+            .arena { min-height: 0; }
+            .chapter-list { max-height: none; }
+        }
+        @media (max-width: 560px) {
+            .app-header { min-height: 48px; padding: 5px 8px; }
+            .brand-title { font-size: 16px; }
+            .brand-subtitle { gap: 4px; font-size: 9px; }
+            .connection-status { padding: 4px 5px; font-size: 9px; }
+            .panel { padding: 7px 6px; }
+            .panel-heading h2 { font-size: 12px; }
+            .chapter-name { font-size: 11px; }
+            .chapter-description { font-size: 9px; }
+            .section-title { font-size: 12px; }
+            .count-option { font-size: 10px; }
+            .question-text { font-size: 12px; }
+            .question-code { font-size: 10px; }
+            .choice-button { grid-template-columns: 22px minmax(0, 1fr); gap: 5px; padding: 4px; font-size: 10px; }
+            .choice-label { width: 20px; height: 20px; }
+            .fighter-avatar { width: 42px; height: 42px; border-radius: 6px; font-size: 27px; }
+            .versus { font-size: 10px; }
+            .fighter-name { font-size: 8px; }
+            .fighter-role { font-size: 8px; }
+            .stat-value { font-size: 16px; }
+        }
+    
+        /* CODE_VIEWPORT_FIT_V3 */
+        /* コード全体を表示し、コード枠内のスクロールをなくす */
+        .question-card {
+            overflow: visible !important;
+        }
+
+        .question-code {
+            max-height: none !important;
+            height: auto !important;
+            overflow: visible !important;
+            margin-top: 6px !important;
+            padding: 5px 7px !important;
+            white-space: pre-wrap !important;
+            overflow-wrap: anywhere !important;
+            word-break: normal !important;
+            tab-size: 4;
+        }
+
+        /* 長いコードのときは選択肢の余白を減らす */
+        #quiz-content.long-code-mode {
+            gap: 3px !important;
+        }
+
+        #quiz-content.long-code-mode .question-card {
+            padding: 4px 6px;
+        }
+
+        #quiz-content.long-code-mode .question-label {
+            margin-bottom: 3px;
+        }
+
+        #quiz-content.long-code-mode .question-text {
+            font-size: 12px;
+            line-height: 1.25;
+        }
+
+        #quiz-content.long-code-mode .choice-list {
+            gap: 2px;
+        }
+
+        #quiz-content.long-code-mode .choice-button {
+            min-height: 27px;
+            padding: 3px 6px;
+            gap: 5px;
+            font-size: 10px;
+            line-height: 1.2;
+        }
+
+        #quiz-content.long-code-mode .choice-label {
+            width: 20px;
+            height: 20px;
+        }
+
+        #quiz-content.long-code-mode .quiz-bottom {
+            min-height: 26px;
+        }
+
+</style>
 </head>
 <body>
 <div class="app-shell">
@@ -513,7 +993,7 @@
     <main class="workspace">
         <section class="panel learning-panel" aria-label="学習エリア">
             <div class="panel-heading">
-                <h2>左側：学習エリア</h2>
+                <h2>学習エリア</h2>
                 <span class="panel-kicker">LEARNING</span>
             </div>
 
@@ -592,7 +1072,7 @@
 
         <section class="panel battle-panel" aria-label="ゲームエリア">
             <div class="panel-heading">
-                <h2>右側：ゲームエリア</h2>
+                <h2>ゲームエリア</h2>
                 <span class="panel-kicker">BATTLE</span>
             </div>
 
@@ -846,10 +1326,62 @@
         const code = element("question-code");
         if (question.codeBlock && String(question.codeBlock).trim() !== "") {
             code.textContent = question.codeBlock;
+
+            // CODE_VIEWPORT_FIT_V3: コードの長さに応じて表示を調整する
+            const codeLines = code.textContent.split(/\r\n|\r|\n/);
+            const lineCount = codeLines.length;
+            const longestLine = Math.max(
+                0,
+                ...codeLines.map(line => line.length)
+            );
+
+            let codeFontSize = 12;
+            let codeLineHeight = 1.3;
+
+            if (lineCount >= 50) {
+                codeFontSize = 7.5;
+                codeLineHeight = 1.0;
+            } else if (lineCount >= 38) {
+                codeFontSize = 8;
+                codeLineHeight = 1.05;
+            } else if (lineCount >= 28) {
+                codeFontSize = 8.75;
+                codeLineHeight = 1.1;
+            } else if (lineCount >= 20) {
+                codeFontSize = 9.5;
+                codeLineHeight = 1.15;
+            } else if (lineCount >= 14) {
+                codeFontSize = 10.5;
+                codeLineHeight = 1.2;
+            } else if (lineCount >= 10) {
+                codeFontSize = 11;
+                codeLineHeight = 1.25;
+            }
+
+            if (longestLine >= 90) {
+                codeFontSize = Math.max(7.25, codeFontSize - 0.75);
+            }
+
+            if (window.innerWidth <= 560) {
+                codeFontSize = Math.max(7.25, codeFontSize - 0.75);
+            }
+
+            code.style.fontSize = codeFontSize + "px";
+            code.style.lineHeight = String(codeLineHeight);
+
+            // 長いコードでは選択肢をコンパクトに表示する
+            element("quiz-content").classList.toggle(
+                "long-code-mode",
+                lineCount >= 14 || longestLine >= 90
+            );
+
             code.classList.remove("hidden");
         } else {
             code.textContent = "";
             code.classList.add("hidden");
+            code.style.fontSize = "";
+            code.style.lineHeight = "";
+            element("quiz-content").classList.remove("long-code-mode");
         }
 
         const stageNumber = Math.floor(currentQuestionIndex / 5) + 1;
