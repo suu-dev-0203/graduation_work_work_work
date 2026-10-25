@@ -971,7 +971,720 @@
         #quiz-content.long-code-mode .quiz-bottom {
             min-height: 26px;
         }
+        /* ============================================================
+           参考画像に近づけるためのレイアウト調整
+           左側の問題処理・右側のゲーム処理のJavaScriptは変更しない
+           ============================================================ */
 
+        /* 右側のゲーム領域は、残った高さをすべて使う */
+        .battle-panel {
+            position: relative; /* HUDなどを配置する基準にする */
+            display: flex; /* 中の要素を縦に並べる */
+            flex-direction: column; /* 上から下への配置にする */
+            gap: 0; /* 要素間の余白を別々に調整する */
+            min-width: 0; /* 横幅が画面からはみ出さないようにする */
+            min-height: 0; /* 高さの縮小を許可する */
+            padding: 4px 6px 5px; /* ゲーム映像の周囲の余白を小さくする */
+            overflow: hidden; /* 子要素が外側へはみ出さないようにする */
+        }
+
+        /* 「ゲームエリア」の見出しを消し、上部の空白をゲーム映像に使う */
+        .battle-panel > .panel-heading {
+            display: none; /* 独立した見出しを非表示にする */
+        }
+
+        /* 背景画像を含むゲームフィールドを大きく表示する */
+        .arena {
+            position: relative; /* HUDとキャラクターをこの領域に重ねる */
+            display: block; /* 中の項目を自由に配置できるようにする */
+            flex: 1 1 auto; /* 使える縦の空間を優先して使う */
+            min-width: 0; /* 横幅のはみ出しを防ぐ */
+            min-height: 0; /* 画面の高さに合わせて縮められるようにする */
+            margin: 0; /* 上の余白をなくす */
+            padding: 0; /* 背景の端まで映像を広げる */
+            overflow: hidden; /* キャラクターや効果を枠内に収める */
+            isolation: isolate; /* 重なり順をこのゲーム画面内で管理する */
+            border: 1px solid #dbe5ef; /* 背景の周りに細い境界線を付ける */
+            border-radius: 7px; /* 角を少しだけ丸くする */
+            background-color: #dcecf6; /* 画像が読み込めない場合の代替色 */
+            background-image: linear-gradient(180deg, rgba(8, 35, 65, .25), transparent 34%), url('/images/game/stages/city/city-background.png'); /* 背景と上部の読みやすさ調整を重ねる */
+            background-size: cover; /* ゲーム領域いっぱいに背景を広げる */
+            background-position: center bottom; /* 道路が見えるよう下側を基準にする */
+            background-repeat: no-repeat; /* 背景をタイル状に繰り返さない */
+        }
+
+        /* 元の仮の床線を消し、道路の画像をそのまま見せる */
+        .arena::after {
+            display: none; /* CSSで描いた床線を非表示にする */
+        }
+
+        /* 背景画像の上に表示するステージ情報の帯 */
+        .battle-topline {
+            position: absolute; /* 背景の上に重ねて表示する */
+            z-index: 5; /* キャラクターや背景より手前に置く */
+            top: 8px; /* ゲーム画面の上端から少し離す */
+            right: 10px; /* 右端から少し離す */
+            left: 10px; /* 左端から少し離す */
+            display: flex; /* 状態・ステージ・時間を横に並べる */
+            align-items: center; /* 縦方向の中央をそろえる */
+            justify-content: space-between; /* 左右に分けて表示する */
+            gap: 8px; /* 項目同士の最低限の間隔を取る */
+            pointer-events: none; /* HUDがキャラクターのクリックを邪魔しない */
+        }
+
+        /* バトル状態は暗い半透明のラベルにして背景上でも読めるようにする */
+        .battle-state {
+            max-width: 40%; /* 文字が長くても画面を占有しすぎない */
+            padding: 5px 9px; /* ラベルの内側に余白を付ける */
+            overflow: hidden; /* 長い文字をはみ出させない */
+            border: 1px solid rgba(255, 255, 255, .35); /* 明るい細枠で区切る */
+            border-radius: 6px; /* ラベルの角を丸くする */
+            color: #ffffff; /* 文字を白くする */
+            background: rgba(8, 38, 73, .82); /* 背景が透ける濃紺にする */
+            font-size: 11px; /* ゲーム画面に合う小さめの文字にする */
+            text-overflow: ellipsis; /* 長い文字は省略記号で収める */
+            white-space: nowrap; /* ラベルを1行に保つ */
+        }
+
+        /* ステージ名もHUDの中央寄りに表示する */
+        .stage-chip {
+            margin-left: auto; /* 余った空間を使って右側へ寄せる */
+            padding: 5px 10px; /* 読みやすい内側余白を付ける */
+            border: 1px solid rgba(255, 255, 255, .35); /* HUDと同じ枠を付ける */
+            border-radius: 6px; /* 角を少し丸くする */
+            color: #ffffff; /* 白い文字で表示する */
+            background: rgba(8, 38, 73, .82); /* 暗い半透明背景で読みやすくする */
+            font-size: 11px; /* 小さくても読める文字サイズにする */
+            white-space: nowrap; /* ステージ表示を折り返さない */
+        }
+
+        /* 右上に残り時間を表示する */
+        .arena-clock {
+            display: inline-flex; /* TIMEと秒数を横に並べる */
+            align-items: center; /* 文字の高さを中央でそろえる */
+            gap: 6px; /* TIMEと秒数の間隔を作る */
+            padding: 5px 9px; /* HUDの内側余白 */
+            border: 1px solid rgba(255, 255, 255, .35); /* 細い白枠を付ける */
+            border-radius: 6px; /* 角を丸くする */
+            color: #ffffff; /* 白い文字を使う */
+            background: rgba(8, 38, 73, .82); /* 半透明の濃紺背景を付ける */
+            font-size: 10px; /* TIMEラベルを小さく表示する */
+            white-space: nowrap; /* 時間を1行に収める */
+        }
+
+        /* 時間の数字だけを少し強調する */
+        .arena-clock strong {
+            font-size: 12px; /* 秒数をTIMEラベルより大きくする */
+            font-variant-numeric: tabular-nums; /* 数字の幅をそろえる */
+        }
+
+        /* 敵のHP表示を背景画像の上部に重ねる */
+        .hp-section {
+            position: absolute; /* 背景の上に固定して置く */
+            z-index: 4; /* 背景より前、キャラクターHUDより後ろに置く */
+            top: 47px; /* ステージ情報のすぐ下に置く */
+            right: 12px; /* 右端の余白 */
+            left: 12px; /* 左端の余白 */
+            margin: 0; /* 既存の上余白をなくす */
+            padding: 7px 9px 8px; /* HP情報の周囲に余白を付ける */
+            border: 1px solid rgba(255, 255, 255, .3); /* 細い枠で区切る */
+            border-radius: 7px; /* 角を丸くする */
+            background: rgba(8, 38, 73, .72); /* 背景を少し透かす */
+        }
+
+        /* HPの見出しと残り体力の数字を白くする */
+        .hp-heading {
+            margin-bottom: 5px; /* HPバーとの間隔を小さくする */
+            color: #ffffff; /* 背景の上で読める白文字にする */
+            font-size: 10px; /* 見出しをコンパクトにする */
+        }
+
+        /* HPの数字を強調する */
+        .hp-heading strong {
+            color: #ffffff; /* 数字も白く表示する */
+            font-size: 11px; /* 見出しより少し大きくする */
+        }
+
+        /* 5つのHPブロックを均等に並べる */
+        .hp-bar {
+            display: grid; /* グリッドで均等に並べる */
+            grid-template-columns: repeat(5, minmax(0, 1fr)); /* 5区画を同じ幅にする */
+            gap: 4px; /* 区画の間に小さな隙間を作る */
+        }
+
+        /* HPバーを細く、ゲーム画面になじむ形にする */
+        .hp-block {
+            height: 7px; /* HPの高さを小さくする */
+            border-radius: 3px; /* 端を軽く丸める */
+            box-shadow: none; /* 余分な立体影をなくす */
+        }
+
+        /* プレイヤーと敵を地面近くに配置する */
+        .fighter {
+            position: absolute; /* 背景の上に直接置く */
+            z-index: 2; /* 背景より前に表示する */
+            bottom: 8%; /* 足元をゲーム画面の下寄りにする */
+            display: flex; /* キャラクターと名前を縦に並べる */
+            flex: none; /* 元の横幅分配を無効にする */
+            flex-direction: column; /* 名前をキャラクターの下に表示する */
+            align-items: center; /* キャラクターと名前を中央にそろえる */
+            justify-content: flex-end; /* 足元側へ配置する */
+            gap: 3px; /* キャラクターと名前の間隔を小さくする */
+            width: 28%; /* 左右それぞれ約3割の範囲に収める */
+            min-width: 0; /* 狭い画面でもはみ出さない */
+        }
+
+        /* プレイヤーはゲーム画面の左側に配置する */
+        #player-unit {
+            left: 5%; /* 左端から5%の位置 */
+        }
+
+        /* 敵はゲーム画面の右側に配置する */
+        #enemy-unit {
+            right: 5%; /* 右端から5%の位置 */
+        }
+
+        /* キャラクターの絵文字を仮の立ち絵として大きく表示する */
+        .fighter-avatar {
+            display: flex; /* 絵文字を中央に配置する */
+            align-items: center; /* 縦方向の中央にそろえる */
+            justify-content: center; /* 横方向の中央にそろえる */
+            width: clamp(76px, 10vw, 150px); /* 画面幅に応じて大きさを変える */
+            height: clamp(86px, 20vh, 190px); /* 立ち絵の高さを画面に合わせる */
+            border: 0; /* 白いカード枠をなくす */
+            border-radius: 0; /* カードの角丸をなくす */
+            color: #ffffff; /* 文字がある場合の色を白くする */
+            background: transparent; /* キャラクター背後の白い四角をなくす */
+            box-shadow: none; /* カードの影をなくす */
+            font-size: clamp(54px, 7vw, 104px); /* 絵文字を大きく見せる */
+            line-height: 1; /* 絵文字の上下余白を減らす */
+            text-shadow: 0 3px 5px rgba(0, 0, 0, .35); /* 背景上でも形が見えるように影を付ける */
+        }
+
+        /* キャラクター名は背景上でも読めるようにする */
+        .fighter-name {
+            max-width: 100%; /* 名前が横にはみ出さないようにする */
+            color: #ffffff; /* 名前を白く表示する */
+            font-size: 11px; /* コンパクトな文字サイズにする */
+            font-weight: 800; /* 名前を太字にする */
+            text-align: center; /* 名前を中央にそろえる */
+            overflow-wrap: anywhere; /* 長い名前を折り返せるようにする */
+            text-shadow: 0 1px 4px rgba(0, 0, 0, .9); /* 背景とのコントラストを上げる */
+        }
+
+        /* 補足的な役割ラベルは参考画像に合わせて非表示にする */
+        .fighter-role {
+            display: none; /* キャラクター下の小さな説明を隠す */
+        }
+
+        /* VS文字はゲーム映像の邪魔にならないように隠す */
+        .versus {
+            display: none; /* キャラクターの間のVSを非表示にする */
+        }
+
+        /* キャラクターの攻撃・被ダメージ・MISSの動きは既存アニメーションを使う */
+        .fighter-avatar.attack {
+            animation: attack .42s ease; /* 正解時に前へ動く */
+        }
+
+        /* ダメージ時は少し揺らす */
+        .fighter-avatar.damaged {
+            animation: damaged .42s ease; /* 被弾した動きを再生する */
+        }
+
+        /* MISS時は一瞬薄くする */
+        .fighter-avatar.miss {
+            animation: miss .3s ease; /* 外したときの動きを再生する */
+        }
+
+        /* 説明文は細い1行にし、ゲーム映像の高さを優先する */
+        .battle-caption {
+            flex: 0 0 auto; /* 必要な高さを維持する */
+            margin: 3px 0 0; /* 上の余白を最小限にする */
+            color: #78818d; /* 補助情報用のグレーにする */
+            font-size: 9px; /* 小さな文字にする */
+            line-height: 1.2; /* 行の高さを低くする */
+            text-align: center; /* 中央に表示する */
+        }
+
+        /* 回答結果のメッセージを薄い帯として表示する */
+        .effect-zone {
+            flex: 0 0 auto; /* メッセージ欄の高さを固定的に確保する */
+            min-height: 27px; /* 1行表示に必要な高さを確保する */
+            max-height: 40px; /* メッセージ欄を大きくしすぎない */
+            margin-top: 3px; /* 上の説明との間隔を小さくする */
+            padding: 5px 8px; /* 内側の余白を小さくする */
+            overflow: hidden; /* 長い解説でゲーム画面を押し縮めない */
+            border: 1px solid #dce5ee; /* 薄い枠線を付ける */
+            border-radius: 5px; /* 角を少し丸くする */
+            color: #44556a; /* メッセージを読みやすい色にする */
+            background: #f6f9fc; /* 白に近い背景色にする */
+            font-size: 10px; /* 文字をコンパクトにする */
+            line-height: 1.25; /* 行の高さを減らす */
+            text-align: center; /* メッセージを中央に置く */
+            white-space: pre-line; /* 改行を反映しつつ通常の折り返しを許可する */
+            overflow-wrap: anywhere; /* 長文が横にはみ出すのを防ぐ */
+        }
+
+        /* 正解メッセージの配色 */
+        .effect-zone.success {
+            border-color: #bfe8d4; /* 緑色の枠にする */
+            color: #18764f; /* 正解メッセージを緑にする */
+            background: #effaf4; /* 薄い緑の背景にする */
+        }
+
+        /* 不正解メッセージの配色 */
+        .effect-zone.miss {
+            border-color: #f0caca; /* 赤色の枠にする */
+            color: #a83e45; /* MISSメッセージを赤にする */
+            background: #fff5f5; /* 薄い赤の背景にする */
+        }
+
+        /* スコアとコンボを画面下部にコンパクトに並べる */
+        .stats-grid {
+            display: grid; /* 2枚のカードを並べる */
+            grid-template-columns: 1fr 1fr; /* SCOREとCOMBOを同じ幅にする */
+            flex: 0 0 auto; /* 余分に縦へ伸ばさない */
+            gap: 6px; /* カード同士の隙間を小さくする */
+            margin-top: 4px; /* メッセージ帯との間隔を小さくする */
+            padding-top: 0; /* 上の余白をなくす */
+        }
+
+        /* スコアとコンボのカードを低くする */
+        .stat-card {
+            min-width: 0; /* 横幅のはみ出しを防ぐ */
+            padding: 4px 9px; /* カードの内側の余白を減らす */
+            border: 1px solid #dfe6ee; /* 薄い境界線を付ける */
+            border-radius: 5px; /* 角を小さく丸める */
+            background: #f7f9fc; /* 白に近い背景にする */
+        }
+
+        /* SCOREとCOMBOの見出しを小さくする */
+        .stat-label {
+            color: #65758b; /* 見出しを落ち着いた色にする */
+            font-size: 9px; /* ラベルを小さくする */
+            line-height: 1.1; /* ラベルの高さを減らす */
+        }
+
+        /* スコアとコンボの数字は読める大きさを保つ */
+        .stat-value {
+            margin-top: 1px; /* ラベルとの間隔を小さくする */
+            color: #182b45; /* 数字を濃い色にする */
+            font-size: 17px; /* 低いカード内でも読みやすくする */
+            font-weight: 800; /* 数字を太くする */
+            line-height: 1.1; /* 数字の高さを抑える */
+            font-variant-numeric: tabular-nums; /* 数字の幅をそろえる */
+        }
+
+        /* コンボ数はオレンジ系の色で区別する */
+        .stat-card.combo .stat-value {
+            color: #b87918; /* コンボ数の文字色 */
+        }
+
+        /* 小さなノートはレイアウトを圧迫しないように非表示 */
+        .battle-panel .footer-note {
+            display: none; /* ゲーム画面の下に余分な文を追加しない */
+        }
+
+        /* 狭い画面でもゲームHUDを左右内に収める */
+        @media (max-width: 900px) {
+            .battle-panel {
+                padding: 3px 4px; /* 小さな画面では外側余白をさらに減らす */
+            }
+            .battle-topline {
+                top: 5px; /* HUDを上端に近づける */
+                right: 5px; /* 右端の余白を減らす */
+                left: 5px; /* 左端の余白を減らす */
+                gap: 4px; /* 項目間の隙間を減らす */
+            }
+            .battle-state,
+            .stage-chip,
+            .arena-clock {
+                padding: 4px 5px; /* HUDの各ラベルを小さくする */
+                font-size: 9px; /* 小さな画面用の文字サイズ */
+            }
+            .hp-section {
+                top: 38px; /* 小さなHUDの下にHP欄を置く */
+                right: 6px; /* 右側の余白 */
+                left: 6px; /* 左側の余白 */
+                padding: 5px 6px; /* HP欄をコンパクトにする */
+            }
+            .fighter-avatar {
+                height: clamp(70px, 16vh, 140px); /* キャラクターが画面を占有しすぎないようにする */
+                font-size: clamp(42px, 6vw, 76px); /* 絵文字の大きさを調整する */
+            }
+        }
+
+        /* スマートフォン幅で文字やHUDが重なりにくいようにする */
+        @media (max-width: 560px) {
+            .arena-clock {
+                gap: 3px; /* TIMEと秒数の間隔を減らす */
+            }
+            .battle-state {
+                max-width: 33%; /* 状態ラベルの幅を制限する */
+            }
+            .fighter {
+                width: 34%; /* 狭い画面ではキャラクター領域を少し広げる */
+            }
+            .fighter-avatar {
+                width: 64px; /* 横幅をスマートフォン向けにする */
+                height: 76px; /* 高さをスマートフォン向けにする */
+                font-size: 48px; /* 絵文字を画面内に収める */
+            }
+            .fighter-name {
+                font-size: 8px; /* 名前が横幅からはみ出ないようにする */
+            }
+            .hp-section {
+                top: 38px; /* HP表示をHUDのすぐ下に維持する */
+            }
+            .effect-zone {
+                min-height: 25px; /* メッセージ欄を低くする */
+                max-height: 32px; /* スマートフォンでも高さを抑える */
+                font-size: 9px; /* 小さい画面で読みやすいサイズにする */
+            }
+            .stat-card {
+                padding: 4px 6px; /* 下部カードをコンパクトにする */
+            }
+        }
+
+        /* ブラウザの動きを減らす設定がある場合は既存の方針を尊重する */
+        @media (prefers-reduced-motion: reduce) {
+            .fighter-avatar,
+            .hp-block {
+                transition: none; /* 動きに敏感な利用者向けに動きを減らす */
+            }
+        }
+
+
+        /* ============================================================
+           2026-10-26 調整：問題を大きくし、解説を最後まで表示する
+           このCSSは前に書かれた設定を上書きするため、末尾に置く
+           ============================================================ */
+
+        /* 短いJava問題のカードに余白を足し、問題文を見やすくする */
+        #quiz-content:not(.long-code-mode) .question-card {
+            padding: 12px 13px; /* 問題文とコードの周りに余裕を作る */
+        }
+
+        /* 問題の種類を示す小さな見出しを読みやすくする */
+        #quiz-content:not(.long-code-mode) .question-label {
+            margin-bottom: 7px; /* 見出しと問題文の距離を広げる */
+            font-size: 11px; /* 見出しの文字を少し大きくする */
+        }
+
+        /* 問題文を参考画像に近い大きさにする */
+        #quiz-content:not(.long-code-mode) .question-text {
+            font-size: clamp(15px, 1.05vw, 17px); /* 画面に合わせて15〜17pxにする */
+            line-height: 1.5; /* 行を読みやすく離す */
+        }
+
+        /* 短いコードは余白を増やし、読みやすく表示する */
+        #quiz-content:not(.long-code-mode) .question-code {
+            max-height: clamp(100px, 22vh, 205px) !important; /* 高さを確保しつつ長すぎないようにする */
+            overflow: auto !important; /* とても長いコードだけコード枠内で確認できるようにする */
+            margin-top: 10px !important; /* 問題文との間隔 */
+            padding: 10px !important; /* コードの周囲に余白を付ける */
+            line-height: 1.45; /* コードの行間を読みやすくする */
+        }
+
+        /* 選択肢の一覧に残りの縦スペースを使わせる */
+        #quiz-content:not(.long-code-mode) .choice-list {
+            flex: 1 1 auto; /* 問題画面の余った高さを受け取る */
+            min-height: 0; /* 高さが足りない時もレイアウトを崩さない */
+            gap: 7px; /* 選択肢同士の間を少し空ける */
+        }
+
+        /* 通常の選択肢を大きくし、一覧の下に空白が残りにくくする */
+        #quiz-content:not(.long-code-mode) .choice-button {
+            flex: 1 0 42px; /* 選択肢を均等に伸ばして残りの高さを活用する */
+            min-height: 42px; /* 押しやすい高さを確保する */
+            padding: 7px 10px; /* 文字の周囲に余裕を作る */
+            grid-template-columns: 30px minmax(0, 1fr); /* A〜Eのラベルを少し広くする */
+            gap: 9px; /* ラベルと回答文の間隔 */
+            font-size: clamp(13px, 0.95vw, 15px); /* 回答文を13〜15pxで表示する */
+            line-height: 1.45; /* 長い選択肢も読みやすくする */
+        }
+
+        /* A〜Eの記号も回答文に合わせて少し大きくする */
+        #quiz-content:not(.long-code-mode) .choice-label {
+            width: 28px; /* 記号の横幅 */
+            height: 28px; /* 記号の高さ */
+            font-size: 12px; /* 記号の文字サイズ */
+        }
+
+        /* 長いコードの問題は、これまでのコンパクト表示を維持する */
+        #quiz-content.long-code-mode .choice-button {
+            flex: 0 0 auto; /* 長いコードの時に選択肢が不必要に伸びないようにする */
+        }
+
+        /* スコア・コンボを説明文の上に置くので、欄を少しだけ高くする */
+        .stats-grid {
+            order: 1; /* ゲーム画面内で先に表示する */
+            margin-top: 5px; /* ゲーム映像との間隔 */
+            margin-bottom: 0; /* 下側の余白をなくす */
+        }
+
+        /* ルール説明はスコア欄のすぐ下に表示する */
+        .battle-caption {
+            order: 2; /* スコア・コンボの次に表示する */
+            margin-top: 4px; /* 上の欄との小さな間隔 */
+            margin-bottom: 0; /* 余分な下余白をなくす */
+            font-size: 10px; /* 小さいながら読み取れる文字サイズ */
+        }
+
+        /* 解説を画面最下部に置き、複数行を読める高さにする */
+        .effect-zone {
+            order: 3; /* スコア・コンボと操作説明より後に表示する */
+            min-height: 64px; /* 1行だけでなく解説も表示できる高さを確保する */
+            max-height: 108px; /* 解説が長すぎる場合の上限 */
+            margin-top: 4px; /* 操作説明との間隔 */
+            padding: 8px 10px; /* 解説文の周囲に余白を付ける */
+            overflow-x: hidden; /* 横方向にはみ出させない */
+            overflow-y: auto; /* 長い説明も欄内で読めるようにする */
+            font-size: 12px; /* 解説の文字を読みやすくする */
+            line-height: 1.45; /* 複数行を読みやすくする */
+            white-space: pre-line; /* Javaの解説に含まれる改行を表示する */
+        }
+
+        /* 狭い画面でも解説を読める高さを残す */
+        @media (max-width: 560px) {
+            #quiz-content:not(.long-code-mode) .question-text {
+                font-size: 14px; /* 小さい画面では問題文を収めやすくする */
+            }
+            #quiz-content:not(.long-code-mode) .choice-button {
+                font-size: 12px; /* 小さい画面でも選択肢がはみ出ないようにする */
+                min-height: 38px; /* スマートフォン向けの最低高さ */
+            }
+            .effect-zone {
+                min-height: 58px; /* 小さい画面でも解説を複数行表示する */
+                max-height: 92px; /* ゲーム映像を残すため上限を調整する */
+                font-size: 11px; /* 画面幅に合わせて文字を調整する */
+            }
+        }
+
+
+
+        /* ============================================================
+           回答結果の見やすさを改善する
+           ・SCORE/COMBOはゲーム画面上部に小さく表示
+           ・答えと解説は中央の半透明パネルに表示
+           ・正しい選択肢は左側で薄い緑色にする
+           ============================================================ */
+
+        /* SCOREとCOMBOを上部HUDの中に横並びで表示する */
+        .arena-stats {
+            display: inline-flex; /* スコアとコンボを横並びにする */
+            align-items: stretch; /* 2つの小さな表示の高さをそろえる */
+            gap: 4px; /* スコアとコンボの間隔を小さくする */
+            flex: 0 0 auto; /* 必要以上に横へ広がらないようにする */
+            margin-left: 0; /* 前後のHUD項目と自然に並べる */
+        }
+
+        /* SCOREとCOMBOそれぞれの小さな半透明カード */
+        .arena-stat {
+            display: inline-flex; /* ラベルと数字を横に並べる */
+            align-items: center; /* 上下の位置を中央にそろえる */
+            gap: 5px; /* ラベルと数字の間隔を少し空ける */
+            padding: 4px 7px; /* カードの余白を小さくする */
+            border: 1px solid rgba(255, 255, 255, .35); /* 細い枠線を付ける */
+            border-radius: 6px; /* 角を少し丸くする */
+            color: #ffffff; /* 背景上で読める白文字にする */
+            background: rgba(8, 38, 73, .84); /* 背景が少し透ける濃紺にする */
+            white-space: nowrap; /* ラベルと数字を改行しない */
+        }
+
+        /* SCORE・COMBOの小さなラベル */
+        .arena-stat-label {
+            color: rgba(255, 255, 255, .82); /* 数字より少し控えめな白にする */
+            font-size: 9px; /* HUDの中に収まるサイズ */
+            font-weight: 650; /* 小さくても読みやすくする */
+        }
+
+        /* スコアとコンボの数字 */
+        .arena-stat strong {
+            color: #ffffff; /* 数字を白く表示する */
+            font-size: 12px; /* ラベルより少し大きくする */
+            font-weight: 850; /* 数字を太字にする */
+            font-variant-numeric: tabular-nums; /* 数字の幅をそろえる */
+        }
+
+        /* ステージ名とスコアの間に余計な空白を作らない */
+        .stage-chip {
+            margin-left: 0; /* SCORE/COMBOと横並びになるようにする */
+        }
+
+        /* 答えをゲームフィールドの中央に重ねる透明な入れ物 */
+        .answer-overlay {
+            position: absolute; /* 背景画像の上に重ねる */
+            z-index: 30; /* HUDやキャラクターより手前に表示する */
+            inset: 0; /* ゲームフィールド全体を覆う */
+            display: flex; /* 中央パネルを中央に配置する */
+            align-items: center; /* 縦方向の中央にそろえる */
+            justify-content: center; /* 横方向の中央にそろえる */
+            padding: 14px; /* 画面端にパネルが接しないようにする */
+            pointer-events: none; /* 表示中もゲーム表示のクリックを奪わない */
+        }
+
+        /* 答えと解説を載せる半透明の中央パネル */
+        .answer-overlay-card {
+            width: min(88%, 640px); /* ゲーム画面の幅に収まり、広すぎないようにする */
+            max-height: 82%; /* 背景とキャラクターが少し見える高さにする */
+            overflow-x: hidden; /* 横方向にはみ出さないようにする */
+            overflow-y: auto; /* 解説が長い場合はパネル内で読めるようにする */
+            padding: clamp(16px, 2.2vw, 28px); /* 画面幅に合わせて余白を調整する */
+            border: 2px solid rgba(255, 255, 255, .86); /* 明るい枠でカードを区切る */
+            border-radius: 16px; /* やわらかな角丸にする */
+            color: #1c2f49; /* 本文を濃い色にして読みやすくする */
+            background: rgba(250, 253, 255, .91); /* 背景画像が少し透ける白にする */
+            box-shadow: 0 16px 42px rgba(3, 19, 39, .28); /* 背景から浮かせる */
+            -webkit-backdrop-filter: blur(7px); /* 対応ブラウザで背景を軽くぼかす */
+            backdrop-filter: blur(7px); /* 背景を少しぼかし、文字を読みやすくする */
+            text-align: center; /* 見出しと答えを中央にそろえる */
+        }
+
+        /* 正解・不正解の大きな見出し */
+        .answer-outcome {
+            margin: 0 0 10px; /* 答えとの間に間隔を作る */
+            color: #188454; /* 通常は正解を示す緑色にする */
+            font-size: clamp(27px, 3vw, 42px); /* 大きな文字で結果を伝える */
+            font-weight: 900; /* 見出しを太くする */
+            line-height: 1.15; /* 見出しの高さを抑える */
+            letter-spacing: .02em; /* 文字を少しだけ読みやすく離す */
+        }
+
+        /* 不正解パネルの見出しを赤色にする */
+        .answer-overlay-card.miss .answer-outcome {
+            color: #bf3542; /* MISSが一目で分かる赤色 */
+        }
+
+        /* 正解の選択肢を大きく目立たせる */
+        .answer-correct-text {
+            margin: 0 0 14px; /* 答えと解説見出しの間隔 */
+            padding: 9px 12px; /* 答えを囲む余白 */
+            border: 1px solid #a9dcb9; /* 薄い緑色の枠線 */
+            border-radius: 9px; /* 答えの枠を丸くする */
+            color: #145b35; /* 濃い緑の文字にする */
+            background: rgba(225, 247, 231, .94); /* 薄い緑の背景にする */
+            font-size: clamp(17px, 1.7vw, 23px); /* 答えを本文より大きく表示 */
+            font-weight: 850; /* 答えを太字にする */
+            line-height: 1.4; /* 長い答えも読みやすくする */
+            overflow-wrap: anywhere; /* 長い文字列を枠内で折り返す */
+        }
+
+        /* 解説見出し */
+        .answer-explanation-label {
+            margin: 0 0 5px; /* 本文との間に少し間隔を付ける */
+            color: #5f7187; /* 補助的な見出し色にする */
+            font-size: 11px; /* 解説という見出しは控えめにする */
+            font-weight: 850; /* 見出しをはっきりさせる */
+            letter-spacing: .12em; /* 見出しを区別しやすくする */
+        }
+
+        /* Javaの解説本文 */
+        .answer-explanation {
+            margin: 0; /* ブラウザ標準の余白をなくす */
+            color: #273a52; /* 本文を濃い青灰色にする */
+            font-size: clamp(14px, 1.25vw, 18px); /* 説明を無理なく読めるサイズにする */
+            font-weight: 550; /* 長文でも読みやすい太さにする */
+            line-height: 1.6; /* 行間を広げて読みやすくする */
+            text-align: left; /* 複数行の解説は左揃えにする */
+            white-space: pre-line; /* 解説文の改行を反映する */
+            overflow-wrap: anywhere; /* 長い文字列がはみ出ないようにする */
+        }
+
+        /* Enterキーと自動進行の案内 */
+        .answer-next-hint {
+            margin: 16px 0 0; /* 解説の下に間隔を作る */
+            padding-top: 10px; /* 上の区切り線との距離 */
+            border-top: 1px solid rgba(91, 116, 143, .22); /* 内容と操作案内を分ける */
+            color: #526880; /* 補助情報の色にする */
+            font-size: 12px; /* 読みやすく、主張しすぎないサイズ */
+            font-weight: 750; /* 操作方法を見つけやすくする */
+            line-height: 1.4; /* 狭い画面でも読みやすくする */
+        }
+
+        /* 回答された選択肢の正解を薄い緑色で強調する */
+        .choice-button.answer-correct,
+        .choice-button.answer-correct:disabled {
+            border-color: #65b981 !important; /* 正解の枠線を緑色にする */
+            color: #174f31 !important; /* 正解文を濃い緑にする */
+            background: #e5f7e9 !important; /* 正解の選択肢を薄い緑色にする */
+            box-shadow: inset 0 0 0 1px rgba(74, 165, 103, .16); /* 正解枠を少しだけ強調する */
+            opacity: 1 !important; /* disabled状態でも薄くならないようにする */
+        }
+
+        /* 正解のA〜Eラベルも緑色で強調する */
+        .choice-button.answer-correct .choice-label {
+            color: #ffffff !important; /* ラベル文字を白くする */
+            background: #39965a !important; /* ラベルを緑色にする */
+        }
+
+        /* 選んだ答えが不正解だった場合は、選択した行を薄い赤で表示する */
+        .choice-button.answer-selected-wrong,
+        .choice-button.answer-selected-wrong:disabled {
+            border-color: #e6aaaa !important; /* 不正解の枠線を赤系にする */
+            color: #8d3338 !important; /* 選択した不正解の文字色 */
+            background: #fff0f0 !important; /* 選んだ不正解を薄い赤にする */
+            opacity: 1 !important; /* disabledで薄くならないようにする */
+        }
+
+        /* 画面が狭い場合はHUDと結果パネルを少しコンパクトにする */
+        @media (max-width: 900px) {
+            .battle-topline {
+                gap: 4px; /* HUD項目の間隔を小さくする */
+            }
+            .battle-state {
+                max-width: 27%; /* 状態ラベルが他の項目を押さないようにする */
+                padding: 4px 5px; /* 状態ラベルを小さくする */
+                font-size: 9px; /* 状態文字を小さくする */
+            }
+            .stage-chip,
+            .arena-clock {
+                padding: 4px 5px; /* ステージと時間の余白を減らす */
+                font-size: 9px; /* HUDを小さな画面に合わせる */
+            }
+            .arena-stat {
+                gap: 3px; /* 小さな画面ではラベルと数字を近づける */
+                padding: 4px 5px; /* SCORE/COMBOカードを小さくする */
+            }
+            .arena-stat-label {
+                font-size: 8px; /* HUDのラベルを縮小する */
+            }
+            .arena-stat strong {
+                font-size: 10px; /* 数字は読める範囲で縮小する */
+            }
+            .answer-overlay-card {
+                width: 92%; /* 狭い画面の幅を有効活用する */
+                max-height: 88%; /* 解説の表示領域を少し広げる */
+                padding: 14px; /* 余白を控えめにする */
+                border-radius: 12px; /* 角丸を小さくする */
+            }
+            .answer-explanation {
+                font-size: 14px; /* 本文を狭い画面に合わせる */
+            }
+            .answer-next-hint {
+                font-size: 10px; /* 操作案内を小さくする */
+            }
+        }
+
+        /* アニメーションを減らす設定の利用者には、大きな変化を強制しない */
+        @media (prefers-reduced-motion: reduce) {
+            .answer-overlay-card {
+                -webkit-backdrop-filter: none; /* 背景ぼかしを無効にする */
+                backdrop-filter: none; /* 背景ぼかしを無効にする */
+            }
+        }
+
+
+        /* 回答結果の表示中は、右側をクリックして次へ進めることを示す */
+        .battle-panel.answer-can-advance {
+            cursor: pointer; /* マウスポインターをクリック形状にする */
+        }
+
+        /* ゲームフィールドもクリック可能だと分かるようにする */
+        .battle-panel.answer-can-advance .arena {
+            cursor: pointer; /* 背景のどこを押しても進める */
+        }
 </style>
 </head>
 <body>
@@ -1042,7 +1755,7 @@
                     </div>
 
                     <div class="quiz-bottom">
-                        <span class="quiz-hint">正解すると敵に1ダメージ</span>
+                        <span class="quiz-hint">A〜Eキーでも回答できます／正解で敵に1ダメージ</span>
                         <button id="back-home-from-quiz" class="secondary-button" type="button">章選択へ戻る</button>
                     </div>
                 </div>
@@ -1070,54 +1783,82 @@
             </section>
         </section>
 
+        <!-- 右側：ゲーム映像とゲーム情報をまとめるエリア -->
         <section class="panel battle-panel" aria-label="ゲームエリア">
-            <div class="panel-heading">
-                <h2>ゲームエリア</h2>
-                <span class="panel-kicker">BATTLE</span>
-            </div>
+            <!-- 背景画像を広く見せるため、独立した「ゲームエリア」見出しは省略 -->
 
-            <div class="battle-topline">
-                <span id="battle-state" class="battle-state">ゲーム開始前</span>
-                <span id="battle-stage" class="stage-chip">Stage 1</span>
-            </div>
+            <!-- 背景画像の上にHUD（ステージ・残り時間・敵HP）を重ねる -->
+            <div class="arena" aria-label="バトル画面">
+                <!-- 左上にバトル状態を表示する -->
+                <div class="battle-topline">
+                    <!-- 現在のバトル状態を左端に表示する -->
+                    <span id="battle-state" class="battle-state">ゲーム開始前</span>
+                    <!-- 現在のステージ番号を表示する -->
+                    <span id="battle-stage" class="stage-chip">Stage 1</span>
 
-            <div class="hp-section">
-                <div class="hp-heading"><span>ENEMY HP</span><strong id="hp-count">5 / 5</strong></div>
-                <div class="hp-bar" aria-label="敵の体力">
-                    <span id="hp1" class="hp-block"></span>
-                    <span id="hp2" class="hp-block"></span>
-                    <span id="hp3" class="hp-block"></span>
-                    <span id="hp4" class="hp-block"></span>
-                    <span id="hp5" class="hp-block"></span>
+                    <!-- SCOREとCOMBOをゲーム画面上部に小さくまとめる -->
+                    <div class="arena-stats" aria-label="スコアとコンボ">
+                        <span class="arena-stat">
+                            <span class="arena-stat-label">SCORE</span>
+                            <strong id="score-val">0</strong>
+                        </span>
+                        <span class="arena-stat">
+                            <span class="arena-stat-label">COMBO</span>
+                            <strong id="combo-val">0</strong>
+                        </span>
+                    </div>
+
+                    <!-- 左側の問題タイマーと同じ残り時間を表示する -->
+                    <span class="arena-clock"><span>TIME</span><strong id="arena-time">--秒</strong></span>
                 </div>
-            </div>
 
-            <div class="arena">
+                <!-- 背景の上部に敵のHPバーを重ねる -->
+                <div class="hp-section">
+                    <div class="hp-heading"><span>ENEMY HP</span><strong id="hp-count">5 / 5</strong></div>
+                    <div class="hp-bar" aria-label="敵の体力">
+                        <span id="hp1" class="hp-block"></span>
+                        <span id="hp2" class="hp-block"></span>
+                        <span id="hp3" class="hp-block"></span>
+                        <span id="hp4" class="hp-block"></span>
+                        <span id="hp5" class="hp-block"></span>
+                    </div>
+                </div>
+
+                <!-- プレイヤー画像・敵画像を背景より手前に表示する -->
                 <div id="player-unit" class="fighter">
                     <div id="player-avatar" class="fighter-avatar" aria-label="プレイヤー">🧙</div>
                     <div id="player-name" class="fighter-name">PLAYER</div>
                     <div class="fighter-role">プレイヤー</div>
                 </div>
-                <div class="versus">VS</div>
+                <!-- 現在はキャラクター同士の距離を示すために使うが、見た目では非表示にする -->
+                <div class="versus" aria-hidden="true">VS</div>
                 <div id="enemy-unit" class="fighter">
                     <div id="enemy-avatar" class="fighter-avatar" aria-label="敵">🤖</div>
                     <div id="enemy-name" class="fighter-name">JAVA ROBOT</div>
                     <div class="fighter-role">ENEMY</div>
                 </div>
-            </div>
-            <p class="battle-caption">正解するとプレイヤーが攻撃。不正解・時間切れは MISS！</p>
-            <div id="effect-zone" class="effect-zone" role="status" aria-live="polite">待機中：学習する章を選んでゲームを開始してください。</div>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">SCORE</div>
-                    <div id="score-val" class="stat-value">0</div>
-                </div>
-                <div class="stat-card combo">
-                    <div class="stat-label">COMBO</div>
-                    <div id="combo-val" class="stat-value">0</div>
+                <!-- 回答後の正解・答え・解説をゲーム画面中央に重ねて表示する -->
+                <div id="answer-overlay" class="answer-overlay hidden" role="status" aria-live="assertive" aria-atomic="true">
+                    <!-- 背景が少し透けて見える解説パネル -->
+                    <div id="answer-overlay-card" class="answer-overlay-card">
+                        <!-- 正解・不正解を最も大きな文字で表示する -->
+                        <p id="answer-outcome" class="answer-outcome">回答結果</p>
+                        <!-- 正しい選択肢を表示する。タイムアップなどで不明な場合は非表示にする -->
+                        <p id="answer-correct-text" class="answer-correct-text hidden"></p>
+                        <!-- Javaの解説を読みやすい大きさで表示する -->
+                        <p class="answer-explanation-label">解説</p>
+                        <p id="answer-explanation" class="answer-explanation"></p>
+                        <!-- Enterキーで即時に進めることと、自動で6秒後に進むことを案内する -->
+                        <p id="answer-next-hint" class="answer-next-hint">右側をクリック、またはEnterキーで次の問題へ（6秒後に自動で進みます）</p>
+                    </div>
                 </div>
             </div>
+
+            <!-- ゲーム操作の簡単な説明をゲーム画面の下に表示する -->
+            <p class="battle-caption">正解すると攻撃。不正解・時間切れは MISS！</p>
+            <!-- 待機中や通信エラーなど、回答解説以外の短い状態を表示する -->
+            <div id="effect-zone" class="effect-zone" role="status" aria-live="polite">待機中：学習する章を選んでゲームを開始してください。</div>
         </section>
     </main>
     <p class="footer-note">Java Bronze の問題を解きながら、5問ごとのステージクリアを目指そう。</p>
@@ -1139,6 +1880,13 @@
     let timerDuration = 0;
     let timeRemaining = 0;
     let failedStageStartIndex = 0;
+
+    // 回答後の解説を自動で閉じるタイマーを保存する変数
+    let answerAdvanceTimeout = null;
+    // 回答結果を表示中で、Enterキーで次へ進める状態かを保存する
+    let awaitingNextQuestion = false;
+    // 今回選んだ選択肢の番号を保存し、正解表示に利用する
+    let lastSelectedChoiceIndex = -1;
 
     const choiceLabels = ["A", "B", "C", "D", "E"];
     const playerAvatars = ["🧙", "🥷", "⚔️", "🧑‍💻", "🧑‍🎓", "🧑‍⚕️", "🏹", "🛡️"];
@@ -1244,6 +1992,9 @@
     }
 
     function resetBattle() {
+        // 新しいゲームを始めるとき、前の解説表示タイマーを必ず解除する
+        cancelAnswerAdvance();
+        element("answer-overlay").classList.add("hidden");
         currentHp = 5;
         currentScore = 0;
         currentCombo = 0;
@@ -1254,6 +2005,8 @@
         element("effect-zone").className = "effect-zone";
         element("effect-zone").textContent = "⚔️ バトル開始！問題に回答してください。";
         element("battle-state").textContent = "BATTLE START";
+        // 問題タイマー開始前は、右側の時間表示も初期値に戻す
+        element("arena-time").textContent = "--秒";
         updateBattleStage(1);
     }
 
@@ -1315,6 +2068,17 @@
             return;
         }
 
+        // 新しい問題に進むときは、前の回答表示を閉じてタイマーを解除する
+        cancelAnswerAdvance();
+        lastSelectedChoiceIndex = -1;
+        element("answer-overlay").classList.add("hidden");
+        element("answer-overlay-card").className = "answer-overlay-card";
+
+        // 前問で付けた正解・不正解の色をすべて消す
+        document.querySelectorAll(".choice-button").forEach(button => {
+            button.classList.remove("answer-correct", "answer-selected-wrong");
+        });
+
         answerLocked = false;
         element("quiz-content").classList.remove("hidden");
         element("stage-failed-panel").classList.add("hidden");
@@ -1335,27 +2099,29 @@
                 ...codeLines.map(line => line.length)
             );
 
-            let codeFontSize = 12;
-            let codeLineHeight = 1.3;
+            // 短いコードは14pxから表示し、初心者にも読みやすくする
+            let codeFontSize = 14;
+            let codeLineHeight = 1.45;
 
+            // コードが長い場合だけ、問題カード内に収まりやすいよう少しずつ縮小する
             if (lineCount >= 50) {
                 codeFontSize = 7.5;
                 codeLineHeight = 1.0;
             } else if (lineCount >= 38) {
-                codeFontSize = 8;
+                codeFontSize = 8.5;
                 codeLineHeight = 1.05;
             } else if (lineCount >= 28) {
-                codeFontSize = 8.75;
+                codeFontSize = 9.5;
                 codeLineHeight = 1.1;
             } else if (lineCount >= 20) {
-                codeFontSize = 9.5;
+                codeFontSize = 10.5;
                 codeLineHeight = 1.15;
             } else if (lineCount >= 14) {
-                codeFontSize = 10.5;
+                codeFontSize = 11.5;
                 codeLineHeight = 1.2;
             } else if (lineCount >= 10) {
-                codeFontSize = 11;
-                codeLineHeight = 1.25;
+                codeFontSize = 12.5;
+                codeLineHeight = 1.3;
             }
 
             if (longestLine >= 90) {
@@ -1446,7 +2212,16 @@
     }
 
     function updateTimerDisplay() {
+        // 左側の問題欄に残り時間を表示する
         element("timer-value").textContent = timeRemaining + "秒";
+
+        // 右側ゲーム画面のHUDにも同じ残り時間を表示する
+        const arenaTimer = element("arena-time");
+        if (arenaTimer) {
+            arenaTimer.textContent = timeRemaining + "秒";
+        }
+
+        // 残り時間を割合に変換し、左側の時間バーを更新する
         const percentage = timerDuration > 0 ? Math.max(0, (timeRemaining / timerDuration) * 100) : 0;
         const fill = element("timer-fill");
         fill.style.width = percentage + "%";
@@ -1468,6 +2243,8 @@
         const selectedChoice = question.choices[selectedIndex];
         if (typeof selectedChoice !== "string") return;
 
+        // 回答した選択肢の番号を保存し、結果画面で正しい行を強調する
+        lastSelectedChoiceIndex = selectedIndex;
         answerLocked = true;
         stopQuestionTimer();
         setChoiceButtonsDisabled(true);
@@ -1510,48 +2287,192 @@
 
     // APIから受け取った正誤判定をスコア・HP・コンボと演出に反映する
     function displayAnswerResult(result, timedOut) {
+        // 問題のカウントダウンを止め、回答ボタンを一度ロックする
         stopQuestionTimer();
         setChoiceButtonsDisabled(true);
+
+        // 今回表示するゲームエフェクトとキャラクターを取得する
         const effect = element("effect-zone");
         const player = element("player-avatar");
         const enemy = element("enemy-avatar");
+
+        // 前回のアニメーションを外し、今回の動きを再生できるようにする
         player.classList.remove("attack", "damaged", "miss");
         enemy.classList.remove("attack", "damaged", "miss");
-
-        // CSSアニメーションを連続して再生できるように、クラスを付け直す
         void player.offsetWidth;
         void enemy.offsetWidth;
 
+        // 現在の問題の選択肢を取得する
+        const question = localQuestions[currentQuestionIndex];
+        const choices = question && Array.isArray(question.choices) ? question.choices : [];
+
+        // APIから正解の選択肢を特定し、左側の問題で緑色にする
+        const correctIndex = findCorrectChoiceIndex(result, choices, timedOut);
+        document.querySelectorAll(".choice-button").forEach((button, index) => {
+            button.classList.remove("answer-correct", "answer-selected-wrong");
+            if (index === correctIndex) {
+                button.classList.add("answer-correct");
+            } else if (!timedOut && result.correct !== true && index === lastSelectedChoiceIndex) {
+                // 間違えて選んだ答えは薄い赤色で区別する
+                button.classList.add("answer-selected-wrong");
+            }
+        });
+
+        // 正解・不正解に応じてHP、スコア、コンボ、キャラクターの動きを更新する
         if (result.correct === true) {
+            // 正解したら敵のHPを1減らす。ただしHPは0より小さくしない
             if (currentHp > 0) {
                 element("hp" + currentHp).classList.add("empty");
                 currentHp -= 1;
             }
+
+            // 正解したらスコアとコンボを増やす
             currentScore += 100;
             currentCombo += 1;
             element("score-val").textContent = String(currentScore);
             element("combo-val").textContent = String(currentCombo);
             updateHpDisplay();
+
+            // プレイヤーの攻撃と、敵がダメージを受ける動きを再生する
             player.classList.add("attack");
             enemy.classList.add("damaged");
             effect.className = "effect-zone success";
-            effect.textContent = "💥 正解！敵に1ダメージ！\n" + (result.explanation || "よくできました！");
+            effect.textContent = "正解！中央の答え・解説を確認してください。Enterキーで次へ進めます。";
         } else {
+            // 不正解の場合はコンボを0にし、敵のHPは減らさない
             currentCombo = 0;
             element("combo-val").textContent = "0";
             enemy.classList.add("attack");
             player.classList.add("miss");
             effect.className = "effect-zone miss";
-            if (timedOut) {
-                effect.textContent = "⌛ TIME UP！MISS！\n" + (result.explanation || "時間切れです。");
-            } else {
-                effect.textContent = "❌ MISS！\n正解：" + (result.correctChoiceText || "確認できません") + "\n" +
-                    (result.selectedChoiceExplanation || result.explanation || "解説を確認して次へ進みましょう。");
+
+            // 下部の細いメッセージ欄は短い案内だけにし、解説は中央に表示する
+            effect.textContent = timedOut
+                ? "時間切れです。中央の解説を確認してください。"
+                : "MISS！中央に正解と解説を表示しています。Enterキーで次へ進めます。";
+        }
+
+        // 正解・不正解・答え・解説を中央の半透明パネルに表示する
+        showAnswerOverlay(result, timedOut, correctIndex, choices);
+
+        // 結果表示中であることを記録し、自動では6秒後に次の問題へ進める
+        cancelAnswerAdvance();
+        awaitingNextQuestion = true;
+        document.querySelector(".battle-panel").classList.add("answer-can-advance"); // 右画面をクリックできる状態にする
+        answerAdvanceTimeout = window.setTimeout(advanceAfterAnswer, 6000);
+    }
+
+    // APIの返答から正解の選択肢番号を探す
+    function findCorrectChoiceIndex(result, choices, timedOut) {
+        // 正解した場合は、今選んだ選択肢が正解である
+        if (result.correct === true && lastSelectedChoiceIndex >= 0) {
+            return lastSelectedChoiceIndex;
+        }
+
+        // 不正解時は、APIから返された正解の文章と選択肢を照合する
+        const answerText = result.correctChoiceText ?? result.correctAnswerText ?? result.correctAnswer;
+        if (answerText !== undefined && answerText !== null && String(answerText).trim() !== "") {
+            const normalizedAnswer = String(answerText).trim();
+            const matchedIndex = choices.findIndex(choice => String(choice).trim() === normalizedAnswer);
+            if (matchedIndex >= 0) return matchedIndex;
+
+            // APIが「A」「B」などの記号を返した場合にも対応する
+            const letterMatch = normalizedAnswer.match(/^(?:選択肢\s*)?([A-E])(?:[.．:：\s].*)?$/i);
+            if (letterMatch) {
+                return letterMatch[1].toUpperCase().charCodeAt(0) - "A".charCodeAt(0);
             }
         }
 
-        // 現在の回答の演出が見えるよう、少し待ってから次へ進む
-        window.setTimeout(advanceAfterQuestion, 1600);
+        // APIが番号を返している場合の予備処理（0始まりの番号を想定する）
+        if (Number.isInteger(result.correctChoiceIndex) && result.correctChoiceIndex >= 0 && result.correctChoiceIndex < choices.length) {
+            return result.correctChoiceIndex;
+        }
+
+        // タイムアップ時は正解の番号が手元にないため、無理に推測しない
+        return -1;
+    }
+
+    // 答えと解説を画面中央の半透明パネルに表示する
+    function showAnswerOverlay(result, timedOut, correctIndex, choices) {
+        const overlay = element("answer-overlay");
+        const card = element("answer-overlay-card");
+        const outcome = element("answer-outcome");
+        const answer = element("answer-correct-text");
+        const explanation = element("answer-explanation");
+
+        // 結果に合わせてパネルの色と大きな見出しを切り替える
+        const isCorrect = result.correct === true;
+        card.className = "answer-overlay-card " + (isCorrect ? "success" : "miss");
+
+        if (timedOut) {
+            outcome.textContent = "TIME UP！";
+        } else if (isCorrect && currentHp === 0 && currentQuestionIndex % 5 === 4) {
+            // 5問目で敵を倒した場合は、ステージクリアも大きく知らせる
+            outcome.textContent = "正解！ STAGE CLEAR！";
+        } else if (isCorrect) {
+            outcome.textContent = "正解！";
+        } else {
+            outcome.textContent = "MISS！ 不正解";
+        }
+
+        // 正解の選択肢を「正解：C：答え」の形式で表示する
+        let correctAnswerText = "";
+        if (correctIndex >= 0 && correctIndex < choices.length) {
+            correctAnswerText = choiceLabels[correctIndex] + "： " + String(choices[correctIndex]);
+        } else if (result.correctChoiceText || result.correctAnswerText || result.correctAnswer) {
+            // APIが選択肢の文章を返している場合は、その文章を表示する
+            correctAnswerText = String(result.correctChoiceText || result.correctAnswerText || result.correctAnswer);
+        }
+
+        if (correctAnswerText !== "" && !timedOut) {
+            answer.textContent = "正解：" + correctAnswerText;
+            answer.classList.remove("hidden");
+        } else {
+            // 時間切れで正解情報がない場合などは、空の答え欄を見せない
+            answer.textContent = "";
+            answer.classList.add("hidden");
+        }
+
+        // 正解なら通常の解説、不正解なら選んだ答えの解説を優先する
+        const explanationText = isCorrect
+            ? (result.explanation || "正解です。よくできました！")
+            : (result.selectedChoiceExplanation || result.explanation || "解説は登録されていません。");
+        explanation.textContent = explanationText;
+
+        // 操作方法を表示し、Enterキーまたは6秒後の自動進行を知らせる
+        element("answer-overlay").classList.remove("hidden");
+    }
+
+    // 回答結果の表示を閉じ、次の問題へ進む処理を二重実行しないようにする
+    function advanceAfterAnswer() {
+        // 表示中でなければ何もしない（Enter連打やタイマー重複を防止）
+        if (!awaitingNextQuestion) return;
+
+        // まず「表示中」の状態を解除する
+        awaitingNextQuestion = false;
+        document.querySelector(".battle-panel").classList.remove("answer-can-advance"); // クリック可能な表示を解除する
+
+        // 6秒後のタイマーが残っていれば解除する
+        if (answerAdvanceTimeout !== null) {
+            window.clearTimeout(answerAdvanceTimeout);
+            answerAdvanceTimeout = null;
+        }
+
+        // 中央の答えパネルを閉じる
+        element("answer-overlay").classList.add("hidden");
+
+        // 次の問題またはステージ結果へ進む
+        advanceAfterQuestion();
+    }
+
+    // 回答結果表示タイマーを解除し、進行待ち状態をリセットする
+    function cancelAnswerAdvance() {
+        if (answerAdvanceTimeout !== null) {
+            window.clearTimeout(answerAdvanceTimeout);
+            answerAdvanceTimeout = null;
+        }
+        awaitingNextQuestion = false;
+        document.querySelector(".battle-panel").classList.remove("answer-can-advance"); // 表示を中断した場合もカーソルを元に戻す
     }
 
     // 1問終了後、5問単位でステージのクリア・失敗を判定する
@@ -1567,15 +2488,15 @@
                 element("effect-zone").className = "effect-zone success";
                 element("effect-zone").textContent = "🎉 STAGE " + completedStageNumber + " CLEAR！敵を倒しました！";
 
+                // 解説を6秒読んだ後なので、余分な待ち時間を入れず次へ進む
                 if (currentQuestionIndex >= localQuestions.length) {
-                    window.setTimeout(finishGame, 1300);
+                    finishGame();
                 } else {
-                    window.setTimeout(() => {
-                        currentHp = 5;
-                        updateHpDisplay();
-                        answerLocked = false;
-                        renderQuestion();
-                    }, 1300);
+                    // 次のステージの敵HPを全回復して、次の問題を表示する
+                    currentHp = 5;
+                    updateHpDisplay();
+                    answerLocked = false;
+                    renderQuestion();
                 }
             } else {
                 failedStageStartIndex = currentQuestionIndex - 5;
@@ -1625,6 +2546,9 @@
 
     // 全問題のプレイ終了時に結果を表示する
     function finishGame() {
+        // 終了画面に切り替えるとき、回答後のタイマーと中央パネルを解除する
+        cancelAnswerAdvance();
+        element("answer-overlay").classList.add("hidden");
         stopQuestionTimer();
         answerLocked = true;
         element("quiz-content").classList.add("hidden");
@@ -1640,6 +2564,9 @@
     }
 
     function returnToHome() {
+        // HOMEへ戻る場合も、回答結果の自動進行を必ず取り消す
+        cancelAnswerAdvance();
+        element("answer-overlay").classList.add("hidden");
         stopQuestionTimer();
         answerLocked = false;
         element("quiz-view").classList.remove("active");
@@ -1672,6 +2599,59 @@
     element("back-home-from-quiz").addEventListener("click", returnToHome);
     element("back-home-from-fail").addEventListener("click", returnToHome);
     element("return-home-button").addEventListener("click", returnToHome);
+
+    // 右側のゲーム画面をクリックしたら、回答表示中に限り次の問題へ進む
+    document.querySelector(".battle-panel").addEventListener("click", () => {
+        if (awaitingNextQuestion) {
+            advanceAfterAnswer(); // 6秒後の自動進行を解除して、次へ進む
+        }
+    });
+
+    // A〜Eキーによる回答と、Enterキーによる次の問題への進行を登録する
+    document.addEventListener("keydown", event => {
+        // 解説表示中にEnterキーを押したら、6秒を待たず次へ進む
+        if (event.key === "Enter" && awaitingNextQuestion) {
+            event.preventDefault(); // ボタンなどの既定動作を止める
+            event.stopImmediatePropagation(); // 同じキーで別処理が動くのを防ぐ
+            advanceAfterAnswer(); // 回答表示を閉じて次の問題へ進む
+            return; // 以下のA〜Eキー処理は実行しない
+        }
+
+        // 回答後、回答処理中、またはHOME画面ではA〜Eキーを無視する
+        if (awaitingNextQuestion || answerLocked ||
+            !element("quiz-view").classList.contains("active") ||
+            element("quiz-content").classList.contains("hidden")) {
+            return;
+        }
+
+        // Ctrl・Alt・Commandとの組み合わせは通常のショートカットとして扱う
+        if (event.ctrlKey || event.altKey || event.metaKey) return;
+
+        // 入力欄で文字を入力している場合は、A〜Eキーを横取りしない
+        const target = event.target;
+        if (target instanceof HTMLElement &&
+            (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) {
+            return;
+        }
+
+        // 押されたキーがA〜E以外なら何もしない
+        if (!/^[a-e]$/i.test(event.key)) return;
+
+        // Aを0、Bを1、Cを2、Dを3、Eを4の番号に変換する
+        const choiceIndex = event.key.toUpperCase().charCodeAt(0) - "A".charCodeAt(0);
+
+        // 対応する選択肢ボタンを取得する
+        const choiceButton = document.querySelector('.choice-button[data-index="' + choiceIndex + '"]');
+
+        // 存在しない選択肢、非表示の選択肢、無効な選択肢は無視する
+        if (!choiceButton || choiceButton.disabled || choiceButton.classList.contains("hidden")) {
+            return;
+        }
+
+        // ブラウザの既定動作を止めて、通常のクリックと同じ回答処理を呼ぶ
+        event.preventDefault();
+        checkAnswer(choiceIndex); // サーバーで正誤判定してゲームを更新する
+    }, true); // captureで早めに処理し、他の処理との競合を避ける
 
     // ページ表示後に、章一覧をAPIから読み込む
     loadChapters();
