@@ -1,0 +1,6846 @@
+<!DOCTYPE html>
+<!--
+    このファイルはJava Learning Systemのゲーム画面全体を定義するHTMLです。
+
+    このページでは、
+    ① ログイン
+    ② Chapter選択
+    ③ 問題数選択
+    ④ Java問題への回答
+    ⑤ 正解・不正解の判定
+    ⑥ キャラクターのバトル演出
+    ⑦ 5問ごとのStage切り替え
+    ⑧ 間違えた問題の復習
+    を1つの画面で管理します。
+-->
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <!-- 日本語を正しく表示するためにUTF-8を指定します。 -->
+    <meta charset="UTF-8">
+
+    <!-- PCだけでなくスマートフォンなどでも画面幅に合わせて表示します。 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- ブラウザのテーマカラーを指定します。 -->
+    <meta name="theme-color" content="#101827">
+
+    <!-- ブラウザのタブに表示されるページタイトルです。 -->
+    <title>Java Learning System</title>
+
+    <style>
+
+        /* =========================================================
+           1. 全体で使用する色や基本設定
+           ========================================================= */
+
+        :root {
+            /* ページ全体の背景色です。 */
+            --page-bg: #101827;
+
+            /* 通常のパネル背景色です。 */
+            --panel-bg: #ffffff;
+
+            /* 問題カードなどの背景色です。 */
+            --card-bg: #f4f6f8;
+
+            /* 枠線の色です。 */
+            --border: #dfe4ea;
+
+            /* 通常の文字色です。 */
+            --text: #202733;
+
+            /* 補足説明などの薄い文字色です。 */
+            --muted: #707985;
+
+            /* メインカラーです。 */
+            --blue: #3987f6;
+
+            /* 青色の薄い背景です。 */
+            --blue-pale: #e8f2ff;
+
+            /* エラーやHPなどに使う赤色です。 */
+            --red: #e65e63;
+
+            /* 赤色の薄い背景です。 */
+            --red-pale: #fff0f0;
+
+            /* 成功時の緑色です。 */
+            --green: #229b70;
+
+            /* 成功時の薄い背景です。 */
+            --green-pale: #e9f8f1;
+
+            /* コンボなどに使うオレンジ色です。 */
+            --orange: #e7a23a;
+
+            /* パネルに使う影です。 */
+            --shadow: 0 12px 35px rgba(0, 0, 0, 0.20);
+
+            /* ゲーム画面の文字に使う影です。 */
+            --game-text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.65);
+        }
+
+        /* すべての要素でpaddingとborderをwidth・heightに含めます。 */
+        * {
+            box-sizing: border-box;
+        }
+
+        /* HTML全体の高さを画面いっぱいにします。 */
+        html {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* body全体を画面いっぱいにし、外側のスクロールを禁止します。 */
+        body {
+            width: 100%;
+            height: 100%;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            color: var(--text);
+            background: var(--page-bg);
+            font-family:
+                "Yu Gothic UI",
+                "Meiryo",
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+            line-height: 1.5;
+        }
+
+        /* ボタンや入力欄にもページ全体と同じフォントを使います。 */
+        button,
+        input {
+            font: inherit;
+        }
+
+        /* ボタンをタップしたときのスマートフォン特有のハイライトを抑えます。 */
+        button {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* =========================================================
+           2. ログイン画面
+           ========================================================= */
+
+        /* ログイン画面を画面全体に重ねて表示します。 */
+        .login-overlay {
+            position: fixed;
+            z-index: 1000;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background:
+                radial-gradient(
+                    circle at 50% 30%,
+                    rgba(57, 135, 246, 0.22),
+                    transparent 40%
+                ),
+                linear-gradient(
+                    135deg,
+                    #0b1220,
+                    #111c31 50%,
+                    #0b1220
+                );
+        }
+
+        /* ログインカード本体です。 */
+        .login-card {
+            width: min(430px, 100%);
+            padding: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            color: #ffffff;
+            background: rgba(18, 29, 49, 0.94);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(14px);
+        }
+
+        /* ログイン画面の小さなラベルです。 */
+        .login-kicker {
+            margin: 0 0 8px;
+            color: #82b5ff;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+        }
+
+        /* ログイン画面のタイトルです。 */
+        .login-title {
+            margin: 0;
+            font-size: clamp(25px, 5vw, 34px);
+            font-weight: 850;
+        }
+
+        /* ログイン画面の説明文です。 */
+        .login-description {
+            margin: 12px 0 22px;
+            color: #b9c6d8;
+            font-size: 13px;
+        }
+
+        /* ユーザー名入力欄のラベルです。 */
+        .login-label {
+            display: block;
+            margin-bottom: 7px;
+            color: #dbe7f8;
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+        /* ユーザー名入力欄です。 */
+        .login-input {
+            width: 100%;
+            height: 46px;
+            padding: 0 13px;
+            border: 1px solid #43536c;
+            border-radius: 9px;
+            outline: none;
+            color: #ffffff;
+            background: #0e1728;
+        }
+
+        /* 入力欄を選択したときに青い枠を表示します。 */
+        .login-input:focus {
+            border-color: #5b9cff;
+            box-shadow: 0 0 0 3px rgba(91, 156, 255, 0.15);
+        }
+
+        /* ログインボタンです。 */
+        .login-button {
+            width: 100%;
+            min-height: 46px;
+            margin-top: 12px;
+            border: 0;
+            border-radius: 9px;
+            color: #ffffff;
+            background: #3987f6;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        /* ログインボタンをマウスオーバーしたとき少し明るくします。 */
+        .login-button:hover {
+            filter: brightness(1.08);
+        }
+
+        /* ログインエラー表示用の領域です。 */
+        .login-error {
+            min-height: 20px;
+            margin: 8px 0 0;
+            color: #ff969b;
+            font-size: 12px;
+        }
+
+        /* =========================================================
+           3. ログイン後のアプリ全体
+           ========================================================= */
+
+        /* アプリ本体を画面いっぱいに表示します。 */
+        .app-shell {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            min-height: 0;
+            overflow: hidden;
+            background: #ffffff;
+        }
+
+        /* =========================================================
+           4. ヘッダー
+           ========================================================= */
+
+        /* 上部ヘッダーを横並びにします。 */
+        .app-header {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            min-height: 60px;
+            padding: 7px 16px;
+            border-bottom: 1px solid var(--border);
+            background: #ffffff;
+        }
+
+        /* タイトル部分を横並びにします。 */
+        .brand-area {
+            min-width: 0;
+        }
+
+        /* アプリタイトルです。 */
+        .brand-title {
+            margin: 0;
+            font-size: clamp(18px, 1.6vw, 23px);
+            font-weight: 850;
+            letter-spacing: -0.035em;
+        }
+
+        /* タイトル下の説明です。 */
+        .brand-subtitle {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 7px;
+            margin: 2px 0 0;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        /* 区切り線の文字色です。 */
+        .brand-subtitle .separator {
+            color: #c5c9cf;
+        }
+
+        /* ログイン情報をまとめる領域です。 */
+        .login-status-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 0 0 auto;
+        }
+
+        /* ログイン中ユーザーの表示です。 */
+        .login-user-status {
+            padding: 6px 10px;
+            border: 1px solid #dce6f4;
+            border-radius: 7px;
+            color: #356da9;
+            background: #f3f8ff;
+            font-size: 11px;
+            font-weight: 750;
+            white-space: nowrap;
+        }
+
+        /* ログアウトボタンです。 */
+        .logout-button {
+            min-height: 32px;
+            padding: 5px 9px;
+            border: 1px solid #dfe4ea;
+            border-radius: 7px;
+            color: #59616d;
+            background: #ffffff;
+            font-size: 11px;
+            font-weight: 750;
+            cursor: pointer;
+        }
+
+        /* ログアウトボタンのマウスオーバー状態です。 */
+        .logout-button:hover {
+            border-color: #b5beca;
+            background: #f8fafc;
+        }
+
+        /* API接続状態表示です。 */
+        .connection-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 9px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            color: var(--muted);
+            background: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* API接続状態の丸いランプです。 */
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #b4bac3;
+        }
+
+        /* API接続成功時は緑色にします。 */
+        .connection-status.ready .status-dot {
+            background: var(--green);
+        }
+
+        /* API接続失敗時は赤色にします。 */
+        .connection-status.error .status-dot {
+            background: var(--red);
+        }
+
+        /* =========================================================
+           5. 左右2分割のメイン画面
+           ========================================================= */
+
+        /* 左右を50%ずつに分けます。 */
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            flex: 1 1 auto;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* 共通パネル設定です。 */
+        .panel {
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+            min-height: 0;
+            padding: 10px 14px;
+            overflow: hidden;
+            background: #ffffff;
+        }
+
+        /* 左側と右側のパネルを縦方向に並べます。 */
+        .learning-panel,
+        .battle-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 左右の境界線です。 */
+        .learning-panel {
+            border-right: 1px solid var(--border);
+        }
+
+        /* パネル見出しです。 */
+        .panel-heading {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        /* パネル見出し文字です。 */
+        .panel-heading h2 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        /* LEARNING / BATTLEの小さな文字です。 */
+        .panel-kicker {
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        /* 画面切り替え用の共通クラスです。 */
+        .view {
+            display: none;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* activeが付いた画面だけ表示します。 */
+        .view.active {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* hiddenクラスが付いた要素は完全に非表示にします。 */
+        .hidden {
+            display: none !important;
+        }
+
+        /* =========================================================
+           6. 章選択画面
+           ========================================================= */
+
+        /* 状態バッジです。 */
+        .status-badge {
+            align-self: flex-start;
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 7px;
+            border-radius: 4px;
+            color: var(--blue);
+            background: var(--blue-pale);
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        /* 「学習する章を選ぼう」の見出しです。 */
+        .section-title {
+            flex: 0 0 auto;
+            margin: 8px 0 7px;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        /* 章一覧を縦に並べます。 */
+        .chapter-list {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            min-height: 70px;
+            gap: 6px;
+            padding-right: 2px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+
+        /* 章カードです。 */
+        .chapter-card {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #dedfe2;
+            border-radius: 6px;
+            text-align: left;
+            color: var(--text);
+            background: #f4f4f5;
+            cursor: pointer;
+            transition:
+                border-color 0.16s ease,
+                background 0.16s ease,
+                transform 0.16s ease;
+        }
+
+        /* 章カードにカーソルを乗せたときの表示です。 */
+        .chapter-card:hover {
+            border-color: #b5cfff;
+            background: #f8fbff;
+        }
+
+        /* 章カードを押した瞬間に少し下げます。 */
+        .chapter-card:active {
+            transform: translateY(1px);
+        }
+
+        /* 現在選択中の章です。 */
+        .chapter-card[aria-pressed="true"] {
+            border-color: var(--blue);
+            background: #f0f6ff;
+            box-shadow: inset 0 0 0 1px rgba(57, 135, 246, 0.12);
+        }
+
+        /* 章名と説明をまとめる領域です。 */
+        .chapter-main {
+            display: flex;
+            min-width: 0;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        /* 章名です。 */
+        .chapter-name {
+            font-size: 13px;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        /* 章の説明です。 */
+        .chapter-description {
+            color: var(--muted);
+            font-size: 10px;
+            line-height: 1.35;
+        }
+
+        /* 章に登録されている問題数です。 */
+        .chapter-count {
+            flex: 0 0 auto;
+            color: var(--muted);
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        /* 模擬問題を表す小さなタグです。 */
+        .mock-tag {
+            display: inline-block;
+            margin-left: 5px;
+            padding: 1px 5px;
+            border-radius: 4px;
+            color: #925d12;
+            background: #fff0cf;
+            font-size: 9px;
+        }
+
+        /* 読み込み中やデータなしの表示です。 */
+        .loading-message,
+        .empty-message {
+            padding: 12px;
+            border: 1px dashed #d4d8de;
+            border-radius: 6px;
+            color: var(--muted);
+            background: #fafbfc;
+            font-size: 12px;
+        }
+
+        /* 設定欄の区切り線です。 */
+        .setting-divider {
+            flex: 0 0 auto;
+            height: 1px;
+            margin: 8px 0;
+            background: var(--border);
+        }
+
+        /* 問題数選択の見出しです。 */
+        .setting-label {
+            flex: 0 0 auto;
+            margin-bottom: 6px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        /* 問題数ボタンを横並びにします。 */
+        .count-options {
+            display: grid;
+            flex: 0 0 auto;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        /* 問題数ボタンです。 */
+        .count-option {
+            min-height: 34px;
+            padding: 5px 4px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--muted);
+            background: #ffffff;
+            font-size: 12px;
+            font-weight: 750;
+            cursor: pointer;
+        }
+
+        /* 選択中の問題数です。 */
+        .count-option[aria-pressed="true"] {
+            border-color: var(--blue);
+            color: var(--blue);
+            background: var(--blue-pale);
+        }
+
+        /* 選択状態の説明です。 */
+        .selected-summary {
+            flex: 0 0 auto;
+            min-height: 0;
+            margin: 7px 0;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        /* 共通のメインボタンです。 */
+        .primary-button {
+            width: 100%;
+            min-height: 39px;
+            padding: 8px 12px;
+            border: 0;
+            border-radius: 5px;
+            color: #ffffff;
+            background: var(--blue);
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        /* メインボタンにマウスを乗せたとき少し明るくします。 */
+        .primary-button:hover {
+            filter: brightness(1.05);
+        }
+
+        /* 通信中などで押せない状態です。 */
+        .primary-button:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        /* 戻るボタンなどの補助ボタンです。 */
+        .secondary-button {
+            min-height: 34px;
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: #40454d;
+            background: #ffffff;
+            font-size: 12px;
+            font-weight: 750;
+            cursor: pointer;
+        }
+
+        /* 補助ボタンのマウスオーバー状態です。 */
+        .secondary-button:hover {
+            border-color: #aeb5bf;
+            background: #fafbfc;
+        }
+
+        /* ボタンを横並びにする領域です。 */
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        /* =========================================================
+           7. クイズ画面
+           ========================================================= */
+
+        /* クイズ画面全体の隙間です。 */
+        .quiz-view {
+            gap: 7px;
+        }
+
+        /* 問題番号とタイマーを横並びにします。 */
+        .quiz-topline {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        /* 現在の問題番号です。 */
+        .quiz-step {
+            margin: 0;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 750;
+            line-height: 1.3;
+        }
+
+        /* タイマー表示全体です。 */
+        .timer-wrap {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            gap: 6px;
+            min-width: 96px;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 750;
+        }
+
+        /* 残り秒数です。 */
+        .timer-value {
+            min-width: 38px;
+            color: var(--text);
+            font-size: 12px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* タイマーの外枠です。 */
+        .timer-track {
+            flex: 0 0 auto;
+            height: 4px;
+            overflow: hidden;
+            border-radius: 99px;
+            background: #eceef1;
+        }
+
+        /* タイマーの残り時間を示す部分です。 */
+        .timer-fill {
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--blue);
+            transition:
+                width 0.25s linear,
+                background 0.2s ease;
+        }
+
+        /* 残り5秒以下になると赤くします。 */
+        .timer-fill.warning {
+            background: var(--red);
+        }
+
+        /* 問題文を囲むカードです。 */
+        .question-card {
+            flex: 0 0 auto;
+            max-width: 100%;
+            padding: 9px 10px;
+            overflow: visible;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fbfbfc;
+        }
+
+        /* 問題のカテゴリ名です。 */
+        .question-label {
+            margin: 0 0 5px;
+            color: var(--blue);
+            font-size: 10px;
+            font-weight: 850;
+        }
+
+        /* 問題文です。 */
+        .question-text {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 750;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        /* Javaコードを表示する領域です。 */
+        .question-code {
+            width: 100%;
+            height: auto;
+            max-height: none;
+            margin: 6px 0 0;
+            padding: 5px 7px;
+            overflow: visible;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            color: #303744;
+            background: #f0f2f5;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 12px;
+            line-height: 1.3;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: normal;
+            tab-size: 4;
+        }
+
+        /* 選択肢を縦に並べます。 */
+        .choice-list {
+            display: flex;
+            flex: 1 1 auto;
+            min-height: 0;
+            flex-direction: column;
+            gap: 5px;
+            padding-right: 2px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+
+        /* 各選択肢ボタンです。 */
+        .choice-button {
+            display: grid;
+            flex: 0 0 auto;
+            grid-template-columns: 26px minmax(0, 1fr);
+            align-items: center;
+            gap: 7px;
+            width: 100%;
+            min-height: 36px;
+            padding: 5px 8px;
+            border: 1px solid #e0e3e8;
+            border-radius: 5px;
+            color: #363b43;
+            background: #ffffff;
+            text-align: left;
+            font-size: 12px;
+            line-height: 1.4;
+            cursor: pointer;
+        }
+
+        /* 選択肢にマウスを乗せたときの表示です。 */
+        .choice-button:hover:not(:disabled) {
+            border-color: #9dc4ff;
+            background: #f5f9ff;
+        }
+
+        /* 回答処理中は選択肢を押せないようにします。 */
+        .choice-button:disabled {
+            opacity: 0.66;
+            cursor: default;
+        }
+
+        /* A・B・Cなどのラベルです。 */
+        .choice-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            color: #606773;
+            background: #f0f2f5;
+            font-size: 11px;
+            font-weight: 850;
+        }
+
+        /* 選択肢本文です。 */
+        .choice-text {
+            min-width: 0;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        /* クイズ画面下部です。 */
+        .quiz-bottom {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            min-height: 34px;
+            margin-top: auto;
+            padding-top: 2px;
+        }
+
+        /* クイズ画面の補足説明です。 */
+        .quiz-hint {
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        /* =========================================================
+           8. 結果・復習画面
+           ========================================================= */
+
+        /* 結果パネルです。 */
+        .result-panel {
+            max-height: 100%;
+            padding: 12px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fbfcfd;
+        }
+
+        /* 結果タイトルです。 */
+        .result-panel h3 {
+            margin: 0 0 6px;
+            font-size: 17px;
+        }
+
+        /* 結果説明文です。 */
+        .result-panel p {
+            margin: 6px 0;
+            color: var(--muted);
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+
+        /* 結果スコアを目立たせます。 */
+        .result-score {
+            margin-top: 12px !important;
+            color: var(--text) !important;
+            font-size: 15px !important;
+            font-weight: 800;
+        }
+
+        /* 復習件数を表示するバッジです。 */
+        .review-count-badge {
+            display: inline-flex;
+            align-items: center;
+            margin-top: 4px;
+            padding: 3px 7px;
+            border-radius: 5px;
+            color: #875f14;
+            background: #fff3cf;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        /* =========================================================
+           9. 右側ゲーム画面
+           ========================================================= */
+
+        /* BATTLE上部の状態表示です。 */
+        .battle-topline {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        /* BATTLE STARTやSTAGE CLEARなどの状態です。 */
+        .battle-state {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 7px;
+            border-radius: 4px;
+            color: var(--blue);
+            background: var(--blue-pale);
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        /* 現在のStage番号です。 */
+        .stage-chip {
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 750;
+        }
+
+        /* 敵HP全体です。 */
+        .hp-section {
+            flex: 0 0 auto;
+            margin-top: 11px;
+        }
+
+        /* HPタイトルと数字を横並びにします。 */
+        .hp-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 6px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* HPの数字です。 */
+        .hp-heading strong {
+            color: var(--text);
+            font-size: 14px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 敵HP5個を横並びにします。 */
+        .hp-bar {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 4px;
+        }
+
+        /* HP1個分です。 */
+        .hp-block {
+            height: 8px;
+            border-radius: 3px;
+            background: var(--red);
+            transition:
+                background 0.22s ease,
+                opacity 0.22s ease,
+                transform 0.22s ease;
+        }
+
+        /* 0になったHPは空にします。 */
+        .hp-block.empty {
+            background: #f0dada;
+            opacity: 0.65;
+        }
+
+        /* プレイヤーHP表示の領域です。 */
+        .player-hp-section {
+            flex: 0 0 auto;
+            margin-top: 7px;
+        }
+
+        /* プレイヤーHPのタイトルです。 */
+        .player-hp-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            color: #647080;
+            font-size: 10px;
+            font-weight: 750;
+        }
+
+        /* プレイヤーHPバーです。 */
+        .player-hp-bar {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 4px;
+        }
+
+        /* プレイヤーHP1個分です。 */
+        .player-hp-block {
+            height: 5px;
+            border-radius: 99px;
+            background: #4d9cf5;
+            transition:
+                background 0.2s ease,
+                opacity 0.2s ease;
+        }
+
+        /* プレイヤーHPが減った部分です。 */
+        .player-hp-block.empty {
+            background: #dfe7f2;
+            opacity: 0.55;
+        }
+
+        /* =========================================================
+           10. 2Dバトルアリーナ
+           ========================================================= */
+
+        /* ゲーム映像全体です。 */
+        .arena {
+            position: relative;
+            display: flex;
+            flex: 1 1 auto;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 0;
+            margin-top: 8px;
+            padding: 10px 4%;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.20);
+            border-radius: 8px;
+            background-color: #26364c;
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            isolation: isolate;
+        }
+
+        /* 地面に近い部分に薄いグラデーションを重ねます。 */
+        .arena::before {
+            position: absolute;
+            z-index: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            height: 28%;
+            background:
+                linear-gradient(
+                    to bottom,
+                    rgba(0, 0, 0, 0),
+                    rgba(0, 0, 0, 0.30)
+                );
+            content: "";
+            pointer-events: none;
+        }
+
+        /* ゲーム画面上にステージ名を重ねる表示です。 */
+        .arena-stage-label {
+            position: absolute;
+            z-index: 10;
+            top: 9px;
+            left: 10px;
+            padding: 4px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 5px;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.38);
+            font-size: 10px;
+            font-weight: 850;
+            text-shadow: var(--game-text-shadow);
+            backdrop-filter: blur(3px);
+        }
+
+        /* ゲーム画面上のコンボ表示です。 */
+        .arena-combo {
+            position: absolute;
+            z-index: 10;
+            top: 9px;
+            right: 10px;
+            padding: 4px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 5px;
+            color: #fff4a3;
+            background: rgba(0, 0, 0, 0.38);
+            font-size: 10px;
+            font-weight: 850;
+            text-shadow: var(--game-text-shadow);
+            backdrop-filter: blur(3px);
+        }
+
+        /* =========================================================
+           11. ステージ背景
+           ========================================================= */
+
+        /* Stage 1は渋谷背景を表示します。 */
+        .arena.stage-1 {
+            background-image: url("/images/bg_shibuya.png");
+        }
+
+        /* Stage 2は海背景を表示します。 */
+        .arena.stage-2 {
+            background-image: url("/images/bg_beach.png");
+        }
+
+        /* Stage 3以降はStage 1背景を予備として使います。 */
+        .arena.stage-fallback {
+            background-image: url("/images/bg_shibuya.png");
+        }
+
+        /* =========================================================
+           12. キャラクター
+           ========================================================= */
+
+        /* プレイヤー・敵の配置用コンテナです。 */
+        .fighter {
+            position: relative;
+            z-index: 5;
+            display: flex;
+            flex: 0 0 31%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            min-width: 0;
+            gap: 3px;
+            padding-bottom: 4px;
+        }
+
+        /* キャラクター画像を置く領域です。 */
+        .fighter-avatar {
+            position: relative;
+            width: clamp(82px, 11vw, 155px);
+            height: clamp(105px, 18vh, 205px);
+            overflow: visible;
+            border: 0;
+            background: transparent;
+            filter: drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.30));
+            transition:
+                transform 0.15s ease,
+                filter 0.15s ease;
+        }
+
+        /* 実際の画像です。 */
+        .fighter-avatar img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center bottom;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        /* キャラクター名です。 */
+        .fighter-name {
+            position: relative;
+            z-index: 2;
+            max-width: 100%;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 850;
+            text-align: center;
+            text-shadow: var(--game-text-shadow);
+            overflow-wrap: anywhere;
+        }
+
+        /* キャラクターの役割表示です。 */
+        .fighter-role {
+            position: relative;
+            z-index: 2;
+            color: #edf4ff;
+            font-size: 9px;
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.65);
+        }
+
+        /* VS表示です。 */
+        .versus {
+            position: relative;
+            z-index: 6;
+            align-self: flex-end;
+            margin-bottom: 55px;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
+        }
+
+        /* =========================================================
+           13. 手裏剣
+           ========================================================= */
+
+        /* JavaScriptで生成した手裏剣を置く領域です。 */
+        .projectile-layer {
+            position: absolute;
+            z-index: 20;
+            inset: 0;
+            overflow: visible;
+            pointer-events: none;
+        }
+
+        /* 手裏剣本体です。 */
+        .shuriken {
+            position: absolute;
+            left: 29%;
+            bottom: 38%;
+            width: 22px;
+            height: 22px;
+            color: #dfe9ff;
+            font-size: 25px;
+            line-height: 1;
+            text-shadow:
+                0 0 5px #ffffff,
+                0 0 10px #72a8ff;
+            transform: rotate(0deg);
+            animation: shuriken-fly 0.52s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+
+        /* 手裏剣が左から右へ飛ぶアニメーションです。 */
+        @keyframes shuriken-fly {
+            0% {
+                opacity: 0;
+                transform: translate(0, 0) rotate(0deg) scale(0.6);
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            50% {
+                transform: translate(180%, -8px) rotate(360deg) scale(1);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translate(350%, 0) rotate(720deg) scale(0.9);
+            }
+        }
+
+        /* =========================================================
+           14. 着弾エフェクト
+           ========================================================= */
+
+        /* 敵に当たった瞬間に表示する火花です。 */
+        .hit-spark {
+            position: absolute;
+            z-index: 30;
+            right: 25%;
+            bottom: 45%;
+            width: 20px;
+            height: 20px;
+            color: #fff6a6;
+            font-size: 38px;
+            line-height: 1;
+            text-shadow:
+                0 0 6px #ffffff,
+                0 0 14px #ffb13b;
+            pointer-events: none;
+            animation: hit-spark 0.48s ease-out forwards;
+        }
+
+        /* 火花を大きくして消すアニメーションです。 */
+        @keyframes hit-spark {
+            0% {
+                opacity: 0;
+                transform: scale(0.2) rotate(-30deg);
+            }
+
+            35% {
+                opacity: 1;
+                transform: scale(1.25) rotate(10deg);
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(0.7) rotate(35deg);
+            }
+        }
+
+        /* =========================================================
+           15. キャラクター攻撃・被弾アニメーション
+           ========================================================= */
+
+        /* 正解時に女子高生を少し前へ動かします。 */
+        .fighter-avatar.player-attack {
+            animation: player-attack 0.52s ease both;
+        }
+
+        /* 敵に攻撃が当たったときに忍者を揺らします。 */
+        .fighter-avatar.enemy-hit {
+            animation: enemy-hit 0.50s ease both;
+        }
+
+        /* 不正解時にプレイヤーを赤く点滅させます。 */
+        .fighter-avatar.player-miss {
+            animation:
+                player-miss-flash 0.55s ease,
+                player-miss-shake 0.55s ease;
+        }
+
+        /* プレイヤーが攻撃する動きです。 */
+        @keyframes player-attack {
+            0% {
+                transform: translateX(0) scale(1);
+                filter: drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.30));
+            }
+
+            45% {
+                transform: translateX(18px) scale(1.06);
+                filter:
+                    drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.30))
+                    drop-shadow(0 0 12px rgba(120, 190, 255, 0.9));
+            }
+
+            100% {
+                transform: translateX(0) scale(1);
+                filter: drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.30));
+            }
+        }
+
+        /* 敵が攻撃を受けてのけぞる動きです。 */
+        @keyframes enemy-hit {
+            0% {
+                transform: translateX(0) rotate(0);
+                filter: drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.30));
+            }
+
+            25% {
+                transform: translateX(8px) rotate(5deg);
+            }
+
+            55% {
+                transform: translateX(-8px) rotate(-5deg);
+                filter:
+                    drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.30))
+                    drop-shadow(0 0 16px rgba(255, 211, 84, 0.95));
+            }
+
+            100% {
+                transform: translateX(0) rotate(0);
+                filter: drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.30));
+            }
+        }
+
+        /* 不正解時にプレイヤーを赤く点滅させます。 */
+        @keyframes player-miss-flash {
+            0%,
+            100% {
+                filter: drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.30));
+            }
+
+            50% {
+                filter:
+                    drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.30))
+                    drop-shadow(0 0 18px rgba(255, 65, 65, 0.95));
+            }
+        }
+
+        /* 不正解時にプレイヤーを左右に揺らします。 */
+        @keyframes player-miss-shake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20% {
+                transform: translateX(-7px);
+            }
+
+            40% {
+                transform: translateX(7px);
+            }
+
+            60% {
+                transform: translateX(-5px);
+            }
+
+            80% {
+                transform: translateX(4px);
+            }
+        }
+
+        /* =========================================================
+           16. バトル説明・結果表示
+           ========================================================= */
+
+        /* バトル画面下部の説明です。 */
+        .battle-caption {
+            flex: 0 0 auto;
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 11px;
+            text-align: center;
+        }
+
+        /* 正解・不正解のメッセージ表示領域です。 */
+        .effect-zone {
+            flex: 0 0 auto;
+            min-height: 48px;
+            max-height: 82px;
+            margin-top: 7px;
+            padding: 8px 10px;
+            overflow: auto;
+            border: 1px solid #edf0f3;
+            border-radius: 5px;
+            color: #545b65;
+            background: #fafbfc;
+            font-size: 12px;
+            line-height: 1.4;
+            text-align: center;
+            white-space: pre-line;
+            overflow-wrap: anywhere;
+        }
+
+        /* 正解時のメッセージです。 */
+        .effect-zone.success {
+            border-color: #c9efdc;
+            color: #18764f;
+            background: var(--green-pale);
+        }
+
+        /* 不正解時のメッセージです。 */
+        .effect-zone.miss {
+            border-color: #f6d3d3;
+            color: #b6474b;
+            background: var(--red-pale);
+        }
+
+        /* スコアとコンボを横並びにします。 */
+        .stats-grid {
+            display: grid;
+            flex: 0 0 auto;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        /* スコアカードです。 */
+        .stat-card {
+            padding: 7px 10px;
+            border: 1px solid #e1e3e6;
+            border-radius: 5px;
+            background: #f4f4f5;
+        }
+
+        /* スコア項目名です。 */
+        .stat-label {
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        /* スコアの数字です。 */
+        .stat-value {
+            margin-top: 0;
+            color: var(--text);
+            font-size: 19px;
+            font-weight: 850;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* コンボの数字をオレンジにします。 */
+        .stat-card.combo .stat-value {
+            color: #b87918;
+        }
+
+        /* =========================================================
+           17. 長いJavaコードへの対応
+           ========================================================= */
+
+        /* 長いコード問題では問題間の隙間を小さくします。 */
+        #quiz-content.long-code-mode {
+            gap: 3px;
+        }
+
+        /* 長いコード問題では問題カードの余白を減らします。 */
+        #quiz-content.long-code-mode .question-card {
+            padding: 4px 6px;
+        }
+
+        /* 長いコード問題では問題文を少し小さくします。 */
+        #quiz-content.long-code-mode .question-text {
+            font-size: 12px;
+            line-height: 1.25;
+        }
+
+        /* 長いコード問題では選択肢間の隙間を減らします。 */
+        #quiz-content.long-code-mode .choice-list {
+            gap: 2px;
+        }
+
+        /* 長いコード問題では選択肢を小さくします。 */
+        #quiz-content.long-code-mode .choice-button {
+            min-height: 27px;
+            padding: 3px 6px;
+            gap: 5px;
+            font-size: 10px;
+            line-height: 1.2;
+        }
+
+        /* 長いコード問題ではA～Eラベルも小さくします。 */
+        #quiz-content.long-code-mode .choice-label {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* =========================================================
+           18. スマートフォン対応
+           ========================================================= */
+
+        /* 画面が狭い場合でも左右2分割を維持します。 */
+        @media (max-width: 900px) {
+
+            /* ヘッダーの左右余白を少なくします。 */
+            .app-header {
+                padding-right: 10px;
+                padding-left: 10px;
+            }
+
+            /* パネルの余白を少なくします。 */
+            .panel {
+                padding: 8px 10px;
+            }
+
+            /* パネルの補助タイトルを非表示にします。 */
+            .panel-kicker {
+                display: none;
+            }
+
+            /* キャラクターを少し小さくします。 */
+            .fighter-avatar {
+                width: clamp(65px, 12vw, 120px);
+                height: clamp(85px, 16vh, 165px);
+            }
+        }
+
+        /* さらに狭い画面用です。 */
+        @media (max-width: 560px) {
+
+            /* ヘッダーを小さくします。 */
+            .app-header {
+                min-height: 48px;
+                padding: 5px 8px;
+            }
+
+            /* タイトルを小さくします。 */
+            .brand-title {
+                font-size: 16px;
+            }
+
+            /* サブタイトルを小さくします。 */
+            .brand-subtitle {
+                gap: 4px;
+                font-size: 9px;
+            }
+
+            /* ログイン情報を小さくします。 */
+            .login-user-status {
+                max-width: 100px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* キャラクターをさらに小さくします。 */
+            .fighter-avatar {
+                width: 55px;
+                height: 75px;
+            }
+
+            /* VSを小さくします。 */
+            .versus {
+                margin-bottom: 45px;
+                font-size: 10px;
+            }
+
+            /* 問題文を小さくします。 */
+            .question-text {
+                font-size: 12px;
+            }
+
+            /* コードを小さくします。 */
+            .question-code {
+                font-size: 10px;
+            }
+
+            /* 選択肢を小さくします。 */
+            .choice-button {
+                grid-template-columns: 22px minmax(0, 1fr);
+                gap: 5px;
+                padding: 4px;
+                font-size: 10px;
+            }
+
+            /* 選択肢ラベルを小さくします。 */
+            .choice-label {
+                width: 20px;
+                height: 20px;
+            }
+
+            /* ゲーム画面のステージ表示を小さくします。 */
+            .arena-stage-label,
+            .arena-combo {
+                font-size: 8px;
+            }
+        }
+
+        /* 動きを減らす設定の利用者にはアニメーションを短くします。 */
+        @media (prefers-reduced-motion: reduce) {
+
+            /* すべてのアニメーションをほぼ停止します。 */
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!--
+    =========================================================
+    ログイン画面
+    =========================================================
+
+    localStorageにユーザー名が保存されていなければ表示します。
+    ログイン後はJavaScriptでhiddenを付けて非表示にします。
+-->
+<div id="login-overlay" class="login-overlay">
+
+    <!-- ログインカードです。 -->
+    <div class="login-card">
+
+        <!-- Java Learning Systemであることを示します。 -->
+        <p class="login-kicker">JAVA LEARNING SYSTEM</p>
+
+        <!-- ログイン画面のタイトルです。 -->
+        <h1 class="login-title">ようこそ！</h1>
+
+        <!-- ログイン機能の説明です。 -->
+        <p class="login-description">
+            ユーザー名を入力して、Java Bronzeの学習ゲームを開始してください。
+        </p>
+
+        <!-- ユーザー名入力欄のラベルです。 -->
+        <label class="login-label" for="username-input">
+            ユーザー名
+        </label>
+
+        <!-- ユーザーが名前を入力する欄です。 -->
+        <input
+            id="username-input"
+            class="login-input"
+            type="text"
+            maxlength="20"
+            autocomplete="nickname"
+            placeholder="例：はるか"
+        >
+
+        <!-- ログイン時のエラーメッセージを表示します。 -->
+        <p id="login-error" class="login-error"></p>
+
+        <!-- 入力した名前でログインします。 -->
+        <button
+            id="login-button"
+            class="login-button"
+            type="button"
+        >
+            ログインして学習を始める
+        </button>
+
+    </div>
+
+</div>
+
+
+<!--
+    =========================================================
+    アプリ本体
+    =========================================================
+
+    初期状態ではログイン確認後に表示されます。
+-->
+<div id="app-shell" class="app-shell hidden">
+
+    <!-- =====================================================
+         ヘッダー
+         ===================================================== -->
+    <header class="app-header">
+
+        <!-- アプリ名と説明をまとめます。 -->
+        <div class="brand-area">
+
+            <!-- アプリタイトルです。 -->
+            <h1 class="brand-title">
+                Java Learning System
+            </h1>
+
+            <!-- この画面の主要機能を説明します。 -->
+            <p class="brand-subtitle">
+                <span>Java Bronze 学習ゲーム</span>
+                <span class="separator">|</span>
+                <span>Chapter</span>
+                <span class="separator">|</span>
+                <span>Stage</span>
+                <span class="separator">|</span>
+                <span>Timer</span>
+            </p>
+
+        </div>
+
+
+        <!-- ログイン情報とAPI状態をまとめます。 -->
+        <div class="login-status-area">
+
+            <!-- ログイン中のユーザー名をJavaScriptで設定します。 -->
+            <div id="login-user-status" class="login-user-status">
+                未ログイン
+            </div>
+
+            <!-- ログアウトボタンです。 -->
+            <button
+                id="logout-button"
+                class="logout-button"
+                type="button"
+            >
+                ログアウト
+            </button>
+
+            <!-- Spring Boot APIへの接続状態です。 -->
+            <div
+                id="connection-status"
+                class="connection-status"
+                role="status"
+            >
+                <span class="status-dot"></span>
+                <span id="connection-status-text">
+                    API接続確認中
+                </span>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         メインエリア
+         ===================================================== -->
+    <main class="workspace">
+
+
+        <!-- ===================================================
+             左側：学習エリア
+             =================================================== -->
+        <section
+            class="panel learning-panel"
+            aria-label="学習エリア"
+        >
+
+            <!-- 左側のタイトルです。 -->
+            <div class="panel-heading">
+
+                <!-- 学習エリアの名前です。 -->
+                <h2>左側：学習エリア</h2>
+
+                <!-- 補助ラベルです。 -->
+                <span class="panel-kicker">
+                    LEARNING
+                </span>
+
+            </div>
+
+
+            <!-- =================================================
+                 章選択画面
+                 ================================================= -->
+            <section
+                id="home-view"
+                class="view active"
+            >
+
+                <!-- 現在がゲーム開始前であることを示します。 -->
+                <span class="status-badge">
+                    ゲーム開始前
+                </span>
+
+                <!-- 章選択の見出しです。 -->
+                <h3 class="section-title">
+                    学習する章を選ぼう！
+                </h3>
+
+                <!-- Spring Boot APIから取得した章を表示します。 -->
+                <div
+                    id="chapter-list"
+                    class="chapter-list"
+                    aria-label="学習する章"
+                >
+
+                    <!-- API取得前に表示するメッセージです。 -->
+                    <div class="loading-message">
+                        章データを読み込んでいます...
+                    </div>
+
+                </div>
+
+
+                <!-- 章と問題数設定の区切りです。 -->
+                <div class="setting-divider"></div>
+
+
+                <!-- 問題数設定のタイトルです。 -->
+                <span class="setting-label">
+                    今回プレイする問題数
+                </span>
+
+
+                <!-- 問題数選択ボタンです。 -->
+                <div
+                    id="question-count-options"
+                    class="count-options"
+                    aria-label="問題数を選択"
+                >
+
+                    <!-- 5問を選択するボタンです。 -->
+                    <button
+                        class="count-option"
+                        type="button"
+                        data-count="5"
+                        aria-pressed="true"
+                    >
+                        5問
+                    </button>
+
+                    <!-- 10問を選択するボタンです。 -->
+                    <button
+                        class="count-option"
+                        type="button"
+                        data-count="10"
+                        aria-pressed="false"
+                    >
+                        10問
+                    </button>
+
+                    <!-- 15問を選択するボタンです。 -->
+                    <button
+                        class="count-option"
+                        type="button"
+                        data-count="15"
+                        aria-pressed="false"
+                    >
+                        15問
+                    </button>
+
+                    <!-- 20問を選択するボタンです。 -->
+                    <button
+                        class="count-option"
+                        type="button"
+                        data-count="20"
+                        aria-pressed="false"
+                    >
+                        20問
+                    </button>
+
+                </div>
+
+
+                <!-- 現在の選択内容を説明します。 -->
+                <p
+                    id="selected-summary"
+                    class="selected-summary"
+                >
+                    第1章から5問を出題します。1ステージは5問です。
+                </p>
+
+
+                <!-- ゲーム開始ボタンです。 -->
+                <button
+                    id="start-button"
+                    class="primary-button"
+                    type="button"
+                    disabled
+                >
+                    章データを読み込み中...
+                </button>
+
+            </section>
+
+
+            <!-- =================================================
+                 クイズ画面
+                 ================================================= -->
+            <section
+                id="quiz-view"
+                class="view"
+                aria-live="polite"
+            >
+
+                <!-- 問題部分全体です。 -->
+                <div id="quiz-content">
+
+                    <!-- 問題番号とタイマーを表示します。 -->
+                    <div class="quiz-topline">
+
+                        <!-- 現在の章・Stage・問題番号です。 -->
+                        <p
+                            id="stage-info"
+                            class="quiz-step"
+                        >
+                            第1章 / Stage 1 / 第1問目
+                        </p>
+
+                        <!-- 残り時間を表示します。 -->
+                        <div
+                            class="timer-wrap"
+                            aria-label="残り時間"
+                        >
+
+                            <!-- TIMEというラベルです。 -->
+                            <span>TIME</span>
+
+                            <!-- 残り秒数です。 -->
+                            <span
+                                id="timer-value"
+                                class="timer-value"
+                            >
+                                --秒
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- タイマーの横棒です。 -->
+                    <div
+                        class="timer-track"
+                        aria-hidden="true"
+                    >
+                        <div
+                            id="timer-fill"
+                            class="timer-fill"
+                        ></div>
+                    </div>
+
+
+                    <!-- 問題文カードです。 -->
+                    <div class="question-card">
+
+                        <!-- Java Bronzeなどのカテゴリです。 -->
+                        <p
+                            id="question-label"
+                            class="question-label"
+                        >
+                            JAVA BRONZE
+                        </p>
+
+                        <!-- 実際の問題文です。 -->
+                        <p
+                            id="question-text"
+                            class="question-text"
+                        >
+                            問題を読み込んでいます...
+                        </p>
+
+                        <!-- コード問題の場合だけ表示します。 -->
+                        <pre
+                            id="question-code"
+                            class="question-code hidden"
+                        ></pre>
+
+                    </div>
+
+
+                    <!-- 選択肢を表示する領域です。 -->
+                    <div
+                        id="choice-list"
+                        class="choice-list"
+                        aria-label="回答選択肢"
+                    >
+
+                        <!-- Aの選択肢です。 -->
+                        <button
+                            class="choice-button"
+                            type="button"
+                            data-index="0"
+                        >
+                            <span class="choice-label">A</span>
+                            <span class="choice-text">選択肢A</span>
+                        </button>
+
+                        <!-- Bの選択肢です。 -->
+                        <button
+                            class="choice-button"
+                            type="button"
+                            data-index="1"
+                        >
+                            <span class="choice-label">B</span>
+                            <span class="choice-text">選択肢B</span>
+                        </button>
+
+                        <!-- Cの選択肢です。 -->
+                        <button
+                            class="choice-button"
+                            type="button"
+                            data-index="2"
+                        >
+                            <span class="choice-label">C</span>
+                            <span class="choice-text">選択肢C</span>
+                        </button>
+
+                        <!-- Dの選択肢です。 -->
+                        <button
+                            class="choice-button"
+                            type="button"
+                            data-index="3"
+                        >
+                            <span class="choice-label">D</span>
+                            <span class="choice-text">選択肢D</span>
+                        </button>
+
+                        <!-- Eの選択肢です。 -->
+                        <button
+                            class="choice-button"
+                            type="button"
+                            data-index="4"
+                        >
+                            <span class="choice-label">E</span>
+                            <span class="choice-text">選択肢E</span>
+                        </button>
+
+                    </div>
+
+
+                    <!-- クイズ画面下部です。 -->
+                    <div class="quiz-bottom">
+
+                        <!-- 正解時のゲームルールを説明します。 -->
+                        <span class="quiz-hint">
+                            正解すると敵に1ダメージ
+                        </span>
+
+                        <!-- 途中で章選択画面に戻るボタンです。 -->
+                        <button
+                            id="back-home-from-quiz"
+                            class="secondary-button"
+                            type="button"
+                        >
+                            章選択へ戻る
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     Stage失敗パネル
+                     ================================================= -->
+                <div
+                    id="stage-failed-panel"
+                    class="result-panel hidden"
+                >
+
+                    <!-- Stage失敗を示します。 -->
+                    <span class="status-badge">
+                        STAGE FAILED
+                    </span>
+
+                    <!-- 再挑戦を促します。 -->
+                    <h3>
+                        もう一度挑戦しよう！
+                    </h3>
+
+                    <!-- JavaScriptで具体的な結果を表示します。 -->
+                    <p id="stage-failed-message">
+                        5問終了しましたが、敵のHPが残っています。
+                    </p>
+
+                    <!-- ステージリトライの説明です。 -->
+                    <p>
+                        このステージの5問をもう一度プレイできます。
+                    </p>
+
+                    <!-- Stage失敗時のボタンです。 -->
+                    <div class="button-row">
+
+                        <!-- 同じStageから再挑戦します。 -->
+                        <button
+                            id="retry-stage-button"
+                            class="primary-button"
+                            type="button"
+                            style="margin-top:0"
+                        >
+                            このステージをリトライ
+                        </button>
+
+                        <!-- 章選択へ戻ります。 -->
+                        <button
+                            id="back-home-from-fail"
+                            class="secondary-button"
+                            type="button"
+                        >
+                            章選択へ戻る
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     ゲーム結果パネル
+                     ================================================= -->
+                <div
+                    id="game-result-panel"
+                    class="result-panel hidden"
+                >
+
+                    <!-- 結果画面であることを示します。 -->
+                    <span class="status-badge">
+                        RESULT
+                    </span>
+
+                    <!-- 結果タイトルです。 -->
+                    <h3 id="game-result-title">
+                        学習終了！
+                    </h3>
+
+                    <!-- プレイ結果の説明です。 -->
+                    <p id="game-result-message">
+                        今回のプレイ結果です。
+                    </p>
+
+                    <!-- スコアです。 -->
+                    <p
+                        id="game-result-score"
+                        class="result-score"
+                    >
+                        SCORE: 0
+                    </p>
+
+                    <!-- 間違えた問題数です。 -->
+                    <span
+                        id="review-count-badge"
+                        class="review-count-badge hidden"
+                    >
+                        間違えた問題：0問
+                    </span>
+
+                    <!-- 結果画面の操作ボタンです。 -->
+                    <div class="button-row">
+
+                        <!-- 間違えた問題だけで復習します。 -->
+                        <button
+                            id="review-button"
+                            class="primary-button hidden"
+                            type="button"
+                            style="margin-top:0"
+                        >
+                            間違えた問題を復習
+                        </button>
+
+                        <!-- 章選択へ戻ります。 -->
+                        <button
+                            id="return-home-button"
+                            class="secondary-button"
+                            type="button"
+                        >
+                            別の章を選ぶ
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     復習終了パネル
+                     ================================================= -->
+                <div
+                    id="review-result-panel"
+                    class="result-panel hidden"
+                >
+
+                    <!-- 復習終了を示します。 -->
+                    <span class="status-badge">
+                        REVIEW
+                    </span>
+
+                    <!-- 復習結果タイトルです。 -->
+                    <h3>
+                        復習終了！
+                    </h3>
+
+                    <!-- 復習結果を表示します。 -->
+                    <p id="review-result-message">
+                        間違えた問題の復習が終了しました。
+                    </p>
+
+                    <!-- 復習結果のボタンです。 -->
+                    <div class="button-row">
+
+                        <!-- もう一度復習します。 -->
+                        <button
+                            id="review-again-button"
+                            class="primary-button"
+                            type="button"
+                            style="margin-top:0"
+                        >
+                            もう一度復習する
+                        </button>
+
+                        <!-- 通常の結果画面へ戻ります。 -->
+                        <button
+                            id="review-back-result-button"
+                            class="secondary-button"
+                            type="button"
+                        >
+                            結果画面へ戻る
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- ===================================================
+             右側：ゲームエリア
+             =================================================== -->
+        <section
+            class="panel battle-panel"
+            aria-label="ゲームエリア"
+        >
+
+            <!-- ゲームエリアのタイトルです。 -->
+            <div class="panel-heading">
+
+                <!-- 右側の名前です。 -->
+                <h2>
+                    右側：ゲームエリア
+                </h2>
+
+                <!-- BATTLE表示です。 -->
+                <span class="panel-kicker">
+                    BATTLE
+                </span>
+
+            </div>
+
+
+            <!-- Stage状態を表示します。 -->
+            <div class="battle-topline">
+
+                <!-- BATTLE START / STAGE CLEARなどを表示します。 -->
+                <span
+                    id="battle-state"
+                    class="battle-state"
+                >
+                    ゲーム開始前
+                </span>
+
+                <!-- 現在のStageを表示します。 -->
+                <span
+                    id="battle-stage"
+                    class="stage-chip"
+                >
+                    Stage 1
+                </span>
+
+            </div>
+
+
+            <!-- 敵HP表示です。 -->
+            <div class="hp-section">
+
+                <!-- 敵HPタイトルと数値です。 -->
+                <div class="hp-heading">
+                    <span>ENEMY HP</span>
+                    <strong id="hp-count">
+                        5 / 5
+                    </strong>
+                </div>
+
+                <!-- 敵HPを5ブロックで表現します。 -->
+                <div
+                    class="hp-bar"
+                    aria-label="敵の体力"
+                >
+
+                    <!-- 敵HP 1です。 -->
+                    <span
+                        id="hp1"
+                        class="hp-block"
+                    ></span>
+
+                    <!-- 敵HP 2です。 -->
+                    <span
+                        id="hp2"
+                        class="hp-block"
+                    ></span>
+
+                    <!-- 敵HP 3です。 -->
+                    <span
+                        id="hp3"
+                        class="hp-block"
+                    ></span>
+
+                    <!-- 敵HP 4です。 -->
+                    <span
+                        id="hp4"
+                        class="hp-block"
+                    ></span>
+
+                    <!-- 敵HP 5です。 -->
+                    <span
+                        id="hp5"
+                        class="hp-block"
+                    ></span>
+
+                </div>
+
+            </div>
+
+
+            <!-- プレイヤーHPです。 -->
+            <div class="player-hp-section">
+
+                <!-- プレイヤーHPのタイトルと数値です。 -->
+                <div class="player-hp-heading">
+                    <span>PLAYER HP</span>
+                    <strong id="player-hp-count">
+                        3 / 3
+                    </strong>
+                </div>
+
+                <!-- プレイヤーHPを3ブロックで表現します。 -->
+                <div class="player-hp-bar">
+
+                    <!-- プレイヤーHP 1です。 -->
+                    <span
+                        id="player-hp1"
+                        class="player-hp-block"
+                    ></span>
+
+                    <!-- プレイヤーHP 2です。 -->
+                    <span
+                        id="player-hp2"
+                        class="player-hp-block"
+                    ></span>
+
+                    <!-- プレイヤーHP 3です。 -->
+                    <span
+                        id="player-hp3"
+                        class="player-hp-block"
+                    ></span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 2Dゲーム画面
+                 ================================================= -->
+            <div
+                id="arena"
+                class="arena stage-1"
+            >
+
+                <!-- ゲーム画面内にStage名を表示します。 -->
+                <div
+                    id="arena-stage-label"
+                    class="arena-stage-label"
+                >
+                    STAGE 1 / SHIBUYA
+                </div>
+
+                <!-- ゲーム画面内にコンボ数を表示します。 -->
+                <div
+                    id="arena-combo"
+                    class="arena-combo"
+                >
+                    COMBO × 0
+                </div>
+
+
+                <!-- 手裏剣などをJavaScriptから追加する場所です。 -->
+                <div
+                    id="projectile-layer"
+                    class="projectile-layer"
+                ></div>
+
+
+                <!-- プレイヤー側です。 -->
+                <div
+                    id="player-unit"
+                    class="fighter"
+                >
+
+                    <!-- 女子高生の画像を表示します。 -->
+                    <div
+                        id="player-avatar"
+                        class="fighter-avatar"
+                        aria-label="女子高生"
+                    >
+
+                        <!-- 初期状態では通常ポーズを表示します。 -->
+                        <img
+                            id="player-image"
+                            src="/images/jk_ready.png"
+                            alt="女子高生プレイヤー"
+                        >
+
+                    </div>
+
+                    <!-- プレイヤー名です。 -->
+                    <div
+                        id="player-name"
+                        class="fighter-name"
+                    >
+                        女子高生
+                    </div>
+
+                    <!-- プレイヤーの役割です。 -->
+                    <div class="fighter-role">
+                        PLAYER
+                    </div>
+
+                </div>
+
+
+                <!-- プレイヤーと敵の間にVSを表示します。 -->
+                <div class="versus">
+                    VS
+                </div>
+
+
+                <!-- 敵側です。 -->
+                <div
+                    id="enemy-unit"
+                    class="fighter"
+                >
+
+                    <!-- Java忍者の画像を表示します。 -->
+                    <div
+                        id="enemy-avatar"
+                        class="fighter-avatar"
+                        aria-label="Java忍者"
+                    >
+
+                        <!-- 初期状態では通常ポーズを表示します。 -->
+                        <img
+                            id="enemy-image"
+                            src="/images/ninja_ready.png"
+                            alt="Java忍者"
+                        >
+
+                    </div>
+
+                    <!-- 敵名です。 -->
+                    <div
+                        id="enemy-name"
+                        class="fighter-name"
+                    >
+                        Java忍者
+                    </div>
+
+                    <!-- 敵の役割です。 -->
+                    <div class="fighter-role">
+                        ENEMY
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ゲームルール説明です。 -->
+            <p class="battle-caption">
+                正解すると手裏剣で攻撃。不正解・時間切れはPLAYER HPが減少！
+            </p>
+
+
+            <!-- 正解・不正解メッセージです。 -->
+            <div
+                id="effect-zone"
+                class="effect-zone"
+                role="status"
+                aria-live="polite"
+            >
+                待機中：ログインして学習する章を選んでください。
+            </div>
+
+
+            <!-- スコアとコンボです。 -->
+            <div class="stats-grid">
+
+                <!-- SCOREです。 -->
+                <div class="stat-card">
+
+                    <!-- 項目名です。 -->
+                    <div class="stat-label">
+                        SCORE
+                    </div>
+
+                    <!-- 現在のスコアです。 -->
+                    <div
+                        id="score-val"
+                        class="stat-value"
+                    >
+                        0
+                    </div>
+
+                </div>
+
+
+                <!-- COMBOです。 -->
+                <div class="stat-card combo">
+
+                    <!-- 項目名です。 -->
+                    <div class="stat-label">
+                        COMBO
+                    </div>
+
+                    <!-- 現在のコンボです。 -->
+                    <div
+                        id="combo-val"
+                        class="stat-value"
+                    >
+                        0
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script>
+
+    /* =========================================================
+       1. ログイン状態
+       ========================================================= */
+
+    /*
+     * localStorageに保存するとブラウザを閉じてもユーザー名を保持できます。
+     * 今回は本格的な認証ではなく、卒業制作のUI確認用の簡易ログインとして実装します。
+     */
+    const LOGIN_STORAGE_KEY = "javaLearningSystemUsername";
+
+    /*
+     * ログイン中のユーザー名を保持します。
+     */
+    let currentUsername = "";
+
+    /* =========================================================
+       2. ゲーム状態
+       ========================================================= */
+
+    /*
+     * Spring Bootから取得した章一覧を保存します。
+     */
+    let availableChapters = [];
+
+    /*
+     * 現在選択している章番号です。
+     */
+    let selectedChapter = 1;
+
+    /*
+     * 1回のゲームで出題する問題数です。
+     */
+    let selectedQuestionCount = 5;
+
+    /*
+     * 現在プレイしている問題一覧です。
+     */
+    let localQuestions = [];
+
+    /*
+     * 現在何問目なのかを0から数えます。
+     */
+    let currentQuestionIndex = 0;
+
+    /*
+     * 敵のHPです。
+     * 1問正解するたびに1減り、5問正解すると0になります。
+     */
+    let currentHp = 5;
+
+    /*
+     * プレイヤー側のHPです。
+     * 不正解または時間切れで1減ります。
+     */
+    let currentPlayerHp = 3;
+
+    /*
+     * 現在のスコアです。
+     */
+    let currentScore = 0;
+
+    /*
+     * 現在のコンボ数です。
+     */
+    let currentCombo = 0;
+
+    /*
+     * クリアしたStage数です。
+     */
+    let clearedStages = 0;
+
+    /*
+     * 回答処理中にボタンを連打されないようにするためのフラグです。
+     */
+    let answerLocked = false;
+
+    /*
+     * タイマーをsetIntervalで管理するためのIDです。
+     */
+    let timerInterval = null;
+
+    /*
+     * 現在の問題の制限時間です。
+     */
+    let timerDuration = 0;
+
+    /*
+     * 現在残っている秒数です。
+     */
+    let timeRemaining = 0;
+
+    /*
+     * Stage失敗時に、どの問題からリトライするかを保存します。
+     */
+    let failedStageStartIndex = 0;
+
+    /*
+     * 同じ問題の回答結果が二重処理されることを防ぎます。
+     */
+    let answerResultHandled = false;
+
+    /*
+     * 次の問題への移動処理が二重実行されることを防ぎます。
+     */
+    let advanceHandled = false;
+
+    /*
+     * 現在のStage番号です。
+     */
+    let currentStageNumber = 1;
+
+    /*
+     * 現在のステージテーマを保存します。
+     */
+    let activeStageTheme = null;
+
+    /*
+     * 通常プレイ中に間違えた問題を保存する配列です。
+     *
+     * ここに保存した問題だけを使って、
+     * ゲーム終了後に復習モードを開始できます。
+     */
+    let wrongQuestions = [];
+
+    /*
+     * 復習モード中かどうかを判定します。
+     */
+    let isReviewMode = false;
+
+    /*
+     * 復習開始前の通常ゲーム結果画面へ戻るためのフラグです。
+     */
+    let reviewReturnToResult = false;
+
+
+    /* =========================================================
+       3. 選択肢ラベル
+       ========================================================= */
+
+    /*
+     * 現在の画面はA～Eの5択に対応しています。
+     */
+    const choiceLabels = ["A", "B", "C", "D", "E"];
+
+
+    /* =========================================================
+       4. Stageごとのキャラクター・背景設定
+       ========================================================= */
+
+    /*
+     * Stageごとのゲーム素材を1か所で管理します。
+     *
+     * この設計にしておくことで、
+     *
+     * Stage 1 → 渋谷
+     * Stage 2 → 海
+     *
+     * という切り替えをJavaScript側で簡単に管理できます。
+     *
+     * 将来的にStage 3を追加するときも、
+     * ここへ1つ設定を追加するだけで拡張できます。
+     */
+    const stageThemes = {
+
+        /*
+         * Stage 1の設定です。
+         */
+        1: {
+            name: "SHIBUYA",
+            playerName: "女子高生",
+            enemyName: "Java忍者",
+            background: "/images/bg_shibuya.png",
+            playerReady: "/images/jk_ready.png",
+            playerAttack: "/images/jk_throw.png",
+            enemyReady: "/images/ninja_ready.png",
+            enemyHit: "/images/ninja_hit.png"
+        },
+
+        /*
+         * Stage 2の設定です。
+         */
+        2: {
+            name: "BEACH",
+            playerName: "女子高生",
+            enemyName: "Java忍者",
+            background: "/images/bg_beach.png",
+            playerReady: "/images/jk_ready.png",
+            playerAttack: "/images/jk_throw.png",
+            enemyReady: "/images/ninja_ready.png",
+            enemyHit: "/images/ninja_hit.png"
+        }
+
+    };
+
+
+    /* =========================================================
+       5. HTML要素取得用の短縮関数
+       ========================================================= */
+
+    /*
+     * IDからHTML要素を取得する処理を毎回document.getElementByIdと書かず、
+     * element("xxx")という短い形で使えるようにします。
+     */
+    const element = (id) => document.getElementById(id);
+
+
+    /* =========================================================
+       6. ログイン処理
+       ========================================================= */
+
+    /*
+     * localStorageに保存されているユーザー名を確認し、
+     * すでにログイン済みならログイン画面を表示せずにゲーム画面を開きます。
+     */
+    function initializeLogin() {
+
+        /*
+         * 前回保存したユーザー名を取得します。
+         */
+        const savedUsername = localStorage.getItem(LOGIN_STORAGE_KEY);
+
+        /*
+         * 名前が保存されている場合は、その名前を現在のユーザー名にします。
+         */
+        if (savedUsername && savedUsername.trim() !== "") {
+
+            /*
+             * 前回のユーザー名を使います。
+             */
+            currentUsername = savedUsername.trim();
+
+            /*
+             * ログイン後の画面を表示します。
+             */
+            showLoggedInApplication();
+
+            /*
+             * ログイン済みでも章データはAPIから取得する必要があります。
+             */
+            loadChapters();
+
+            /*
+             * ここで処理を終了します。
+             */
+            return;
+        }
+
+        /*
+         * 初回アクセスの場合はログイン画面を表示します。
+         */
+        showLoginScreen();
+    }
+
+
+    /*
+     * ログイン画面を表示します。
+     */
+    function showLoginScreen() {
+
+        /*
+         * ログイン画面を表示します。
+         */
+        element("login-overlay").classList.remove("hidden");
+
+        /*
+         * アプリ本体を非表示にします。
+         */
+        element("app-shell").classList.add("hidden");
+
+        /*
+         * 入力欄へ自動的にカーソルを移動します。
+         */
+        window.setTimeout(() => {
+            element("username-input").focus();
+        }, 50);
+    }
+
+
+    /*
+     * ログイン後のアプリ画面を表示します。
+     */
+    function showLoggedInApplication() {
+
+        /*
+         * ログイン画面を非表示にします。
+         */
+        element("login-overlay").classList.add("hidden");
+
+        /*
+         * ゲーム本体を表示します。
+         */
+        element("app-shell").classList.remove("hidden");
+
+        /*
+         * ヘッダーへユーザー名を表示します。
+         */
+        element("login-user-status").textContent =
+            currentUsername + " さんがログイン中";
+
+        /*
+         * ゲーム開始前のメッセージを設定します。
+         */
+        element("effect-zone").textContent =
+            "待機中：" + currentUsername + "さん、学習する章を選んでください。";
+    }
+
+
+    /*
+     * 入力されたユーザー名を確認してログインします。
+     */
+    function login() {
+
+        /*
+         * 入力欄の文字列を取得し、前後の空白を削除します。
+         */
+        const username =
+            element("username-input").value.trim();
+
+        /*
+         * 空欄の場合はログインさせません。
+         */
+        if (username === "") {
+
+            /*
+             * ユーザーへ入力が必要であることを伝えます。
+             */
+            element("login-error").textContent =
+                "ユーザー名を入力してください。";
+
+            /*
+             * 入力欄へカーソルを戻します。
+             */
+            element("username-input").focus();
+
+            /*
+             * これ以上処理しません。
+             */
+            return;
+        }
+
+        /*
+         * ユーザー名を現在のユーザーとして保存します。
+         */
+        currentUsername = username;
+
+        /*
+         * 次回アクセス時にも使えるようlocalStorageへ保存します。
+         */
+        localStorage.setItem(
+            LOGIN_STORAGE_KEY,
+            currentUsername
+        );
+
+        /*
+         * エラーメッセージを消します。
+         */
+        element("login-error").textContent = "";
+
+        /*
+         * ログイン後のゲーム画面を表示します。
+         */
+        showLoggedInApplication();
+
+        /*
+         * ログイン後に章一覧を読み込みます。
+         */
+        loadChapters();
+    }
+
+
+    /*
+     * ログアウトします。
+     */
+    function logout() {
+
+        /*
+         * 実行中のタイマーを停止します。
+         */
+        stopQuestionTimer();
+
+        /*
+         * localStorageからユーザー名を削除します。
+         */
+        localStorage.removeItem(LOGIN_STORAGE_KEY);
+
+        /*
+         * 現在のユーザー名も空にします。
+         */
+        currentUsername = "";
+
+        /*
+         * 現在の問題データを消します。
+         */
+        localQuestions = [];
+
+        /*
+         * 間違えた問題も消します。
+         */
+        wrongQuestions = [];
+
+        /*
+         * 復習モードを終了します。
+         */
+        isReviewMode = false;
+
+        /*
+         * ログイン画面へ戻します。
+         */
+        showLoginScreen();
+    }
+
+
+    /* =========================================================
+       7. API接続状態
+       ========================================================= */
+
+    /*
+     * API接続状態の表示を更新します。
+     */
+    function setConnectionStatus(state, text) {
+
+        /*
+         * 接続状態を表示するHTML要素を取得します。
+         */
+        const status = element("connection-status");
+
+        /*
+         * 以前の状態クラスを削除します。
+         */
+        status.classList.remove("ready", "error");
+
+        /*
+         * 接続成功ならreadyクラスを追加します。
+         */
+        if (state === "ready") {
+            status.classList.add("ready");
+        }
+
+        /*
+         * 接続失敗ならerrorクラスを追加します。
+         */
+        if (state === "error") {
+            status.classList.add("error");
+        }
+
+        /*
+         * 状態文字列を画面へ表示します。
+         */
+        element("connection-status-text").textContent = text;
+    }
+
+
+    /* =========================================================
+       8. 章一覧API
+       ========================================================= */
+
+    /*
+     * Spring BootからJava Bronzeの章一覧を取得します。
+     */
+    async function loadChapters() {
+
+        /*
+         * 章一覧を表示する領域を取得します。
+         */
+        const list = element("chapter-list");
+
+        /*
+         * API接続中であることを表示します。
+         */
+        setConnectionStatus(
+            "connecting",
+            "API接続中"
+        );
+
+        try {
+
+            /*
+             * Spring Bootの章一覧APIへアクセスします。
+             */
+            const response = await fetch(
+                "/api/questions/chapters?genre=BRONZE"
+            );
+
+            /*
+             * HTTPステータスが200番台でなければエラーにします。
+             */
+            if (!response.ok) {
+
+                /*
+                 * HTTPステータスを含めて原因を表示します。
+                 */
+                throw new Error(
+                    "章データを取得できませんでした（HTTP " +
+                    response.status +
+                    "）"
+                );
+            }
+
+            /*
+             * JSON形式の章データをJavaScriptへ変換します。
+             */
+            const data = await response.json();
+
+            /*
+             * 配列でなければエラーにします。
+             */
+            if (!Array.isArray(data) || data.length === 0) {
+                throw new Error(
+                    "章データが見つかりませんでした"
+                );
+            }
+
+            /*
+             * 章番号の小さい順に並べます。
+             */
+            availableChapters =
+                data
+                    .slice()
+                    .sort(
+                        (a, b) =>
+                            Number(a.chapter) -
+                            Number(b.chapter)
+                    );
+
+            /*
+             * 現在選択中の章が存在するか確認します。
+             */
+            if (
+                !availableChapters.some(
+                    chapter =>
+                        Number(chapter.chapter) ===
+                        selectedChapter
+                )
+            ) {
+
+                /*
+                 * 存在しなければ最初の章を選択します。
+                 */
+                selectedChapter =
+                    Number(
+                        availableChapters[0].chapter
+                    );
+            }
+
+            /*
+             * 章カードを画面へ描画します。
+             */
+            renderChapterCards();
+
+            /*
+             * 選択状態の説明も更新します。
+             */
+            updateSelectedSummary();
+
+            /*
+             * ゲーム開始ボタンを押せるようにします。
+             */
+            element("start-button").disabled = false;
+
+            /*
+             * ボタン文字を通常状態に戻します。
+             */
+            element("start-button").textContent =
+                "ゲーム開始";
+
+            /*
+             * API接続成功と表示します。
+             */
+            setConnectionStatus(
+                "ready",
+                "API接続OK"
+            );
+
+        } catch (error) {
+
+            /*
+             * 取得失敗時は章一覧を空にします。
+             */
+            list.replaceChildren();
+
+            /*
+             * エラーメッセージを入れるdivを作ります。
+             */
+            const message =
+                document.createElement("div");
+
+            /*
+             * 見た目用のクラスを設定します。
+             */
+            message.className = "empty-message";
+
+            /*
+             * エラー内容を表示します。
+             */
+            message.textContent =
+                error.message +
+                "。Spring Bootの起動状態を確認してください。";
+
+            /*
+             * エラーメッセージを画面へ追加します。
+             */
+            list.appendChild(message);
+
+            /*
+             * 問題が取れないためゲーム開始を禁止します。
+             */
+            element("start-button").disabled = true;
+
+            /*
+             * ボタンの文字も変更します。
+             */
+            element("start-button").textContent =
+                "章データを読み込めません";
+
+            /*
+             * API接続エラーとして表示します。
+             */
+            setConnectionStatus(
+                "error",
+                "API接続エラー"
+            );
+
+            /*
+             * バトル画面にもエラー内容を表示します。
+             */
+            element("effect-zone").textContent =
+                "章データの読み込みに失敗しました。";
+
+            /*
+             * 開発者ツールでも詳細を確認できるようにします。
+             */
+            console.error(
+                "章データの読み込みエラー:",
+                error
+            );
+        }
+    }
+
+
+    /* =========================================================
+       9. 章カードの描画
+       ========================================================= */
+
+    /*
+     * APIから取得した章情報を画面上のカードへ変換します。
+     */
+    function renderChapterCards() {
+
+        /*
+         * 章一覧を表示する領域を取得します。
+         */
+        const list = element("chapter-list");
+
+        /*
+         * 以前表示していたカードを全部削除します。
+         */
+        list.replaceChildren();
+
+        /*
+         * 章を1つずつカードに変換します。
+         */
+        availableChapters.forEach(chapter => {
+
+            /*
+             * 章番号を数値へ変換します。
+             */
+            const chapterNumber =
+                Number(chapter.chapter);
+
+            /*
+             * button要素としてカードを作ります。
+             */
+            const card =
+                document.createElement("button");
+
+            /*
+             * buttonの種類を通常ボタンにします。
+             */
+            card.type = "button";
+
+            /*
+             * CSS用クラスを設定します。
+             */
+            card.className = "chapter-card";
+
+            /*
+             * 現在選択中の章かどうかをアクセシビリティ属性へ保存します。
+             */
+            card.setAttribute(
+                "aria-pressed",
+                String(
+                    chapterNumber === selectedChapter
+                )
+            );
+
+            /*
+             * 章名と説明をまとめるspanを作ります。
+             */
+            const main =
+                document.createElement("span");
+
+            /*
+             * CSS用クラスを設定します。
+             */
+            main.className = "chapter-main";
+
+            /*
+             * 章タイトル用のspanを作ります。
+             */
+            const name =
+                document.createElement("span");
+
+            /*
+             * CSS用クラスを設定します。
+             */
+            name.className = "chapter-name";
+
+            /*
+             * APIから取得したタイトルを表示します。
+             */
+            name.textContent =
+                chapter.title ||
+                ("第" + chapterNumber + "章");
+
+            /*
+             * 模擬問題なら「模擬問題」タグを表示します。
+             */
+            if (chapter.isMock) {
+
+                /*
+                 * タグ用spanを作ります。
+                 */
+                const mockTag =
+                    document.createElement("span");
+
+                /*
+                 * CSSクラスを設定します。
+                 */
+                mockTag.className = "mock-tag";
+
+                /*
+                 * タグ文字を設定します。
+                 */
+                mockTag.textContent = "模擬問題";
+
+                /*
+                 * 章名の後ろにタグを追加します。
+                 */
+                name.appendChild(mockTag);
+            }
+
+            /*
+             * 章説明用のspanを作ります。
+             */
+            const description =
+                document.createElement("span");
+
+            /*
+             * CSSクラスを設定します。
+             */
+            description.className =
+                "chapter-description";
+
+            /*
+             * APIの説明を表示します。
+             */
+            description.textContent =
+                chapter.description ||
+                "Java Bronzeの学習問題";
+
+            /*
+             * 問題数表示用のspanを作ります。
+             */
+            const count =
+                document.createElement("span");
+
+            /*
+             * CSSクラスを設定します。
+             */
+            count.className = "chapter-count";
+
+            /*
+             * 問題数を表示します。
+             */
+            count.textContent =
+                String(chapter.questionCount ?? 0) +
+                "問";
+
+            /*
+             * 章名と説明をまとめます。
+             */
+            main.append(
+                name,
+                description
+            );
+
+            /*
+             * 章情報と問題数をカードへ追加します。
+             */
+            card.append(
+                main,
+                count
+            );
+
+            /*
+             * カードがクリックされたときの処理です。
+             */
+            card.addEventListener(
+                "click",
+                () => {
+
+                    /*
+                     * 選択された章番号を保存します。
+                     */
+                    selectedChapter =
+                        chapterNumber;
+
+                    /*
+                     * 選択状態を再描画します。
+                     */
+                    renderChapterCards();
+
+                    /*
+                     * 説明文も更新します。
+                     */
+                    updateSelectedSummary();
+
+                    /*
+                     * バトルメッセージを通常状態に戻します。
+                     */
+                    element("effect-zone").className =
+                        "effect-zone";
+
+                    /*
+                     * 選択した章を知らせます。
+                     */
+                    element("effect-zone").textContent =
+                        "第" +
+                        selectedChapter +
+                        "章を選択しました。問題数を選んで開始してください。";
+                }
+            );
+
+            /*
+             * 完成したカードを一覧へ追加します。
+             */
+            list.appendChild(card);
+        });
+    }
+
+
+    /* =========================================================
+       10. 選択状態の説明
+       ========================================================= */
+
+    /*
+     * 現在選択されている章と問題数を説明します。
+     */
+    function updateSelectedSummary() {
+
+        /*
+         * 現在の章情報を検索します。
+         */
+        const chapter =
+            availableChapters.find(
+                item =>
+                    Number(item.chapter) ===
+                    selectedChapter
+            );
+
+        /*
+         * 章タイトルがあれば使い、なければ第○章とします。
+         */
+        const title =
+            chapter
+                ? chapter.title
+                : "第" + selectedChapter + "章";
+
+        /*
+         * 現在の設定を画面へ表示します。
+         */
+        element("selected-summary").textContent =
+            title +
+            "から" +
+            selectedQuestionCount +
+            "問を出題します。1ステージは5問です。";
+    }
+
+
+    /* =========================================================
+       11. Stageテーマ切り替え
+       ========================================================= */
+
+    /*
+     * 現在のStageに合わせて、
+     * 背景・女子高生・Java忍者をまとめて切り替えます。
+     */
+    function applyStageTheme(stageNumber) {
+
+        /*
+         * Stage 1またはStage 2の設定を取得します。
+         */
+        const theme =
+            stageThemes[stageNumber] ||
+            stageThemes[1];
+
+        /*
+         * 現在のテーマを保存します。
+         */
+        activeStageTheme = theme;
+
+        /*
+         * 現在のStage番号も保存します。
+         */
+        currentStageNumber = stageNumber;
+
+        /*
+         * アリーナを取得します。
+         */
+        const arena =
+            element("arena");
+
+        /*
+         * Stage 1 / Stage 2 / fallbackのクラスをすべて削除します。
+         */
+        arena.classList.remove(
+            "stage-1",
+            "stage-2",
+            "stage-fallback"
+        );
+
+        /*
+         * Stage 1なら渋谷背景を設定します。
+         */
+        if (stageNumber === 1) {
+
+            /*
+             * Stage 1用CSSクラスを追加します。
+             */
+            arena.classList.add("stage-1");
+
+        /*
+         * Stage 2なら海背景を設定します。
+         */
+        } else if (stageNumber === 2) {
+
+            /*
+             * Stage 2用CSSクラスを追加します。
+             */
+            arena.classList.add("stage-2");
+
+        /*
+         * Stage 3以降は今後の拡張用にStage 1背景を使います。
+         */
+        } else {
+
+            /*
+             * 予備背景を設定します。
+             */
+            arena.classList.add("stage-fallback");
+        }
+
+        /*
+         * プレイヤー名を更新します。
+         */
+        element("player-name").textContent =
+            theme.playerName;
+
+        /*
+         * 敵名を更新します。
+         */
+        element("enemy-name").textContent =
+            theme.enemyName;
+
+        /*
+         * プレイヤーの通常画像を設定します。
+         */
+        element("player-image").src =
+            theme.playerReady;
+
+        /*
+         * 敵の通常画像を設定します。
+         */
+        element("enemy-image").src =
+            theme.enemyReady;
+
+        /*
+         * alt属性もStage情報に合わせます。
+         */
+        element("player-image").alt =
+            theme.playerName;
+
+        /*
+         * 敵のalt属性も更新します。
+         */
+        element("enemy-image").alt =
+            theme.enemyName;
+
+        /*
+         * アクセシビリティ用のaria-labelも更新します。
+         */
+        element("player-avatar")
+            .setAttribute(
+                "aria-label",
+                theme.playerName
+            );
+
+        /*
+         * 敵側のaria-labelも更新します。
+         */
+        element("enemy-avatar")
+            .setAttribute(
+                "aria-label",
+                theme.enemyName
+            );
+
+        /*
+         * ゲーム画面左上のStage表示を更新します。
+         */
+        element("arena-stage-label").textContent =
+            "STAGE " +
+            stageNumber +
+            " / " +
+            theme.name;
+
+        /*
+         * 右上のStage表示も更新します。
+         */
+        updateBattleStage(stageNumber);
+    }
+
+
+    /* =========================================================
+       12. バトル状態リセット
+       ========================================================= */
+
+    /*
+     * 新しいゲームを開始するときにスコアやHPなどを初期化します。
+     */
+    function resetBattle() {
+
+        /*
+         * 敵HPを5へ戻します。
+         */
+        currentHp = 5;
+
+        /*
+         * プレイヤーHPを3へ戻します。
+         */
+        currentPlayerHp = 3;
+
+        /*
+         * スコアを0へ戻します。
+         */
+        currentScore = 0;
+
+        /*
+         * コンボを0へ戻します。
+         */
+        currentCombo = 0;
+
+        /*
+         * クリアStage数を0へ戻します。
+         */
+        clearedStages = 0;
+
+        /*
+         * 現在Stageを1にします。
+         */
+        currentStageNumber = 1;
+
+        /*
+         * HP表示を更新します。
+         */
+        updateHpDisplay();
+
+        /*
+         * プレイヤーHP表示も更新します。
+         */
+        updatePlayerHpDisplay();
+
+        /*
+         * スコア表示を0へ戻します。
+         */
+        element("score-val").textContent = "0";
+
+        /*
+         * コンボ表示を0へ戻します。
+         */
+        element("combo-val").textContent = "0";
+
+        /*
+         * コンボ表示もゲーム画面へ反映します。
+         */
+        element("arena-combo").textContent =
+            "COMBO × 0";
+
+        /*
+         * エフェクト表示を通常状態へ戻します。
+         */
+        element("effect-zone").className =
+            "effect-zone";
+
+        /*
+         * ゲーム開始メッセージを表示します。
+         */
+        element("effect-zone").textContent =
+            "⚔️ バトル開始！問題に回答してください。";
+
+        /*
+         * バトル状態を開始状態にします。
+         */
+        element("battle-state").textContent =
+            "BATTLE START";
+
+        /*
+         * Stage 1のテーマを適用します。
+         */
+        applyStageTheme(1);
+
+        /*
+         * キャラクターのアニメーション用クラスをリセットします。
+         */
+        resetCharacterImages();
+    }
+
+
+    /* =========================================================
+       13. ゲーム開始
+       ========================================================= */
+
+    /*
+     * 選択した章から問題を取得し、ゲーム画面へ移動します。
+     */
+    async function startGame() {
+
+        /*
+         * ゲーム開始ボタンを取得します。
+         */
+        const startButton =
+            element("start-button");
+
+        /*
+         * 二重クリックを防止します。
+         */
+        startButton.disabled = true;
+
+        /*
+         * 読み込み中の表示へ変更します。
+         */
+        startButton.textContent =
+            "問題を読み込み中...";
+
+        /*
+         * 読み込みメッセージを表示します。
+         */
+        element("effect-zone").className =
+            "effect-zone";
+
+        /*
+         * 問題取得中であることを知らせます。
+         */
+        element("effect-zone").textContent =
+            "📚 問題データを読み込んでいます...";
+
+        try {
+
+            /*
+             * 以前のタイマーが残っていれば停止します。
+             */
+            stopQuestionTimer();
+
+            /*
+             * 通常ゲームモードにします。
+             */
+            isReviewMode = false;
+
+            /*
+             * 間違えた問題一覧を新しいゲーム開始時に空にします。
+             */
+            wrongQuestions = [];
+
+            /*
+             * Spring Bootの問題API URLを作ります。
+             *
+             * Chapter 1なら、
+             * /api/questions/chapter/1
+             * のようになります。
+             */
+            const url =
+                "/api/questions/chapter/" +
+                encodeURIComponent(selectedChapter) +
+                "?genre=BRONZE&limit=" +
+                encodeURIComponent(selectedQuestionCount);
+
+            /*
+             * 問題APIへアクセスします。
+             */
+            const response =
+                await fetch(url);
+
+            /*
+             * HTTPエラーなら例外を発生させます。
+             */
+            if (!response.ok) {
+
+                /*
+                 * 最初のエラーメッセージを作ります。
+                 */
+                let message =
+                    "問題データを取得できませんでした（HTTP " +
+                    response.status +
+                    "）";
+
+                try {
+
+                    /*
+                     * Spring Bootから返されたエラーJSONを確認します。
+                     */
+                    const errorBody =
+                        await response.json();
+
+                    /*
+                     * messageがあれば画面に使います。
+                     */
+                    if (errorBody.message) {
+                        message =
+                            errorBody.message;
+                    }
+
+                } catch (_) {
+
+                    /*
+                     * JSONでない場合は最初のメッセージを使用します。
+                     */
+                }
+
+                /*
+                 * エラーを呼び出し元へ渡します。
+                 */
+                throw new Error(message);
+            }
+
+            /*
+             * JSONをJavaScriptオブジェクトへ変換します。
+             */
+            const data =
+                await response.json();
+
+            /*
+             * 配列でなければエラーにします。
+             */
+            if (
+                !Array.isArray(data) ||
+                data.length === 0
+            ) {
+                throw new Error(
+                    "選択した章に問題がありません"
+                );
+            }
+
+            /*
+             * questionIdとchoicesが存在するか確認します。
+             */
+            if (
+                data.some(
+                    question =>
+                        !question.questionId ||
+                        !Array.isArray(question.choices)
+                )
+            ) {
+                throw new Error(
+                    "問題データの形式が正しくありません"
+                );
+            }
+
+            /*
+             * 選択した問題数を超えないように切り取ります。
+             */
+            localQuestions =
+                data.slice(
+                    0,
+                    selectedQuestionCount
+                );
+
+            /*
+             * 問題番号を最初に戻します。
+             */
+            currentQuestionIndex = 0;
+
+            /*
+             * 回答ロックを解除します。
+             */
+            answerLocked = false;
+
+            /*
+             * 回答処理済みフラグを解除します。
+             */
+            answerResultHandled = false;
+
+            /*
+             * 次問題処理済みフラグも解除します。
+             */
+            advanceHandled = false;
+
+            /*
+             * バトル状態を初期化します。
+             */
+            resetBattle();
+
+            /*
+             * 章選択画面を非表示にします。
+             */
+            element("home-view")
+                .classList
+                .remove("active");
+
+            /*
+             * クイズ画面を表示します。
+             */
+            element("quiz-view")
+                .classList
+                .add("active");
+
+            /*
+             * 問題部分を表示します。
+             */
+            element("quiz-content")
+                .classList
+                .remove("hidden");
+
+            /*
+             * Stage失敗画面を非表示にします。
+             */
+            element("stage-failed-panel")
+                .classList
+                .add("hidden");
+
+            /*
+             * 通常結果画面を非表示にします。
+             */
+            element("game-result-panel")
+                .classList
+                .add("hidden");
+
+            /*
+             * 復習結果画面も非表示にします。
+             */
+            element("review-result-panel")
+                .classList
+                .add("hidden");
+
+            /*
+             * 最初の問題を表示します。
+             */
+            renderQuestion();
+
+        } catch (error) {
+
+            /*
+             * エラー時は赤いメッセージを表示します。
+             */
+            element("effect-zone").className =
+                "effect-zone miss";
+
+            /*
+             * エラー内容を表示します。
+             */
+            element("effect-zone").textContent =
+                "⚠️ " +
+                error.message;
+
+            /*
+             * 開発者ツールにも出力します。
+             */
+            console.error(
+                "ゲーム開始エラー:",
+                error
+            );
+
+        } finally {
+
+            /*
+             * API処理が終わったら開始ボタンを再び押せるようにします。
+             */
+            startButton.disabled = false;
+
+            /*
+             * ボタン文字を元に戻します。
+             */
+            startButton.textContent =
+                "ゲーム開始";
+        }
+    }
+
+
+    /* =========================================================
+       14. 問題表示
+       ========================================================= */
+
+    /*
+     * currentQuestionIndexに対応する問題を画面へ表示します。
+     */
+    function renderQuestion() {
+
+        /*
+         * 新しい問題なので回答処理済みフラグを解除します。
+         */
+        answerResultHandled = false;
+
+        /*
+         * 新しい問題なので次問題処理済みフラグも解除します。
+         */
+        advanceHandled = false;
+
+        /*
+         * 現在の問題を取得します。
+         */
+        const question =
+            localQuestions[currentQuestionIndex];
+
+        /*
+         * 問題が存在しなければゲーム終了です。
+         */
+        if (!question) {
+
+            /*
+             * 結果画面へ移動します。
+             */
+            finishGame();
+
+            /*
+             * ここで処理を終了します。
+             */
+            return;
+        }
+
+        /*
+         * 回答できる状態にします。
+         */
+        answerLocked = false;
+
+        /*
+         * 問題部分を表示します。
+         */
+        element("quiz-content")
+            .classList
+            .remove("hidden");
+
+        /*
+         * Stage失敗パネルを隠します。
+         */
+        element("stage-failed-panel")
+            .classList
+            .add("hidden");
+
+        /*
+         * 通常結果パネルを隠します。
+         */
+        element("game-result-panel")
+            .classList
+            .add("hidden");
+
+        /*
+         * 復習結果パネルも隠します。
+         */
+        element("review-result-panel")
+            .classList
+            .add("hidden");
+
+        /*
+         * 問題カテゴリと難易度を表示します。
+         */
+        element("question-label").textContent =
+            (question.checklist || "JAVA BRONZE") +
+            (
+                question.difficulty
+                    ? " ・ " + question.difficulty
+                    : ""
+            );
+
+        /*
+         * 問題文を表示します。
+         */
+        element("question-text").textContent =
+            question.questionText ||
+            "問題文が登録されていません。";
+
+
+        /* -----------------------------------------------------
+           Javaコード表示
+           ----------------------------------------------------- */
+
+        /*
+         * コード表示用のpre要素を取得します。
+         */
+        const code =
+            element("question-code");
+
+        /*
+         * コードが存在するか確認します。
+         */
+        if (
+            question.codeBlock &&
+            String(question.codeBlock).trim() !== ""
+        ) {
+
+            /*
+             * コード本文を設定します。
+             */
+            code.textContent =
+                question.codeBlock;
+
+            /*
+             * 改行単位でコードを分割します。
+             */
+            const codeLines =
+                code.textContent.split(
+                    /\r\n|\r|\n/
+                );
+
+            /*
+             * コードの行数を取得します。
+             */
+            const lineCount =
+                codeLines.length;
+
+            /*
+             * 一番長い行の文字数を取得します。
+             */
+            const longestLine =
+                Math.max(
+                    0,
+                    ...codeLines.map(
+                        line => line.length
+                    )
+                );
+
+            /*
+             * 通常時の文字サイズです。
+             */
+            let codeFontSize = 12;
+
+            /*
+             * 通常時の行間です。
+             */
+            let codeLineHeight = 1.3;
+
+            /*
+             * 50行以上ならかなり小さくします。
+             */
+            if (lineCount >= 50) {
+
+                /*
+                 * 長大なコードを画面に収めるためのサイズです。
+                 */
+                codeFontSize = 7.5;
+
+                /*
+                 * 行間も縮めます。
+                 */
+                codeLineHeight = 1.0;
+
+            /*
+             * 38行以上の場合です。
+             */
+            } else if (lineCount >= 38) {
+
+                /*
+                 * 文字サイズを小さくします。
+                 */
+                codeFontSize = 8;
+
+                /*
+                 * 行間を縮めます。
+                 */
+                codeLineHeight = 1.05;
+
+            /*
+             * 28行以上の場合です。
+             */
+            } else if (lineCount >= 28) {
+
+                /*
+                 * さらに少し縮めます。
+                 */
+                codeFontSize = 8.75;
+
+                /*
+                 * 行間を調整します。
+                 */
+                codeLineHeight = 1.1;
+
+            /*
+             * 20行以上の場合です。
+             */
+            } else if (lineCount >= 20) {
+
+                /*
+                 * 文字サイズを調整します。
+                 */
+                codeFontSize = 9.5;
+
+                /*
+                 * 行間を調整します。
+                 */
+                codeLineHeight = 1.15;
+
+            /*
+             * 14行以上の場合です。
+             */
+            } else if (lineCount >= 14) {
+
+                /*
+                 * 文字サイズを少し縮めます。
+                 */
+                codeFontSize = 10.5;
+
+                /*
+                 * 行間を調整します。
+                 */
+                codeLineHeight = 1.2;
+
+            /*
+             * 10行以上の場合です。
+             */
+            } else if (lineCount >= 10) {
+
+                /*
+                 * 少しだけ縮めます。
+                 */
+                codeFontSize = 11;
+
+                /*
+                 * 行間を調整します。
+                 */
+                codeLineHeight = 1.25;
+            }
+
+            /*
+             * 横方向に長すぎるコードも縮めます。
+             */
+            if (longestLine >= 90) {
+
+                /*
+                 * 最低7.25pxを維持しながら小さくします。
+                 */
+                codeFontSize =
+                    Math.max(
+                        7.25,
+                        codeFontSize - 0.75
+                    );
+            }
+
+            /*
+             * 小さい画面ではさらに少し縮めます。
+             */
+            if (window.innerWidth <= 560) {
+
+                /*
+                 * 最低7.25pxを維持します。
+                 */
+                codeFontSize =
+                    Math.max(
+                        7.25,
+                        codeFontSize - 0.75
+                    );
+            }
+
+            /*
+             * 計算した文字サイズを適用します。
+             */
+            code.style.fontSize =
+                codeFontSize + "px";
+
+            /*
+             * 計算した行間を適用します。
+             */
+            code.style.lineHeight =
+                String(codeLineHeight);
+
+            /*
+             * コードが長い場合はlong-code-modeを有効にします。
+             */
+            element("quiz-content")
+                .classList
+                .toggle(
+                    "long-code-mode",
+                    lineCount >= 14 ||
+                    longestLine >= 90
+                );
+
+            /*
+             * コードを表示します。
+             */
+            code.classList.remove("hidden");
+
+        } else {
+
+            /*
+             * コードがない場合は中身を空にします。
+             */
+            code.textContent = "";
+
+            /*
+             * コード枠を非表示にします。
+             */
+            code.classList.add("hidden");
+
+            /*
+             * JavaScriptで設定した文字サイズをリセットします。
+             */
+            code.style.fontSize = "";
+
+            /*
+             * JavaScriptで設定した行間もリセットします。
+             */
+            code.style.lineHeight = "";
+
+            /*
+             * 長いコードモードも解除します。
+             */
+            element("quiz-content")
+                .classList
+                .remove("long-code-mode");
+        }
+
+
+        /* -----------------------------------------------------
+           Stage計算
+           ----------------------------------------------------- */
+
+        /*
+         * 5問を1Stageとして現在Stageを計算します。
+         *
+         * 0～4問目 → Stage 1
+         * 5～9問目 → Stage 2
+         * 10～14問目 → Stage 3
+         */
+        const stageNumber =
+            Math.floor(
+                currentQuestionIndex / 5
+            ) + 1;
+
+        /*
+         * Stage内で何問目なのかを計算します。
+         */
+        const inStageQuestion =
+            (currentQuestionIndex % 5) + 1;
+
+        /*
+         * 左側のStage情報を更新します。
+         */
+        element("stage-info").textContent =
+            "第" +
+            question.chapter +
+            "章 / Stage " +
+            stageNumber +
+            " / 第" +
+            inStageQuestion +
+            "問目（全" +
+            localQuestions.length +
+            "問）";
+
+        /*
+         * 通常モードではStageごとにテーマを切り替えます。
+         *
+         * 復習モードでは、復習問題だけを連続して出題するため、
+         * 画面上のStageテーマは現在のStageを維持します。
+         */
+        if (!isReviewMode) {
+
+            /*
+             * 新しいStageになった場合だけテーマを切り替えます。
+             */
+            if (currentStageNumber !== stageNumber) {
+                applyStageTheme(stageNumber);
+            }
+
+            /*
+             * Stage 1開始時など、まだテーマが設定されていない場合も適用します。
+             */
+            if (!activeStageTheme) {
+                applyStageTheme(stageNumber);
+            }
+        }
+
+        /*
+         * 右側のStage表示を更新します。
+         */
+        updateBattleStage(stageNumber);
+
+
+        /* -----------------------------------------------------
+           選択肢表示
+           ----------------------------------------------------- */
+
+        /*
+         * 問題の選択肢を取得します。
+         */
+        const choices =
+            Array.isArray(question.choices)
+                ? question.choices
+                : [];
+
+        /*
+         * 画面上の選択肢ボタンをすべて取得します。
+         */
+        const buttons =
+            document.querySelectorAll(
+                ".choice-button"
+            );
+
+        /*
+         * 各ボタンへ選択肢を設定します。
+         */
+        buttons.forEach(
+            (button, index) => {
+
+                /*
+                 * APIの同じ位置の選択肢を取得します。
+                 */
+                const choice =
+                    choices[index];
+
+                /*
+                 * 選択肢本文を表示する要素を取得します。
+                 */
+                const text =
+                    button.querySelector(
+                        ".choice-text"
+                    );
+
+                /*
+                 * 選択肢が存在しなければボタンを隠します。
+                 */
+                if (
+                    typeof choice !== "string" ||
+                    choice.trim() === ""
+                ) {
+
+                    /*
+                     * ボタンを非表示にします。
+                     */
+                    button.classList.add("hidden");
+
+                    /*
+                     * 押せないようにします。
+                     */
+                    button.disabled = true;
+
+                    /*
+                     * 古い文字を消します。
+                     */
+                    text.textContent = "";
+
+                } else {
+
+                    /*
+                     * 選択肢を表示します。
+                     */
+                    button.classList.remove("hidden");
+
+                    /*
+                     * 回答可能にします。
+                     */
+                    button.disabled = false;
+
+                    /*
+                     * 選択肢本文を設定します。
+                     */
+                    text.textContent = choice;
+                }
+            }
+        );
+
+
+        /*
+         * 前の問題のアニメーションをリセットします。
+         */
+        resetCharacterImages();
+
+        /*
+         * 現在の問題の開始メッセージを表示します。
+         */
+        element("effect-zone").className =
+            "effect-zone";
+
+        /*
+         * 復習モードなら復習中であることを表示します。
+         */
+        if (isReviewMode) {
+
+            /*
+             * 復習問題の開始メッセージです。
+             */
+            element("effect-zone").textContent =
+                "🔁 復習問題 " +
+                (currentQuestionIndex + 1) +
+                " / " +
+                localQuestions.length +
+                "！回答を選択してください。";
+
+        } else {
+
+            /*
+             * 通常ゲームの開始メッセージです。
+             */
+            element("effect-zone").textContent =
+                "⚔️ 第" +
+                inStageQuestion +
+                "問目！回答を選択してください。";
+        }
+
+        /*
+         * 問題に設定された制限時間を開始します。
+         */
+        startQuestionTimer(
+            question.timeLimitSeconds
+        );
+    }
+
+
+    /* =========================================================
+       15. 問題タイマー
+       ========================================================= */
+
+    /*
+     * 問題ごとのカウントダウンを開始します。
+     */
+    function startQuestionTimer(seconds) {
+
+        /*
+         * 以前のタイマーを停止します。
+         */
+        stopQuestionTimer();
+
+        /*
+         * APIの値を数値に変換します。
+         * 値が不正なら30秒を使います。
+         */
+        timerDuration =
+            Math.max(
+                1,
+                Number(seconds) || 30
+            );
+
+        /*
+         * 残り時間を初期化します。
+         */
+        timeRemaining =
+            timerDuration;
+
+        /*
+         * 画面へタイマーを表示します。
+         */
+        updateTimerDisplay();
+
+        /*
+         * 1秒ごとにカウントダウンします。
+         */
+        timerInterval =
+            window.setInterval(
+                () => {
+
+                    /*
+                     * 回答処理中なら時間を減らしません。
+                     */
+                    if (answerLocked) {
+                        return;
+                    }
+
+                    /*
+                     * 残り時間を1秒減らします。
+                     */
+                    timeRemaining -= 1;
+
+                    /*
+                     * 表示を更新します。
+                     */
+                    updateTimerDisplay();
+
+                    /*
+                     * 0秒になったら時間切れです。
+                     */
+                    if (timeRemaining <= 0) {
+
+                        /*
+                         * タイマーを停止します。
+                         */
+                        stopQuestionTimer();
+
+                        /*
+                         * まだ回答処理をしていなければ時間切れ処理を行います。
+                         */
+                        if (!answerLocked) {
+
+                            /*
+                             * 回答をロックします。
+                             */
+                            answerLocked = true;
+
+                            /*
+                             * 選択肢を押せなくします。
+                             */
+                            setChoiceButtonsDisabled(true);
+
+                            /*
+                             * 時間切れを不正解として処理します。
+                             */
+                            displayAnswerResult(
+                                {
+                                    correct: false,
+                                    explanation:
+                                        "制限時間内に回答できませんでした。"
+                                },
+                                true
+                            );
+                        }
+                    }
+                },
+                1000
+            );
+    }
+
+
+    /*
+     * 現在の問題タイマーを停止します。
+     */
+    function stopQuestionTimer() {
+
+        /*
+         * タイマーIDが存在する場合だけ停止します。
+         */
+        if (timerInterval !== null) {
+
+            /*
+             * setIntervalを停止します。
+             */
+            window.clearInterval(
+                timerInterval
+            );
+
+            /*
+             * タイマーIDを空にします。
+             */
+            timerInterval = null;
+        }
+    }
+
+
+    /*
+     * タイマー表示を更新します。
+     */
+    function updateTimerDisplay() {
+
+        /*
+         * 残り秒数を表示します。
+         */
+        element("timer-value").textContent =
+            timeRemaining + "秒";
+
+        /*
+         * 残り時間を100%基準で計算します。
+         */
+        const percentage =
+            timerDuration > 0
+                ? Math.max(
+                    0,
+                    (timeRemaining /
+                        timerDuration) *
+                    100
+                )
+                : 0;
+
+        /*
+         * タイマーの棒を取得します。
+         */
+        const fill =
+            element("timer-fill");
+
+        /*
+         * 棒の幅を残り時間に合わせます。
+         */
+        fill.style.width =
+            percentage + "%";
+
+        /*
+         * 残り5秒以下ならwarningクラスを付けます。
+         */
+        fill.classList.toggle(
+            "warning",
+            timeRemaining <= 5
+        );
+    }
+
+
+    /* =========================================================
+       16. 選択肢ボタンのロック
+       ========================================================= */
+
+    /*
+     * 回答処理中に同じ問題へ複数回答されないようにします。
+     */
+    function setChoiceButtonsDisabled(disabled) {
+
+        /*
+         * すべての選択肢ボタンを取得します。
+         */
+        document
+            .querySelectorAll(".choice-button")
+            .forEach(button => {
+
+                /*
+                 * 非表示ではないボタンだけをロックします。
+                 */
+                if (
+                    !button.classList.contains(
+                        "hidden"
+                    )
+                ) {
+
+                    /*
+                     * disabledを設定します。
+                     */
+                    button.disabled =
+                        disabled;
+                }
+            });
+    }
+
+
+    /* =========================================================
+       17. 回答送信
+       ========================================================= */
+
+    /*
+     * 選択された回答をSpring Bootの正誤判定APIへ送ります。
+     */
+    async function checkAnswer(selectedIndex) {
+
+        /*
+         * すでに処理中なら何もしません。
+         */
+        if (answerLocked) {
+            return;
+        }
+
+        /*
+         * 現在の問題を取得します。
+         */
+        const question =
+            localQuestions[currentQuestionIndex];
+
+        /*
+         * 問題が存在しなければ終了します。
+         */
+        if (!question) {
+            return;
+        }
+
+        /*
+         * 選択された選択肢本文を取得します。
+         */
+        const selectedChoice =
+            question.choices[selectedIndex];
+
+        /*
+         * 選択肢本文が文字列でなければ終了します。
+         */
+        if (
+            typeof selectedChoice !==
+            "string"
+        ) {
+            return;
+        }
+
+        /*
+         * 二重回答を防ぎます。
+         */
+        answerLocked = true;
+
+        /*
+         * タイマーを止めます。
+         */
+        stopQuestionTimer();
+
+        /*
+         * 選択肢ボタンを無効化します。
+         */
+        setChoiceButtonsDisabled(true);
+
+        /*
+         * 判定中メッセージを表示します。
+         */
+        element("effect-zone").className =
+            "effect-zone";
+
+        /*
+         * サーバー判定中であることを表示します。
+         */
+        element("effect-zone").textContent =
+            "回答を判定しています...";
+
+        try {
+
+            /*
+             * Spring Bootの正誤判定APIへPOSTします。
+             */
+            const response =
+                await fetch(
+                    "/api/answers",
+                    {
+                        /*
+                         * データを送信するのでPOSTを使います。
+                         */
+                        method: "POST",
+
+                        /*
+                         * JSONとして送信することを伝えます。
+                         */
+                        headers: {
+                            "Content-Type":
+                                "application/json; charset=utf-8"
+                        },
+
+                        /*
+                         * 問題IDと選択した回答をJSONで送信します。
+                         */
+                        body: JSON.stringify(
+                            {
+                                questionId:
+                                    question.questionId,
+                                selectedChoice:
+                                    selectedChoice
+                            }
+                        )
+                    }
+                );
+
+            /*
+             * APIのJSON結果を受け取ります。
+             */
+            let result;
+
+            try {
+
+                /*
+                 * レスポンスをJSONとして読み込みます。
+                 */
+                result =
+                    await response.json();
+
+            } catch (_) {
+
+                /*
+                 * JSONでなければエラーにします。
+                 */
+                throw new Error(
+                    "サーバーから正しい形式の回答が返されませんでした"
+                );
+            }
+
+            /*
+             * HTTPエラーならエラーにします。
+             */
+            if (!response.ok) {
+
+                /*
+                 * サーバーのmessageがあれば使います。
+                 */
+                throw new Error(
+                    result.message ||
+                    "正誤判定に失敗しました（HTTP " +
+                    response.status +
+                    "）"
+                );
+            }
+
+            /*
+             * correctがbooleanであることを確認します。
+             */
+            if (
+                typeof result.correct !==
+                "boolean"
+            ) {
+
+                /*
+                 * 正しいAPIレスポンスでないためエラーにします。
+                 */
+                throw new Error(
+                    "正誤判定APIの応答にcorrectがありません"
+                );
+            }
+
+            /*
+             * 正誤結果をゲームへ反映します。
+             */
+            displayAnswerResult(
+                result,
+                false
+            );
+
+        } catch (error) {
+
+            /*
+             * 通信エラーなら再回答可能にします。
+             */
+            answerLocked = false;
+
+            /*
+             * 選択肢も再び押せるようにします。
+             */
+            setChoiceButtonsDisabled(false);
+
+            /*
+             * エラー表示を赤くします。
+             */
+            element("effect-zone").className =
+                "effect-zone miss";
+
+            /*
+             * エラー内容を表示します。
+             */
+            element("effect-zone").textContent =
+                "⚠️ 回答判定に失敗しました。もう一度選択してください。\n" +
+                error.message;
+
+            /*
+             * 開発者ツールにも出力します。
+             */
+            console.error(
+                "回答判定エラー:",
+                error
+            );
+
+            /*
+             * 通信復旧後に再回答できるようタイマーを再開します。
+             */
+            startQuestionTimer(
+                Math.max(
+                    timeRemaining,
+                    10
+                )
+            );
+        }
+    }
+
+
+    /* =========================================================
+       18. 正解・不正解処理
+       ========================================================= */
+
+    /*
+     * サーバーから返ってきた正誤判定をゲームへ反映します。
+     */
+    function displayAnswerResult(
+        result,
+        timedOut
+    ) {
+
+        /*
+         * 同じ問題が二重処理されるのを防ぎます。
+         */
+        if (answerResultHandled) {
+            return;
+        }
+
+        /*
+         * 処理済みにします。
+         */
+        answerResultHandled = true;
+
+        /*
+         * タイマーを停止します。
+         */
+        stopQuestionTimer();
+
+        /*
+         * 選択肢を無効化します。
+         */
+        setChoiceButtonsDisabled(true);
+
+        /*
+         * メッセージ表示領域を取得します。
+         */
+        const effect =
+            element("effect-zone");
+
+        /*
+         * プレイヤー画像領域を取得します。
+         */
+        const player =
+            element("player-avatar");
+
+        /*
+         * 敵画像領域を取得します。
+         */
+        const enemy =
+            element("enemy-avatar");
+
+        /*
+         * 現在のアニメーション用クラスを削除します。
+         */
+        player.classList.remove(
+            "player-attack",
+            "player-miss"
+        );
+
+        /*
+         * 敵側の被弾クラスも削除します。
+         */
+        enemy.classList.remove(
+            "enemy-hit"
+        );
+
+        /*
+         * 正解かどうかを判定します。
+         */
+        if (result.correct === true) {
+
+            /* -------------------------------------------------
+               正解処理
+               ------------------------------------------------- */
+
+            /*
+             * 敵HPが残っている場合だけ1減らします。
+             */
+            if (currentHp > 0) {
+
+                /*
+                 * 現在のHPブロックを空にします。
+                 */
+                element(
+                    "hp" + currentHp
+                ).classList.add(
+                    "empty"
+                );
+
+                /*
+                 * 敵HPを1減らします。
+                 */
+                currentHp -= 1;
+            }
+
+            /*
+             * 正解なので100点追加します。
+             */
+            currentScore += 100;
+
+            /*
+             * コンボを1増やします。
+             */
+            currentCombo += 1;
+
+            /*
+             * スコア表示を更新します。
+             */
+            element("score-val").textContent =
+                String(currentScore);
+
+            /*
+             * コンボ表示を更新します。
+             */
+            element("combo-val").textContent =
+                String(currentCombo);
+
+            /*
+             * ゲーム画面上のコンボ表示も更新します。
+             */
+            element("arena-combo").textContent =
+                "COMBO × " +
+                currentCombo;
+
+            /*
+             * 敵HP表示を更新します。
+             */
+            updateHpDisplay();
+
+
+            /*
+             * 女子高生を攻撃画像へ変更します。
+             */
+            setPlayerAttackImage();
+
+            /*
+             * プレイヤーの攻撃アニメーションを再生します。
+             */
+            restartAnimationClass(
+                player,
+                "player-attack"
+            );
+
+
+            /*
+             * 約0.25秒後に手裏剣を発射します。
+             */
+            window.setTimeout(
+                () => {
+
+                    /*
+                     * 手裏剣を生成します。
+                     */
+                    createShuriken();
+
+                    /*
+                     * 手裏剣が飛んでいった後、
+                     * 敵を被弾状態へ変更します。
+                     */
+                    window.setTimeout(
+                        () => {
+
+                            /*
+                             * 敵を被弾画像へ変更します。
+                             */
+                            setEnemyHitImage();
+
+                            /*
+                             * 敵の被弾アニメーションを再生します。
+                             */
+                            restartAnimationClass(
+                                enemy,
+                                "enemy-hit"
+                            );
+
+                            /*
+                             * 着弾した場所に火花を表示します。
+                             */
+                            createHitSpark();
+
+                        },
+                        430
+                    );
+
+                },
+                220
+            );
+
+
+            /*
+             * 正解メッセージを表示します。
+             */
+            effect.className =
+                "effect-zone success";
+
+            /*
+             * 解説があれば表示します。
+             */
+            effect.textContent =
+                "💥 正解！手裏剣が命中！敵に1ダメージ！\n" +
+                (
+                    result.explanation ||
+                    "よくできました！"
+                );
+
+        } else {
+
+            /* -------------------------------------------------
+               不正解処理
+               ------------------------------------------------- */
+
+            /*
+             * 不正解なのでコンボを0に戻します。
+             */
+            currentCombo = 0;
+
+            /*
+             * コンボ表示を更新します。
+             */
+            element("combo-val").textContent =
+                "0";
+
+            /*
+             * ゲーム画面のコンボ表示も更新します。
+             */
+            element("arena-combo").textContent =
+                "COMBO × 0";
+
+
+            /*
+             * 通常プレイ中のみ間違えた問題として保存します。
+             *
+             * 復習モード中に間違えても、
+             * 復習リストへ同じ問題を無限追加しないようにします。
+             */
+            if (!isReviewMode) {
+
+                /*
+                 * まだ同じ問題が保存されていないか確認します。
+                 */
+                const alreadySaved =
+                    wrongQuestions.some(
+                        wrongQuestion =>
+                            String(
+                                wrongQuestion.questionId
+                            ) ===
+                            String(
+                                questionIdOfCurrentQuestion()
+                            )
+                    );
+
+                /*
+                 * 初回の間違いなら復習配列へ追加します。
+                 */
+                if (!alreadySaved) {
+
+                    /*
+                     * 現在の問題をコピーして保存します。
+                     */
+                    wrongQuestions.push(
+                        {
+                            ...localQuestions[
+                                currentQuestionIndex
+                            ]
+                        }
+                    );
+                }
+            }
+
+
+            /*
+             * 不正解時はプレイヤーHPを1減らします。
+             */
+            if (currentPlayerHp > 0) {
+
+                /*
+                 * プレイヤーHPを1減らします。
+                 */
+                currentPlayerHp -= 1;
+            }
+
+            /*
+             * プレイヤーHP表示を更新します。
+             */
+            updatePlayerHpDisplay();
+
+            /*
+             * プレイヤーへMISSアニメーションを付けます。
+             */
+            restartAnimationClass(
+                player,
+                "player-miss"
+            );
+
+            /*
+             * 不正解メッセージを赤色で表示します。
+             */
+            effect.className =
+                "effect-zone miss";
+
+            /*
+             * 時間切れかどうかで表示を分けます。
+             */
+            if (timedOut) {
+
+                /*
+                 * 時間切れのメッセージです。
+                 */
+                effect.textContent =
+                    "⌛ TIME UP！MISS！\n" +
+                    "PLAYER HP -1\n" +
+                    (
+                        result.explanation ||
+                        "時間切れです。"
+                    );
+
+            } else {
+
+                /*
+                 * 通常の不正解メッセージです。
+                 */
+                effect.textContent =
+                    "❌ MISS！ PLAYER HP -1\n" +
+                    "正解：" +
+                    (
+                        result.correctChoiceText ||
+                        "確認できません"
+                    ) +
+                    "\n" +
+                    (
+                        result.selectedChoiceExplanation ||
+                        result.explanation ||
+                        "解説を確認して次へ進みましょう。"
+                    );
+            }
+        }
+
+
+        /*
+         * 回答演出が見えるよう1.6秒待ってから次へ進みます。
+         */
+        window.setTimeout(
+            advanceAfterQuestion,
+            1600
+        );
+    }
+
+
+    /* =========================================================
+       19. 現在問題のID取得
+       ========================================================= */
+
+    /*
+     * 復習配列へ問題を保存するときに使うIDを取得します。
+     */
+    function questionIdOfCurrentQuestion() {
+
+        /*
+         * 現在の問題を取得します。
+         */
+        const question =
+            localQuestions[currentQuestionIndex];
+
+        /*
+         * 問題が存在しなければ空文字を返します。
+         */
+        if (!question) {
+            return "";
+        }
+
+        /*
+         * questionIdを返します。
+         */
+        return question.questionId;
+    }
+
+
+    /* =========================================================
+       20. CSSアニメーションを再実行
+       ========================================================= */
+
+    /*
+     * 同じCSSアニメーションを連続で再生するための処理です。
+     */
+    function restartAnimationClass(
+        target,
+        className
+    ) {
+
+        /*
+         * まず対象クラスを削除します。
+         */
+        target.classList.remove(
+            className
+        );
+
+        /*
+         * ブラウザに一度レイアウト計算をさせることで、
+         * 同じアニメーションでも再度開始できるようにします。
+         */
+        void target.offsetWidth;
+
+        /*
+         * もう一度クラスを追加します。
+         */
+        target.classList.add(
+            className
+        );
+    }
+
+
+    /* =========================================================
+       21. 女子高生の画像切り替え
+       ========================================================= */
+
+    /*
+     * 女子高生を攻撃ポーズへ変更します。
+     */
+    function setPlayerAttackImage() {
+
+        /*
+         * 現在のStageテーマを取得します。
+         */
+        const theme =
+            activeStageTheme ||
+            stageThemes[1];
+
+        /*
+         * 攻撃用画像へ変更します。
+         */
+        element("player-image").src =
+            theme.playerAttack;
+    }
+
+
+    /*
+     * 女子高生を通常ポーズへ戻します。
+     */
+    function setPlayerReadyImage() {
+
+        /*
+         * 現在のStageテーマを取得します。
+         */
+        const theme =
+            activeStageTheme ||
+            stageThemes[1];
+
+        /*
+         * 通常画像へ戻します。
+         */
+        element("player-image").src =
+            theme.playerReady;
+    }
+
+
+    /* =========================================================
+       22. Java忍者の画像切り替え
+       ========================================================= */
+
+    /*
+     * Java忍者を被弾ポーズへ変更します。
+     */
+    function setEnemyHitImage() {
+
+        /*
+         * 現在のStageテーマを取得します。
+         */
+        const theme =
+            activeStageTheme ||
+            stageThemes[1];
+
+        /*
+         * 被弾画像へ変更します。
+         */
+        element("enemy-image").src =
+            theme.enemyHit;
+    }
+
+
+    /*
+     * Java忍者を通常ポーズへ戻します。
+     */
+    function setEnemyReadyImage() {
+
+        /*
+         * 現在のStageテーマを取得します。
+         */
+        const theme =
+            activeStageTheme ||
+            stageThemes[1];
+
+        /*
+         * 通常画像へ戻します。
+         */
+        element("enemy-image").src =
+            theme.enemyReady;
+    }
+
+
+    /* =========================================================
+       23. キャラクター画像リセット
+       ========================================================= */
+
+    /*
+     * 前の問題で残った攻撃・被弾状態をリセットします。
+     */
+    function resetCharacterImages() {
+
+        /*
+         * プレイヤーを通常画像へ戻します。
+         */
+        setPlayerReadyImage();
+
+        /*
+         * 敵を通常画像へ戻します。
+         */
+        setEnemyReadyImage();
+
+        /*
+         * プレイヤーのアニメーションクラスを削除します。
+         */
+        element("player-avatar")
+            .classList
+            .remove(
+                "player-attack",
+                "player-miss"
+            );
+
+        /*
+         * 敵のアニメーションクラスも削除します。
+         */
+        element("enemy-avatar")
+            .classList
+            .remove(
+                "enemy-hit"
+            );
+    }
+
+
+    /* =========================================================
+       24. 手裏剣生成
+       ========================================================= */
+
+    /*
+     * CSSだけで作った星形の手裏剣をゲーム画面へ追加します。
+     */
+    function createShuriken() {
+
+        /*
+         * 手裏剣を置くレイヤーを取得します。
+         */
+        const layer =
+            element("projectile-layer");
+
+        /*
+         * span要素を作ります。
+         */
+        const shuriken =
+            document.createElement("span");
+
+        /*
+         * 手裏剣用クラスを設定します。
+         */
+        shuriken.className =
+            "shuriken";
+
+        /*
+         * 星形の記号を表示します。
+         */
+        shuriken.textContent = "✦";
+
+        /*
+         * アクセシビリティ上、装飾であることを示します。
+         */
+        shuriken.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        /*
+         * ゲーム画面へ追加します。
+         */
+        layer.appendChild(shuriken);
+
+        /*
+         * アニメーション終了後にDOMから削除します。
+         */
+        window.setTimeout(
+            () => {
+                shuriken.remove();
+            },
+            650
+        );
+    }
+
+
+    /* =========================================================
+       25. 火花生成
+       ========================================================= */
+
+    /*
+     * 敵へ手裏剣が着弾した瞬間の火花を表示します。
+     */
+    function createHitSpark() {
+
+        /*
+         * 手裏剣レイヤーを取得します。
+         */
+        const layer =
+            element("projectile-layer");
+
+        /*
+         * 火花用要素を作ります。
+         */
+        const spark =
+            document.createElement("span");
+
+        /*
+         * CSSアニメーション用クラスを設定します。
+         */
+        spark.className =
+            "hit-spark";
+
+        /*
+         * 火花記号を設定します。
+         */
+        spark.textContent = "✦";
+
+        /*
+         * 装飾要素なのでスクリーンリーダーから除外します。
+         */
+        spark.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        /*
+         * ゲーム画面へ追加します。
+         */
+        layer.appendChild(spark);
+
+        /*
+         * アニメーション終了後に削除します。
+         */
+        window.setTimeout(
+            () => {
+                spark.remove();
+            },
+            600
+        );
+    }
+
+
+    /* =========================================================
+       26. 次の問題へ進む
+       ========================================================= */
+
+    /*
+     * 1問終了後に次の問題へ進みます。
+     *
+     * 通常ゲームでは5問ごとにStageを切り替えます。
+     * 復習モードでは復習問題を順番に進めます。
+     */
+    function advanceAfterQuestion() {
+
+        /*
+         * 二重実行を防ぎます。
+         */
+        if (advanceHandled) {
+            return;
+        }
+
+        /*
+         * 処理済みにします。
+         */
+        advanceHandled = true;
+
+        /*
+         * 復習モードなら通常のStage処理をしません。
+         */
+        if (isReviewMode) {
+
+            /*
+             * 次の復習問題へ進みます。
+             */
+            currentQuestionIndex += 1;
+
+            /*
+             * すべての復習問題が終わったか確認します。
+             */
+            if (
+                currentQuestionIndex >=
+                localQuestions.length
+            ) {
+
+                /*
+                 * 復習終了画面を表示します。
+                 */
+                finishReviewGame();
+
+            } else {
+
+                /*
+                 * 次の復習問題を表示します。
+                 */
+                renderQuestion();
+            }
+
+            /*
+             * 復習モードの処理はここで終了します。
+             */
+            return;
+        }
+
+
+        /*
+         * 通常ゲームでは次の問題番号へ進みます。
+         */
+        currentQuestionIndex += 1;
+
+        /*
+         * 5問終了したか確認します。
+         */
+        const completedStageQuestions =
+            currentQuestionIndex % 5 === 0;
+
+        /*
+         * 5問終了していない場合です。
+         */
+        if (!completedStageQuestions) {
+
+            /*
+             * まだ問題が残っている場合は次へ進みます。
+             */
+            if (
+                currentQuestionIndex <
+                localQuestions.length
+            ) {
+
+                /*
+                 * 次の問題を表示します。
+                 */
+                renderQuestion();
+
+            } else {
+
+                /*
+                 * 問題がなくなったらゲーム終了です。
+                 */
+                finishGame();
+            }
+
+            /*
+             * Stage処理は不要なので終了します。
+             */
+            return;
+        }
+
+
+        /*
+         * ここから5問終了後のStage処理です。
+         */
+
+        /*
+         * 今終了したStage番号を計算します。
+         */
+        const completedStageNumber =
+            currentQuestionIndex / 5;
+
+
+        /*
+         * 敵HPが0ならStageクリアです。
+         */
+        if (currentHp === 0) {
+
+            /*
+             * クリアStage数を1増やします。
+             */
+            clearedStages += 1;
+
+            /*
+             * Stage Clear表示にします。
+             */
+            element("battle-state").textContent =
+                "STAGE CLEAR!";
+
+            /*
+             * 成功色に変更します。
+             */
+            element("effect-zone").className =
+                "effect-zone success";
+
+            /*
+             * Stage Clearメッセージを表示します。
+             */
+            element("effect-zone").textContent =
+                "🎉 STAGE " +
+                completedStageNumber +
+                " CLEAR！敵を倒しました！";
+
+        } else {
+
+            /*
+             * HPが残っていても5問が終了したことを知らせます。
+             */
+            element("battle-state").textContent =
+                "STAGE END";
+
+            /*
+             * 失敗色で表示します。
+             */
+            element("effect-zone").className =
+                "effect-zone miss";
+
+            /*
+             * 敵HPを表示します。
+             */
+            element("effect-zone").textContent =
+                "Stage " +
+                completedStageNumber +
+                " 終了。敵HPが " +
+                currentHp +
+                " 残っています。次のStageへ進みます。";
+        }
+
+
+        /*
+         * すべての問題を終えた場合です。
+         */
+        if (
+            currentQuestionIndex >=
+            localQuestions.length
+        ) {
+
+            /*
+             * 少し待ってから結果画面へ移動します。
+             */
+            window.setTimeout(
+                finishGame,
+                1300
+            );
+
+            /*
+             * ここで終了します。
+             */
+            return;
+        }
+
+
+        /*
+         * 次のStageを開始します。
+         */
+        window.setTimeout(
+            () => {
+
+                /*
+                 * 敵HPを5へ戻します。
+                 */
+                currentHp = 5;
+
+                /*
+                 * プレイヤーHPも3へ戻します。
+                 */
+                currentPlayerHp = 3;
+
+                /*
+                 * HP表示を更新します。
+                 */
+                updateHpDisplay();
+
+                /*
+                 * プレイヤーHP表示を更新します。
+                 */
+                updatePlayerHpDisplay();
+
+                /*
+                 * 次の回答を受け付けます。
+                 */
+                answerLocked = false;
+
+                /*
+                 * 次のStage番号を計算します。
+                 */
+                const nextStage =
+                    Math.floor(
+                        currentQuestionIndex / 5
+                    ) + 1;
+
+                /*
+                 * 次のStageの背景・キャラクターを適用します。
+                 */
+                applyStageTheme(
+                    nextStage
+                );
+
+                /*
+                 * バトル開始状態へ戻します。
+                 */
+                element("battle-state").textContent =
+                    "BATTLE START";
+
+                /*
+                 * 次の問題を表示します。
+                 */
+                renderQuestion();
+
+            },
+            1300
+        );
+    }
+
+
+    /* =========================================================
+       27. Stageリトライ
+       ========================================================= */
+
+    /*
+     * 失敗したStageの最初の問題から再挑戦します。
+     */
+    function retryCurrentStage() {
+
+        /*
+         * 失敗したStageの開始位置へ戻します。
+         */
+        currentQuestionIndex =
+            failedStageStartIndex;
+
+        /*
+         * 敵HPを5へ戻します。
+         */
+        currentHp = 5;
+
+        /*
+         * プレイヤーHPも3へ戻します。
+         */
+        currentPlayerHp = 3;
+
+        /*
+         * コンボを0へ戻します。
+         */
+        currentCombo = 0;
+
+        /*
+         * 回答ロックを解除します。
+         */
+        answerLocked = false;
+
+        /*
+         * HP表示を更新します。
+         */
+        updateHpDisplay();
+
+        /*
+         * プレイヤーHP表示を更新します。
+         */
+        updatePlayerHpDisplay();
+
+        /*
+         * コンボ表示を0へ戻します。
+         */
+        element("combo-val").textContent =
+            "0";
+
+        /*
+         * ゲーム画面上のコンボ表示も0へ戻します。
+         */
+        element("arena-combo").textContent =
+            "COMBO × 0";
+
+        /*
+         * Stage番号を計算します。
+         */
+        const stageNumber =
+            Math.floor(
+                currentQuestionIndex / 5
+            ) + 1;
+
+        /*
+         * そのStageの背景・キャラクターを再設定します。
+         */
+        applyStageTheme(
+            stageNumber
+        );
+
+        /*
+         * バトル開始状態へ戻します。
+         */
+        element("battle-state").textContent =
+            "BATTLE START";
+
+        /*
+         * Stage失敗画面を隠します。
+         */
+        element("stage-failed-panel")
+            .classList
+            .add("hidden");
+
+        /*
+         * 問題画面を表示します。
+         */
+        element("quiz-content")
+            .classList
+            .remove("hidden");
+
+        /*
+         * 問題を表示します。
+         */
+        renderQuestion();
+    }
+
+
+    /* =========================================================
+       28. 敵HP表示
+       ========================================================= */
+
+    /*
+     * 敵HPの5ブロックと数字を更新します。
+     */
+    function updateHpDisplay() {
+
+        /*
+         * HP1～5を順番に確認します。
+         */
+        for (
+            let i = 1;
+            i <= 5;
+            i++
+        ) {
+
+            /*
+             * 現在HPより大きい番号なら空にします。
+             *
+             * 例：
+             * currentHp = 3
+             * 4・5がemptyになります。
+             */
+            element(
+                "hp" + i
+            ).classList.toggle(
+                "empty",
+                i > currentHp
+            );
+        }
+
+        /*
+         * 数字表示も更新します。
+         */
+        element("hp-count").textContent =
+            currentHp +
+            " / 5";
+    }
+
+
+    /* =========================================================
+       29. プレイヤーHP表示
+       ========================================================= */
+
+    /*
+     * プレイヤーHPを画面へ反映します。
+     */
+    function updatePlayerHpDisplay() {
+
+        /*
+         * PLAYER HP 1～3を順番に確認します。
+         */
+        for (
+            let i = 1;
+            i <= 3;
+            i++
+        ) {
+
+            /*
+             * 現在HPより大きい番号を空にします。
+             */
+            element(
+                "player-hp" + i
+            ).classList.toggle(
+                "empty",
+                i > currentPlayerHp
+            );
+        }
+
+        /*
+         * 数字表示も更新します。
+         */
+        element(
+            "player-hp-count"
+        ).textContent =
+            currentPlayerHp +
+            " / 3";
+    }
+
+
+    /* =========================================================
+       30. Stage表示
+       ========================================================= */
+
+    /*
+     * 右側のStage表示を更新します。
+     */
+    function updateBattleStage(stageNumber) {
+
+        /*
+         * 現在のStageテーマを取得します。
+         */
+        const theme =
+            stageThemes[stageNumber] ||
+            stageThemes[1];
+
+        /*
+         * Stage名と番号を表示します。
+         */
+        element("battle-stage").textContent =
+            theme.name +
+            " / Stage " +
+            stageNumber;
+    }
+
+
+    /* =========================================================
+       31. 通常ゲーム終了
+       ========================================================= */
+
+    /*
+     * 通常ゲームの全問題が終了したとき結果画面を表示します。
+     */
+    function finishGame() {
+
+        /*
+         * タイマーを停止します。
+         */
+        stopQuestionTimer();
+
+        /*
+         * 回答をロックします。
+         */
+        answerLocked = true;
+
+        /*
+         * 問題部分を非表示にします。
+         */
+        element("quiz-content")
+            .classList
+            .add("hidden");
+
+        /*
+         * Stage失敗パネルを隠します。
+         */
+        element("stage-failed-panel")
+            .classList
+            .add("hidden");
+
+        /*
+         * 復習結果パネルを隠します。
+         */
+        element("review-result-panel")
+            .classList
+            .add("hidden");
+
+        /*
+         * 結果画面を表示します。
+         */
+        element("game-result-panel")
+            .classList
+            .remove("hidden");
+
+        /*
+         * 結果タイトルを設定します。
+         */
+        element("game-result-title").textContent =
+            "学習終了！";
+
+        /*
+         * 結果説明を設定します。
+         */
+        element("game-result-message").textContent =
+            "今回の問題数：" +
+            localQuestions.length +
+            "問\n" +
+            "ステージクリア数：" +
+            clearedStages +
+            " / " +
+            Math.ceil(
+                localQuestions.length / 5
+            );
+
+        /*
+         * スコアを表示します。
+         */
+        element("game-result-score").textContent =
+            "SCORE: " +
+            currentScore;
+
+        /*
+         * バトル状態をRESULTへ変更します。
+         */
+        element("battle-state").textContent =
+            "RESULT";
+
+        /*
+         * 結果メッセージを成功色で表示します。
+         */
+        element("effect-zone").className =
+            "effect-zone success";
+
+        /*
+         * プレイ終了メッセージを表示します。
+         */
+        element("effect-zone").textContent =
+            "🏁 プレイ終了！おつかれさまでした。";
+
+
+        /*
+         * 間違えた問題があるか確認します。
+         */
+        if (wrongQuestions.length > 0) {
+
+            /*
+             * 復習ボタンを表示します。
+             */
+            element("review-button")
+                .classList
+                .remove("hidden");
+
+            /*
+             * 間違えた問題数を表示します。
+             */
+            element(
+                "review-count-badge"
+            ).textContent =
+                "間違えた問題：" +
+                wrongQuestions.length +
+                "問";
+
+            /*
+             * 件数バッジを表示します。
+             */
+            element(
+                "review-count-badge"
+            ).classList.remove("hidden");
+
+        } else {
+
+            /*
+             * 間違えた問題がなければ復習ボタンを隠します。
+             */
+            element("review-button")
+                .classList
+                .add("hidden");
+
+            /*
+             * 件数表示も隠します。
+             */
+            element(
+                "review-count-badge"
+            ).classList.add("hidden");
+        }
+    }
+
+
+    /* =========================================================
+       32. 復習モード開始
+       ========================================================= */
+
+    /*
+     * 通常ゲームで間違えた問題だけを使って復習します。
+     */
+    function startReviewMode() {
+
+        /*
+         * 復習対象がなければ何もしません。
+         */
+        if (wrongQuestions.length === 0) {
+            return;
+        }
+
+        /*
+         * 通常ゲームと区別するため復習モードにします。
+         */
+        isReviewMode = true;
+
+        /*
+         * 復習問題を現在の出題配列へコピーします。
+         */
+        localQuestions =
+            wrongQuestions.map(
+                question => ({
+                    ...question
+                })
+            );
+
+        /*
+         * 復習の最初の問題へ戻します。
+         */
+        currentQuestionIndex = 0;
+
+        /*
+         * 回答処理フラグを初期化します。
+         */
+        answerLocked = false;
+
+        /*
+         * 正誤処理済みフラグを解除します。
+         */
+        answerResultHandled = false;
+
+        /*
+         * 次問題処理済みフラグを解除します。
+         */
+        advanceHandled = false;
+
+        /*
+         * 復習用にプレイヤーHPを初期化します。
+         */
+        currentPlayerHp = 3;
+
+        /*
+         * 復習画面でも敵HPを5から開始します。
+         */
+        currentHp = 5;
+
+        /*
+         * プレイヤーHPを表示します。
+         */
+        updatePlayerHpDisplay();
+
+        /*
+         * 敵HPを表示します。
+         */
+        updateHpDisplay();
+
+        /*
+         * 結果画面を隠します。
+         */
+        element("game-result-panel")
+            .classList
+            .add("hidden");
+
+        /*
+         * 復習結果画面を隠します。
+         */
+        element("review-result-panel")
+            .classList
+            .add("hidden");
+
+        /*
+         * 問題画面を表示します。
+         */
+        element("quiz-content")
+            .classList
+            .remove("hidden");
+
+        /*
+         * バトル状態を復習へ変更します。
+         */
+        element("battle-state").textContent =
+            "REVIEW MODE";
+
+        /*
+         * 復習メッセージを表示します。
+         */
+        element("effect-zone").className =
+            "effect-zone";
+
+        /*
+         * 復習開始メッセージです。
+         */
+        element("effect-zone").textContent =
+            "🔁 間違えた問題だけを復習します。";
+
+        /*
+         * 現在のStageテーマを維持したまま問題を表示します。
+         */
+        renderQuestion();
+    }
+
+
+    /* =========================================================
+       33. 復習終了
+       ========================================================= */
+
+    /*
+     * 復習問題をすべて終えたときに表示します。
+     */
+    function finishReviewGame() {
+
+        /*
+         * タイマーを停止します。
+         */
+        stopQuestionTimer();
+
+        /*
+         * 回答をロックします。
+         */
+        answerLocked = true;
+
+        /*
+         * 問題部分を非表示にします。
+         */
+        element("quiz-content")
+            .classList
+            .add("hidden");
+
+        /*
+         * 復習結果画面を表示します。
+         */
+        element("review-result-panel")
+            .classList
+            .remove("hidden");
+
+        /*
+         * 復習結果を表示します。
+         */
+        element(
+            "review-result-message"
+        ).textContent =
+            "今回の復習問題：" +
+            localQuestions.length +
+            "問\n" +
+            "復習が終了しました。";
+
+        /*
+         * バトル状態を変更します。
+         */
+        element("battle-state").textContent =
+            "REVIEW END";
+
+        /*
+         * 結果メッセージを表示します。
+         */
+        element("effect-zone").className =
+            "effect-zone success";
+
+        /*
+         * 復習終了を表示します。
+         */
+        element("effect-zone").textContent =
+            "🔁 復習終了！おつかれさまでした。";
+    }
+
+
+    /* =========================================================
+       34. 結果画面へ戻る
+       ========================================================= */
+
+    /*
+     * 復習終了後に通常ゲームの結果画面へ戻します。
+     */
+    function returnToResult() {
+
+        /*
+         * 復習モードを終了します。
+         */
+        isReviewMode = false;
+
+        /*
+         * 結果画面を表示します。
+         */
+        element("game-result-panel")
+            .classList
+            .remove("hidden");
+
+        /*
+         * 復習結果画面を隠します。
+         */
+        element("review-result-panel")
+            .classList
+            .add("hidden");
+
+        /*
+         * 問題画面を隠します。
+         */
+        element("quiz-content")
+            .classList
+            .add("hidden");
+
+        /*
+         * バトル状態をRESULTへ戻します。
+         */
+        element("battle-state").textContent =
+            "RESULT";
+
+        /*
+         * 結果メッセージを表示します。
+         */
+        element("effect-zone").className =
+            "effect-zone success";
+
+        /*
+         * 結果画面へ戻ったことを知らせます。
+         */
+        element("effect-zone").textContent =
+            "📊 結果画面に戻りました。";
+    }
+
+
+    /* =========================================================
+       35. 章選択画面へ戻る
+       ========================================================= */
+
+    /*
+     * クイズ中・結果画面から章選択へ戻ります。
+     */
+    function returnToHome() {
+
+        /*
+         * タイマーを停止します。
+         */
+        stopQuestionTimer();
+
+        /*
+         * 回答ロックを解除します。
+         */
+        answerLocked = false;
+
+        /*
+         * 正誤処理フラグを解除します。
+         */
+        answerResultHandled = false;
+
+        /*
+         * 次問題処理フラグを解除します。
+         */
+        advanceHandled = false;
+
+        /*
+         * 復習モードを終了します。
+         */
+        isReviewMode = false;
+
+        /*
+         * クイズ画面を非表示にします。
+         */
+        element("quiz-view")
+            .classList
+            .remove("active");
+
+        /*
+         * 章選択画面を表示します。
+         */
+        element("home-view")
+            .classList
+            .add("active");
+
+        /*
+         * 結果画面を隠します。
+         */
+        element("game-result-panel")
+            .classList
+            .add("hidden");
+
+        /*
+         * Stage失敗画面も隠します。
+         */
+        element("stage-failed-panel")
+            .classList
+            .add("hidden");
+
+        /*
+         * 復習結果画面も隠します。
+         */
+        element("review-result-panel")
+            .classList
+            .add("hidden");
+
+        /*
+         * ゲーム開始前のメッセージを表示します。
+         */
+        element("effect-zone").className =
+            "effect-zone";
+
+        /*
+         * ユーザー名付きの待機メッセージです。
+         */
+        element("effect-zone").textContent =
+            "待機中：" +
+            currentUsername +
+            "さん、学習する章を選んでください。";
+
+        /*
+         * バトル状態を初期化します。
+         */
+        element("battle-state").textContent =
+            "ゲーム開始前";
+
+        /*
+         * Stage番号を初期化します。
+         */
+        element("battle-stage").textContent =
+            "Stage 1";
+
+        /*
+         * 敵HPを初期化します。
+         */
+        currentHp = 5;
+
+        /*
+         * プレイヤーHPを初期化します。
+         */
+        currentPlayerHp = 3;
+
+        /*
+         * コンボを初期化します。
+         */
+        currentCombo = 0;
+
+        /*
+         * HPを画面へ反映します。
+         */
+        updateHpDisplay();
+
+        /*
+         * プレイヤーHPを画面へ反映します。
+         */
+        updatePlayerHpDisplay();
+
+        /*
+         * コンボ表示を初期化します。
+         */
+        element("combo-val").textContent =
+            "0";
+
+        /*
+         * ゲーム画面のコンボも初期化します。
+         */
+        element("arena-combo").textContent =
+            "COMBO × 0";
+
+        /*
+         * Stage 1の背景とキャラクターへ戻します。
+         */
+        applyStageTheme(1);
+    }
+
+
+    /* =========================================================
+       36. 問題数選択イベント
+       ========================================================= */
+
+    /*
+     * 5・10・15・20問ボタンすべてにクリックイベントを登録します。
+     */
+    document
+        .querySelectorAll(".count-option")
+        .forEach(button => {
+
+            /*
+             * 問題数ボタンが押されたときの処理です。
+             */
+            button.addEventListener(
+                "click",
+                () => {
+
+                    /*
+                     * data-countから問題数を取得します。
+                     */
+                    selectedQuestionCount =
+                        Number(
+                            button.dataset.count
+                        );
+
+                    /*
+                     * すべての問題数ボタンを確認します。
+                     */
+                    document
+                        .querySelectorAll(
+                            ".count-option"
+                        )
+                        .forEach(option => {
+
+                            /*
+                             * 押されたボタンだけtrueにします。
+                             */
+                            option.setAttribute(
+                                "aria-pressed",
+                                String(
+                                    option === button
+                                )
+                            );
+                        });
+
+                    /*
+                     * 選択内容の説明を更新します。
+                     */
+                    updateSelectedSummary();
+                }
+            );
+        });
+
+
+    /* =========================================================
+       37. 選択肢ボタンイベント
+       ========================================================= */
+
+    /*
+     * A～Eの回答ボタンにクリックイベントを登録します。
+     */
+    document
+        .querySelectorAll(".choice-button")
+        .forEach(button => {
+
+            /*
+             * 選択肢が押されたときに回答処理を実行します。
+             */
+            button.addEventListener(
+                "click",
+                () => {
+
+                    /*
+                     * data-indexを数値に変換して回答処理へ渡します。
+                     */
+                    checkAnswer(
+                        Number(
+                            button.dataset.index
+                        )
+                    );
+                }
+            );
+        });
+
+
+    /* =========================================================
+       38. ログイン関連イベント
+       ========================================================= */
+
+    /*
+     * ログインボタンにクリックイベントを登録します。
+     */
+    element("login-button")
+        .addEventListener(
+            "click",
+            login
+        );
+
+    /*
+     * ログアウトボタンにクリックイベントを登録します。
+     */
+    element("logout-button")
+        .addEventListener(
+            "click",
+            logout
+        );
+
+    /*
+     * ユーザー名入力欄でEnterキーを押した場合もログインします。
+     */
+    element("username-input")
+        .addEventListener(
+            "keydown",
+            event => {
+
+                /*
+                 * Enterキーだった場合だけログインします。
+                 */
+                if (event.key === "Enter") {
+                    login();
+                }
+            }
+        );
+
+
+    /* =========================================================
+       39. ゲーム操作ボタンイベント
+       ========================================================= */
+
+    /*
+     * ゲーム開始ボタンにイベントを登録します。
+     */
+    element("start-button")
+        .addEventListener(
+            "click",
+            startGame
+        );
+
+    /*
+     * Stageリトライボタンにイベントを登録します。
+     */
+    element("retry-stage-button")
+        .addEventListener(
+            "click",
+            retryCurrentStage
+        );
+
+    /*
+     * クイズ画面から章選択へ戻るボタンです。
+     */
+    element("back-home-from-quiz")
+        .addEventListener(
+            "click",
+            returnToHome
+        );
+
+    /*
+     * Stage失敗画面から章選択へ戻るボタンです。
+     */
+    element("back-home-from-fail")
+        .addEventListener(
+            "click",
+            returnToHome
+        );
+
+    /*
+     * 通常結果画面から章選択へ戻るボタンです。
+     */
+    element("return-home-button")
+        .addEventListener(
+            "click",
+            returnToHome
+        );
+
+
+    /* =========================================================
+       40. 復習ボタンイベント
+       ========================================================= */
+
+    /*
+     * 「間違えた問題を復習」ボタンを押したとき、
+     * wrongQuestionsだけで復習を開始します。
+     */
+    element("review-button")
+        .addEventListener(
+            "click",
+            startReviewMode
+        );
+
+    /*
+     * 復習結果画面の「もう一度復習する」ボタンです。
+     */
+    element("review-again-button")
+        .addEventListener(
+            "click",
+            startReviewMode
+        );
+
+    /*
+     * 復習結果画面から通常結果画面へ戻るボタンです。
+     */
+    element("review-back-result-button")
+        .addEventListener(
+            "click",
+            returnToResult
+        );
+
+
+    /* =========================================================
+       41. 画面サイズ変更時の処理
+       ========================================================= */
+
+    /*
+     * ブラウザのサイズが変わった場合、
+     * 長いコード問題の表示サイズを再計算するため、
+     * 現在問題があれば再描画します。
+     */
+    window.addEventListener(
+        "resize",
+        () => {
+
+            /*
+             * 問題が存在しない場合は何もしません。
+             */
+            if (
+                localQuestions.length === 0 ||
+                !element("quiz-view")
+                    .classList
+                    .contains("active")
+            ) {
+                return;
+            }
+
+            /*
+             * 回答中の問題を再描画します。
+             */
+            renderQuestion();
+        }
+    );
+
+
+    /* =========================================================
+       42. 初期化
+       ========================================================= */
+
+    /*
+     * ページが読み込まれたら、
+     * まずログイン状態を確認します。
+     */
+    initializeLogin();
+
+</script>
+
+</body>
+</html>
