@@ -1026,44 +1026,14 @@
         }
 
         /* プレイヤーHP表示の領域です。 */
-        .player-hp-section {
-            flex: 0 0 auto;
-            margin-top: 7px;
-        }
 
         /* プレイヤーHPのタイトルです。 */
-        .player-hp-heading {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 4px;
-            color: #647080;
-            font-size: 10px;
-            font-weight: 750;
-        }
 
         /* プレイヤーHPバーです。 */
-        .player-hp-bar {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 4px;
-        }
 
         /* プレイヤーHP1個分です。 */
-        .player-hp-block {
-            height: 5px;
-            border-radius: 99px;
-            background: #4d9cf5;
-            transition:
-                background 0.2s ease,
-                opacity 0.2s ease;
-        }
 
         /* プレイヤーHPが減った部分です。 */
-        .player-hp-block.empty {
-            background: #dfe7f2;
-            opacity: 0.55;
-        }
 
         /* =========================================================
            10. 2Dバトルアリーナ
@@ -1204,26 +1174,8 @@
         }
 
         /* キャラクター名です。 */
-        .fighter-name {
-            position: relative;
-            z-index: 2;
-            max-width: 100%;
-            color: #ffffff;
-            font-size: 11px;
-            font-weight: 850;
-            text-align: center;
-            text-shadow: var(--game-text-shadow);
-            overflow-wrap: anywhere;
-        }
 
         /* キャラクターの役割表示です。 */
-        .fighter-role {
-            position: relative;
-            z-index: 2;
-            color: #edf4ff;
-            font-size: 9px;
-            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.65);
-        }
 
         /* VS表示です。 */
         .versus {
@@ -2382,40 +2334,18 @@
 
 
             <!-- プレイヤーHPです。 -->
-            <div class="player-hp-section">
 
-                <!-- プレイヤーHPのタイトルと数値です。 -->
-                <div class="player-hp-heading">
-                    <span>PLAYER HP</span>
-                    <strong id="player-hp-count">
-                        3 / 3
-                    </strong>
-                </div>
+<!-- プレイヤーHPのタイトルと数値です。 -->
 
-                <!-- プレイヤーHPを3ブロックで表現します。 -->
-                <div class="player-hp-bar">
+<!-- プレイヤーHPを3ブロックで表現します。 -->
 
-                    <!-- プレイヤーHP 1です。 -->
-                    <span
-                        id="player-hp1"
-                        class="player-hp-block"
-                    ></span>
+<!-- プレイヤーHP 1です。 -->
 
-                    <!-- プレイヤーHP 2です。 -->
-                    <span
-                        id="player-hp2"
-                        class="player-hp-block"
-                    ></span>
+<!-- プレイヤーHP 2です。 -->
 
-                    <!-- プレイヤーHP 3です。 -->
-                    <span
-                        id="player-hp3"
-                        class="player-hp-block"
-                    ></span>
+<!-- プレイヤーHP 3です。 -->
 
-                </div>
-
-            </div>
+            <!-- 整理：プレイヤーHPの表示要素は物理削除しました。HP値はゲーム進行の判定用としてJavaScript内に維持します。 -->
 
 
             <!-- =================================================
@@ -2473,17 +2403,10 @@
                     </div>
 
                     <!-- プレイヤー名です。 -->
-                    <div
-                        id="player-name"
-                        class="fighter-name"
-                    >
-                        女子高生
-                    </div>
 
-                    <!-- プレイヤーの役割です。 -->
-                    <div class="fighter-role">
-                        PLAYER
-                    </div>
+<!-- プレイヤーの役割です。 -->
+
+                    <!-- 整理：プレイヤー名とPLAYER役割の表示要素を物理削除しました。画像のalt属性はアクセシビリティ用に残します。 -->
 
                 </div>
 
@@ -2498,6 +2421,7 @@
                 <div
                     id="enemy-unit"
                     class="fighter"
+                
                 >
 
                     <!-- Java忍者の画像を表示します。 -->
@@ -2517,17 +2441,10 @@
                     </div>
 
                     <!-- 敵名です。 -->
-                    <div
-                        id="enemy-name"
-                        class="fighter-name"
-                    >
-                        Java忍者
-                    </div>
 
-                    <!-- 敵の役割です。 -->
-                    <div class="fighter-role">
-                        ENEMY
-                    </div>
+<!-- 敵の役割です。 -->
+
+                    <!-- 整理：敵名とENEMY役割の表示要素を物理削除しました。画像のalt属性はアクセシビリティ用に残します。 -->
 
                 </div>
 
@@ -3561,14 +3478,26 @@
         /*
          * プレイヤー名を更新します。
          */
-        element("player-name").textContent =
-            theme.playerName;
+        /*
+         * 整理：プレイヤー名の表示要素は物理削除したため、
+         * 要素が存在する場合だけ更新します。
+         */
+        const playerNameElement = element("player-name");
+        if (playerNameElement) {
+            playerNameElement.textContent = theme.playerName;
+        }
 
         /*
          * 敵名を更新します。
          */
-        element("enemy-name").textContent =
-            theme.enemyName;
+        /*
+         * 整理：敵名の表示要素は物理削除したため、
+         * 要素が存在する場合だけ更新します。
+         */
+        const enemyNameElement = element("enemy-name");
+        if (enemyNameElement) {
+            enemyNameElement.textContent = theme.enemyName;
+        }
 
         /*
          * プレイヤーの通常画像を設定します。
@@ -6009,6 +5938,18 @@
     function updatePlayerHpDisplay() {
 
         /*
+         * 【整理】プレイヤーHPのHTML表示は物理削除しています。
+         * そのため、表示用の数値要素がなければ何もせず終了します。
+         * この確認で、nullに対してclassListやtextContentを呼ぶエラーを防ぎます。
+         * currentPlayerHp自体はゲームの敗北判定に必要なので維持します。
+         */
+        const hpCountElement = element("player-hp-count");
+
+        if (!hpCountElement) {
+            return;
+        }
+
+        /*
          * PLAYER HP 1～3を順番に確認します。
          */
         for (
@@ -6020,20 +5961,21 @@
             /*
              * 現在HPより大きい番号を空にします。
              */
-            element(
-                "player-hp" + i
-            ).classList.toggle(
-                "empty",
-                i > currentPlayerHp
-            );
+            const hpBlock = element("player-hp" + i);
+
+            /* HTML側から個別ブロックが削除されていてもエラーにしません。 */
+            if (hpBlock) {
+                hpBlock.classList.toggle(
+                    "empty",
+                    i > currentPlayerHp
+                );
+            }
         }
 
         /*
          * 数字表示も更新します。
          */
-        element(
-            "player-hp-count"
-        ).textContent =
+        hpCountElement.textContent =
             currentPlayerHp +
             " / 3";
     }
